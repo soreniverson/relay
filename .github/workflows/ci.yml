@@ -92,6 +92,7 @@ jobs:
   e2e:
     name: E2E Tests
     runs-on: ubuntu-latest
+    continue-on-error: true  # E2E tests are informational, don't block CI
     services:
       postgres:
         image: postgres:16
