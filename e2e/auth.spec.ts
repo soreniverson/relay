@@ -6,28 +6,44 @@ test.describe("Authentication", () => {
 
     await expect(page.getByRole("heading", { name: /sign in/i })).toBeVisible();
     await expect(page.getByPlaceholder(/email/i)).toBeVisible();
+    await expect(page.getByPlaceholder(/password/i)).toBeVisible();
+    await expect(page.getByRole("button", { name: /sign in/i })).toBeVisible();
+  });
+
+  test("should show signup page", async ({ page }) => {
+    await page.goto("/auth/signup");
+
     await expect(
-      page.getByRole("button", { name: /magic link/i }),
+      page.getByRole("heading", { name: /create your account/i }),
+    ).toBeVisible();
+    await expect(page.getByPlaceholder(/email/i)).toBeVisible();
+    await expect(page.getByPlaceholder(/password/i)).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: /create account/i }),
     ).toBeVisible();
   });
 
-  test("should show error for invalid email", async ({ page }) => {
-    await page.goto("/auth/login");
-
-    await page.getByPlaceholder(/email/i).fill("invalid-email");
-    await page.getByRole("button", { name: /magic link/i }).click();
-
-    await expect(page.getByText(/valid email/i)).toBeVisible();
-  });
-
-  test("should accept valid email", async ({ page }) => {
+  test("should show error for invalid credentials", async ({ page }) => {
     await page.goto("/auth/login");
 
     await page.getByPlaceholder(/email/i).fill("test@example.com");
-    await page.getByRole("button", { name: /magic link/i }).click();
+    await page.getByPlaceholder(/password/i).fill("wrongpassword");
+    await page.getByRole("button", { name: /sign in/i }).click();
 
-    // Should show success message
-    await expect(page.getByText(/check your email/i)).toBeVisible();
+    // Should show error message
+    await expect(
+      page.getByText(/invalid email or password|failed to sign in/i),
+    ).toBeVisible({ timeout: 10000 });
+  });
+
+  test("should navigate between login and signup", async ({ page }) => {
+    await page.goto("/auth/login");
+
+    await page.getByRole("link", { name: /create an account/i }).click();
+    await expect(page).toHaveURL(/\/auth\/signup/);
+
+    await page.getByRole("link", { name: /sign in/i }).click();
+    await expect(page).toHaveURL(/\/auth\/login/);
   });
 
   test("should redirect to dashboard when authenticated", async ({
