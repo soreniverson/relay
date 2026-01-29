@@ -1,6 +1,6 @@
 [build]
 builder = "nixpacks"
-buildCommand = "pnpm install && pnpm build"
+buildCommand = "cd ../.. && pnpm install && pnpm --filter @relay/shared build && pnpm --filter @relay/api build"
 
 [deploy]
 startCommand = "pnpm start"

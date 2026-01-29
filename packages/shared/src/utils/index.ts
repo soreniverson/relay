@@ -381,5 +381,15 @@ export function maskPhone(phone: string): string {
   const digits = phone.replace(/\D/g, '');
   if (digits.length < 4) return phone;
   const lastFour = digits.slice(-4);
-  return phone.replace(/\d(?=\d{4})/g, '*');
+  const digitsToMask = digits.length - 4;
+  let masked = phone;
+  let count = 0;
+  masked = masked.replace(/\d/g, (match) => {
+    if (count < digitsToMask) {
+      count++;
+      return '*';
+    }
+    return match;
+  });
+  return masked;
 }

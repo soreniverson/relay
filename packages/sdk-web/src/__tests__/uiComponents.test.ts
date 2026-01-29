@@ -2,6 +2,10 @@
 // UI COMPONENT TESTS
 // ============================================================================
 
+/**
+ * @vitest-environment jsdom
+ */
+
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 
 // Test DOM utilities

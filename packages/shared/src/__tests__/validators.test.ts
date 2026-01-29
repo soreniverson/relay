@@ -42,14 +42,24 @@ describe('Validators', () => {
   });
 
   describe('createSessionSchema', () => {
+    const validDevice = {
+      type: 'desktop' as const,
+      os: 'macOS',
+      browser: 'Chrome',
+    };
+
     it('should accept minimal valid input', () => {
-      const result = createSessionSchema.safeParse({});
+      const result = createSessionSchema.safeParse({
+        device: validDevice,
+        environment: 'production',
+      });
       expect(result.success).toBe(true);
     });
 
     it('should accept full valid input', () => {
       const result = createSessionSchema.safeParse({
-        sessionId: '550e8400-e29b-41d4-a716-446655440000',
+        id: '550e8400-e29b-41d4-a716-446655440000',
+        device: validDevice,
         appVersion: '1.0.0',
         environment: 'production',
       });
@@ -58,6 +68,7 @@ describe('Validators', () => {
 
     it('should reject invalid environment', () => {
       const result = createSessionSchema.safeParse({
+        device: validDevice,
         environment: 'invalid',
       });
       expect(result.success).toBe(false);
@@ -65,11 +76,13 @@ describe('Validators', () => {
   });
 
   describe('createInteractionSchema', () => {
+    const validSessionId = '550e8400-e29b-41d4-a716-446655440000';
+
     it('should accept valid bug report', () => {
       const result = createInteractionSchema.safeParse({
         type: 'bug',
         source: 'widget',
-        sessionId: '550e8400-e29b-41d4-a716-446655440000',
+        sessionId: validSessionId,
         contentText: 'Something is broken',
         severity: 'high',
         tags: ['ui', 'critical'],
@@ -81,6 +94,7 @@ describe('Validators', () => {
       const result = createInteractionSchema.safeParse({
         type: 'feedback',
         source: 'sdk',
+        sessionId: validSessionId,
         contentText: 'Great product!',
       });
       expect(result.success).toBe(true);
@@ -90,6 +104,7 @@ describe('Validators', () => {
       const result = createInteractionSchema.safeParse({
         type: 'invalid_type',
         source: 'widget',
+        sessionId: validSessionId,
       });
       expect(result.success).toBe(false);
     });
@@ -98,6 +113,7 @@ describe('Validators', () => {
       const result = createInteractionSchema.safeParse({
         type: 'bug',
         source: 'widget',
+        sessionId: validSessionId,
         severity: 'super_high',
       });
       expect(result.success).toBe(false);
