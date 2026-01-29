@@ -3,18 +3,18 @@
 // Enhanced bug report form with severity, screenshot preview, and file attachments
 // ============================================================================
 
-import { createElement, clearChildren } from '../../utils/dom';
-import { createInput, type InputResult } from '../shared/Input';
-import { createTextarea, type TextareaResult } from '../shared/Textarea';
-import { createSelect, type SelectResult } from '../shared/Select';
-import { createCheckbox, type CheckboxResult } from '../shared/Checkbox';
-import { createButton, setButtonLoading } from '../shared/Button';
-import { createFileUpload, type FileUploadResult } from '../shared/FileUpload';
+import { createElement, clearChildren } from "../../utils/dom";
+import { createInput, type InputResult } from "../shared/Input";
+import { createTextarea, type TextareaResult } from "../shared/Textarea";
+import { createSelect, type SelectResult } from "../shared/Select";
+import { createCheckbox, type CheckboxResult } from "../shared/Checkbox";
+import { createButton, setButtonLoading } from "../shared/Button";
+import { createFileUpload, type FileUploadResult } from "../shared/FileUpload";
 
 export interface BugReportFormData {
   title: string;
   description: string;
-  severity: 'low' | 'med' | 'high' | 'critical';
+  severity: "low" | "med" | "high" | "critical";
   includeScreenshot: boolean;
   includeLogs: boolean;
   attachments: File[];
@@ -25,7 +25,7 @@ export interface BugReportFormConfig {
   showScreenshot?: boolean;
   showLogs?: boolean;
   showAttachments?: boolean;
-  defaultSeverity?: BugReportFormData['severity'];
+  defaultSeverity?: BugReportFormData["severity"];
   maxAttachments?: number;
   maxAttachmentSize?: number;
   onSubmit: (data: BugReportFormData) => Promise<void>;
@@ -177,10 +177,10 @@ export const bugReportFormStyles = `
 `;
 
 const SEVERITY_OPTIONS = [
-  { value: 'low', label: 'Low - Minor issue' },
-  { value: 'med', label: 'Medium - Affects workflow' },
-  { value: 'high', label: 'High - Major impact' },
-  { value: 'critical', label: 'Critical - Blocking' },
+  { value: "low", label: "Low - Minor issue" },
+  { value: "med", label: "Medium - Affects workflow" },
+  { value: "high", label: "High - Major impact" },
+  { value: "critical", label: "Critical - Blocking" },
 ];
 
 export interface BugReportFormResult {
@@ -191,13 +191,15 @@ export interface BugReportFormResult {
   showSuccess: () => void;
 }
 
-export function createBugReportForm(config: BugReportFormConfig): BugReportFormResult {
+export function createBugReportForm(
+  config: BugReportFormConfig,
+): BugReportFormResult {
   const {
     showSeverity = true,
     showScreenshot = true,
     showLogs = true,
     showAttachments = true,
-    defaultSeverity = 'med',
+    defaultSeverity = "med",
     maxAttachments = 5,
     maxAttachmentSize = 10 * 1024 * 1024,
     onSubmit,
@@ -208,21 +210,23 @@ export function createBugReportForm(config: BugReportFormConfig): BugReportFormR
   let screenshotBlob: Blob | null = null;
 
   // Create form element
-  const form = createElement('form', { class: 'relay-bug-form' }) as HTMLFormElement;
+  const form = createElement("form", {
+    class: "relay-bug-form",
+  }) as HTMLFormElement;
 
   // Title input
-  const titleInput = createInput('Title', {
-    name: 'title',
-    placeholder: 'Brief summary of the issue',
+  const titleInput = createInput("Title", {
+    name: "title",
+    placeholder: "Brief summary of the issue",
     required: true,
     autoFocus: true,
     onChange: onFormChange,
   });
 
   // Description textarea
-  const descriptionTextarea = createTextarea('Description', {
-    name: 'description',
-    placeholder: 'Describe what happened and how to reproduce it...',
+  const descriptionTextarea = createTextarea("Description", {
+    name: "description",
+    placeholder: "Describe what happened and how to reproduce it...",
     required: true,
     rows: 4,
     maxLength: 2000,
@@ -232,8 +236,8 @@ export function createBugReportForm(config: BugReportFormConfig): BugReportFormR
   // Severity select
   let severitySelect: SelectResult | null = null;
   if (showSeverity) {
-    severitySelect = createSelect('Severity', {
-      name: 'severity',
+    severitySelect = createSelect("Severity", {
+      name: "severity",
       options: SEVERITY_OPTIONS,
       value: defaultSeverity,
     });
@@ -245,32 +249,53 @@ export function createBugReportForm(config: BugReportFormConfig): BugReportFormR
   let screenshotImg: HTMLImageElement | null = null;
 
   if (showScreenshot) {
-    screenshotContainer = createElement('div', { class: 'relay-bug-form__screenshot' });
-    screenshotContainer.style.display = 'none';
+    screenshotContainer = createElement("div", {
+      class: "relay-bug-form__screenshot",
+    });
+    screenshotContainer.style.display = "none";
 
-    const label = createElement('span', { class: 'relay-bug-form__screenshot-label' }, ['Screenshot']);
+    const label = createElement(
+      "span",
+      { class: "relay-bug-form__screenshot-label" },
+      ["Screenshot"],
+    );
 
-    screenshotPreviewEl = createElement('div', { class: 'relay-bug-form__screenshot-preview' });
-    screenshotImg = createElement('img', { alt: 'Screenshot preview' }) as HTMLImageElement;
+    screenshotPreviewEl = createElement("div", {
+      class: "relay-bug-form__screenshot-preview",
+    });
+    screenshotImg = createElement("img", {
+      alt: "Screenshot preview",
+    }) as HTMLImageElement;
     screenshotPreviewEl.appendChild(screenshotImg);
 
     // Action buttons
-    const actions = createElement('div', { class: 'relay-bug-form__screenshot-actions' });
+    const actions = createElement("div", {
+      class: "relay-bug-form__screenshot-actions",
+    });
 
     if (onScreenshotEdit) {
-      const editBtn = createElement('button', {
-        type: 'button',
-        class: 'relay-bug-form__screenshot-btn',
-      }, ['Edit']);
-      editBtn.addEventListener('click', () => onScreenshotEdit());
+      const editBtn = createElement(
+        "button",
+        {
+          type: "button",
+          class: "relay-bug-form__screenshot-btn",
+        },
+        ["Edit"],
+      );
+      editBtn.addEventListener("click", () => onScreenshotEdit());
       actions.appendChild(editBtn);
     }
 
-    const removeBtn = createElement('button', {
-      type: 'button',
-      class: 'relay-bug-form__screenshot-btn relay-bug-form__screenshot-btn--danger',
-    }, ['Remove']);
-    removeBtn.addEventListener('click', () => {
+    const removeBtn = createElement(
+      "button",
+      {
+        type: "button",
+        class:
+          "relay-bug-form__screenshot-btn relay-bug-form__screenshot-btn--danger",
+      },
+      ["Remove"],
+    );
+    removeBtn.addEventListener("click", () => {
       setScreenshotPreview(null);
     });
     actions.appendChild(removeBtn);
@@ -281,39 +306,47 @@ export function createBugReportForm(config: BugReportFormConfig): BugReportFormR
   }
 
   // Options checkboxes
-  const optionsContainer = createElement('div', { class: 'relay-bug-form__options' });
+  const optionsContainer = createElement("div", {
+    class: "relay-bug-form__options",
+  });
 
   let screenshotCheckbox: CheckboxResult | null = null;
   if (showScreenshot) {
-    screenshotCheckbox = createCheckbox('Include screenshot', { checked: true });
+    screenshotCheckbox = createCheckbox("Include screenshot", {
+      checked: true,
+    });
     optionsContainer.appendChild(screenshotCheckbox.container);
   }
 
   let logsCheckbox: CheckboxResult | null = null;
   if (showLogs) {
-    logsCheckbox = createCheckbox('Include console logs', { checked: true }, 'Helps us debug the issue');
+    logsCheckbox = createCheckbox(
+      "Include console logs",
+      { checked: true },
+      "Helps us debug the issue",
+    );
     optionsContainer.appendChild(logsCheckbox.container);
   }
 
   // File upload
   let fileUpload: FileUploadResult | null = null;
   if (showAttachments) {
-    fileUpload = createFileUpload('Attachments', {
+    fileUpload = createFileUpload("Attachments", {
       multiple: true,
       maxFiles: maxAttachments,
       maxSize: maxAttachmentSize,
-      accept: 'image/*,video/*,.pdf,.log,.txt',
+      accept: "image/*,video/*,.pdf,.log,.txt",
     });
   }
 
   // Submit button
-  const submitBtn = createButton('Submit Bug Report', {
-    type: 'submit',
-    variant: 'primary',
+  const submitBtn = createButton("Submit Bug Report", {
+    type: "submit",
+    variant: "primary",
     fullWidth: true,
   });
 
-  const footer = createElement('div', { class: 'relay-bug-form__footer' });
+  const footer = createElement("div", { class: "relay-bug-form__footer" });
   footer.appendChild(submitBtn);
 
   // Assemble form
@@ -332,16 +365,16 @@ export function createBugReportForm(config: BugReportFormConfig): BugReportFormR
   form.appendChild(footer);
 
   // Form submission handler
-  form.addEventListener('submit', async (e) => {
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     // Validate
     if (!titleInput.getValue().trim()) {
-      titleInput.setError('Title is required');
+      titleInput.setError("Title is required");
       return;
     }
     if (!descriptionTextarea.getValue().trim()) {
-      descriptionTextarea.setError('Description is required');
+      descriptionTextarea.setError("Description is required");
       return;
     }
 
@@ -353,20 +386,21 @@ export function createBugReportForm(config: BugReportFormConfig): BugReportFormR
     const formData: BugReportFormData = {
       title: titleInput.getValue().trim(),
       description: descriptionTextarea.getValue().trim(),
-      severity: (severitySelect?.getValue() as BugReportFormData['severity']) || 'med',
+      severity:
+        (severitySelect?.getValue() as BugReportFormData["severity"]) || "med",
       includeScreenshot: screenshotCheckbox?.isChecked() ?? false,
       includeLogs: logsCheckbox?.isChecked() ?? false,
       attachments: fileUpload?.getFiles() || [],
     };
 
     // Show loading state
-    setButtonLoading(submitBtn, true, 'Submitting...');
+    setButtonLoading(submitBtn, true, "Submitting...");
 
     try {
       await onSubmit(formData);
     } catch (error) {
       setButtonLoading(submitBtn, false);
-      console.error('[Relay] Bug report submission failed:', error);
+      console.error("[Relay] Bug report submission failed:", error);
     }
   });
 
@@ -379,10 +413,10 @@ export function createBugReportForm(config: BugReportFormConfig): BugReportFormR
         const url = URL.createObjectURL(blob);
         screenshotImg.onload = () => URL.revokeObjectURL(url);
         screenshotImg.src = url;
-        screenshotContainer.style.display = 'flex';
+        screenshotContainer.style.display = "flex";
       } else {
-        screenshotImg.src = '';
-        screenshotContainer.style.display = 'none';
+        screenshotImg.src = "";
+        screenshotContainer.style.display = "none";
       }
     }
   };
@@ -390,9 +424,9 @@ export function createBugReportForm(config: BugReportFormConfig): BugReportFormR
   // Reset form
   const reset = () => {
     form.reset();
-    titleInput.setValue('');
+    titleInput.setValue("");
     titleInput.setError(null);
-    descriptionTextarea.setValue('');
+    descriptionTextarea.setValue("");
     descriptionTextarea.setError(null);
     if (severitySelect) severitySelect.setValue(defaultSeverity);
     if (screenshotCheckbox) screenshotCheckbox.setChecked(true);
@@ -405,15 +439,21 @@ export function createBugReportForm(config: BugReportFormConfig): BugReportFormR
   // Show success state
   const showSuccess = () => {
     clearChildren(form);
-    form.className = '';
+    form.className = "";
 
-    const successEl = createElement('div', { class: 'relay-bug-form__success' });
+    const successEl = createElement("div", {
+      class: "relay-bug-form__success",
+    });
 
-    const icon = createElement('div', { class: 'relay-bug-form__success-icon' });
+    const icon = createElement("div", {
+      class: "relay-bug-form__success-icon",
+    });
     icon.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>`;
 
-    const title = createElement('h4', {}, ['Thank you!']);
-    const message = createElement('p', {}, ['Your bug report has been submitted.']);
+    const title = createElement("h4", {}, ["Thank you!"]);
+    const message = createElement("p", {}, [
+      "Your bug report has been submitted.",
+    ]);
 
     successEl.appendChild(icon);
     successEl.appendChild(title);

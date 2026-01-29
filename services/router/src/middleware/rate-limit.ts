@@ -1,4 +1,4 @@
-import { MiddlewareHandler } from 'hono';
+import { MiddlewareHandler } from "hono";
 
 interface RateLimitConfig {
   windowMs: number;
@@ -13,7 +13,9 @@ const defaultConfig: RateLimitConfig = {
 // In-memory rate limit store (use Durable Objects in production)
 const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
 
-export function rateLimiter(config: Partial<RateLimitConfig> = {}): MiddlewareHandler {
+export function rateLimiter(
+  config: Partial<RateLimitConfig> = {},
+): MiddlewareHandler {
   const { windowMs, max } = { ...defaultConfig, ...config };
 
   return async (c, next) => {
@@ -35,18 +37,21 @@ export function rateLimiter(config: Partial<RateLimitConfig> = {}): MiddlewareHa
     }
 
     // Set headers
-    c.res.headers.set('X-RateLimit-Limit', max.toString());
-    c.res.headers.set('X-RateLimit-Remaining', Math.max(0, max - record.count).toString());
-    c.res.headers.set('X-RateLimit-Reset', record.resetAt.toString());
+    c.res.headers.set("X-RateLimit-Limit", max.toString());
+    c.res.headers.set(
+      "X-RateLimit-Remaining",
+      Math.max(0, max - record.count).toString(),
+    );
+    c.res.headers.set("X-RateLimit-Reset", record.resetAt.toString());
 
     if (record.count > max) {
       return c.json(
         {
-          error: 'rate_limit_exceeded',
-          message: 'Too many requests, please try again later',
+          error: "rate_limit_exceeded",
+          message: "Too many requests, please try again later",
           retryAfter: Math.ceil((record.resetAt - now) / 1000),
         },
-        429
+        429,
       );
     }
 
@@ -61,7 +66,7 @@ export function rateLimiter(config: Partial<RateLimitConfig> = {}): MiddlewareHa
 
 function getClientId(req: any): string {
   // Use API key if present
-  const apiKey = req.header('X-API-Key');
+  const apiKey = req.header("X-API-Key");
   if (apiKey) {
     // Hash the key to create identifier
     return `key:${apiKey.slice(-8)}`;
@@ -69,9 +74,9 @@ function getClientId(req: any): string {
 
   // Fall back to IP
   const ip =
-    req.header('CF-Connecting-IP') ||
-    req.header('X-Forwarded-For')?.split(',')[0] ||
-    'unknown';
+    req.header("CF-Connecting-IP") ||
+    req.header("X-Forwarded-For")?.split(",")[0] ||
+    "unknown";
 
   return `ip:${ip}`;
 }

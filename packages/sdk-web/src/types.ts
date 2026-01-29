@@ -5,10 +5,10 @@
 export interface RelayConfig {
   apiKey: string;
   endpoint?: string;
-  regionHint?: 'us-west' | 'eu-west';
+  regionHint?: "us-west" | "eu-west";
   user?: RelayUser;
   session?: RelaySession;
-  environment?: 'production' | 'staging' | 'development';
+  environment?: "production" | "staging" | "development";
   appVersion?: string;
   privacy?: PrivacyConfig;
   capture?: CaptureConfig;
@@ -43,7 +43,7 @@ export interface CaptureConfig {
 }
 
 export interface WidgetConfig {
-  position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
+  position?: "bottom-right" | "bottom-left" | "top-right" | "top-left";
   primaryColor?: string;
   showBugReport?: boolean;
   showFeedback?: boolean;
@@ -58,7 +58,7 @@ export interface WidgetConfig {
 export interface BugReportData {
   title?: string;
   description: string;
-  severity?: 'low' | 'med' | 'high' | 'critical';
+  severity?: "low" | "med" | "high" | "critical";
   tags?: string[];
   attachments?: File[];
   includeScreenshot?: boolean;
@@ -75,7 +75,7 @@ export interface FeedbackData {
 
 export interface Annotation {
   id: string;
-  type: 'arrow' | 'rectangle' | 'circle' | 'text' | 'highlight' | 'blur';
+  type: "arrow" | "rectangle" | "circle" | "text" | "highlight" | "blur";
   x: number;
   y: number;
   width?: number;
@@ -98,7 +98,7 @@ export interface TechnicalContext {
 }
 
 export interface ConsoleEntry {
-  level: 'log' | 'info' | 'warn' | 'error' | 'debug';
+  level: "log" | "info" | "warn" | "error" | "debug";
   message: string;
   args?: unknown[];
   timestamp: number;
@@ -139,7 +139,7 @@ export interface ReplayConfig {
     mouseInteraction?: boolean | Record<string, boolean>;
     scroll?: number;
     media?: number;
-    input?: 'last' | 'all';
+    input?: "last" | "all";
   };
 }
 
@@ -150,7 +150,7 @@ export interface Survey {
 }
 
 export interface SurveyDefinition {
-  type: 'nps' | 'csat' | 'ces' | 'custom';
+  type: "nps" | "csat" | "ces" | "custom";
   title: string;
   description?: string;
   questions: SurveyQuestion[];
@@ -159,7 +159,7 @@ export interface SurveyDefinition {
 
 export interface SurveyQuestion {
   id: string;
-  type: 'nps' | 'rating' | 'text' | 'single_choice' | 'multi_choice';
+  type: "nps" | "rating" | "text" | "single_choice" | "multi_choice";
   required: boolean;
   text: string;
   placeholder?: string;
@@ -174,25 +174,25 @@ export interface FeedbackItem {
   id: string;
   title: string;
   description?: string;
-  status: 'under_review' | 'planned' | 'in_progress' | 'shipped' | 'wont_do';
+  status: "under_review" | "planned" | "in_progress" | "shipped" | "wont_do";
   category?: string;
   voteCount: number;
   hasVoted: boolean;
 }
 
 export type RelayEventType =
-  | 'ready'
-  | 'open'
-  | 'close'
-  | 'bug:submitted'
-  | 'feedback:submitted'
-  | 'chat:opened'
-  | 'chat:closed'
-  | 'survey:shown'
-  | 'survey:completed'
-  | 'replay:started'
-  | 'replay:stopped'
-  | 'error';
+  | "ready"
+  | "open"
+  | "close"
+  | "bug:submitted"
+  | "feedback:submitted"
+  | "chat:opened"
+  | "chat:closed"
+  | "survey:shown"
+  | "survey:completed"
+  | "replay:started"
+  | "replay:stopped"
+  | "error";
 
 export type RelayEventHandler = (data?: unknown) => void;
 
@@ -200,7 +200,7 @@ export interface RelayInstance {
   init(config: RelayConfig): Promise<void>;
   identify(user: RelayUser): Promise<void>;
   setSessionAttributes(attrs: Record<string, unknown>): void;
-  open(tab?: 'bug' | 'feedback' | 'chat'): void;
+  open(tab?: "bug" | "feedback" | "chat"): void;
   close(): void;
   captureBug(data: BugReportData): Promise<string>;
   captureFeedback(data: FeedbackData): Promise<string>;

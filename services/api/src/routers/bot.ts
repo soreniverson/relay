@@ -1,18 +1,27 @@
-import { z } from 'zod';
-import { router, projectProcedure, publicProcedure, sdkProcedure } from '../lib/trpc';
-import { TRPCError } from '@trpc/server';
-import { prisma } from '../lib/prisma';
+import { z } from "zod";
+import {
+  router,
+  projectProcedure,
+  publicProcedure,
+  sdkProcedure,
+} from "../lib/trpc";
+import { TRPCError } from "@trpc/server";
+import { prisma } from "../lib/prisma";
 
 // Simple RAG search using text matching (in production, use pgvector)
-async function searchKnowledgeBase(projectId: string, query: string, limit = 5) {
+async function searchKnowledgeBase(
+  projectId: string,
+  query: string,
+  limit = 5,
+) {
   const articles = await prisma.article.findMany({
     where: {
       projectId,
-      status: 'published',
-      visibility: 'public',
+      status: "published",
+      visibility: "public",
       OR: [
-        { title: { contains: query, mode: 'insensitive' } },
-        { content: { contains: query, mode: 'insensitive' } },
+        { title: { contains: query, mode: "insensitive" } },
+        { content: { contains: query, mode: "insensitive" } },
       ],
     },
     select: {
@@ -45,16 +54,22 @@ async function generateBotResponse(
   },
   context: { id: string; title: string; content: string }[],
   conversationHistory: { role: string; content: string }[],
-  userMessage: string
+  userMessage: string,
 ) {
   // Build system prompt
-  const basePrompt = config.systemPrompt || `You are ${config.name}, a helpful AI support assistant. Be ${config.personality} and concise.`;
+  const basePrompt =
+    config.systemPrompt ||
+    `You are ${config.name}, a helpful AI support assistant. Be ${config.personality} and concise.`;
 
-  const contextText = context.length > 0
-    ? `\n\nRelevant knowledge base articles:\n${context.map(c => `## ${c.title}\n${c.content}`).join('\n\n')}`
-    : '';
+  const contextText =
+    context.length > 0
+      ? `\n\nRelevant knowledge base articles:\n${context.map((c) => `## ${c.title}\n${c.content}`).join("\n\n")}`
+      : "";
 
-  const systemPrompt = basePrompt + contextText + `\n\nIf you don't have enough information to answer, say so honestly and offer to connect the user with a human agent.`;
+  const systemPrompt =
+    basePrompt +
+    contextText +
+    `\n\nIf you don't have enough information to answer, say so honestly and offer to connect the user with a human agent.`;
 
   // In production, call OpenAI/Anthropic API here
   // For now, return a simulated response
@@ -64,7 +79,11 @@ async function generateBotResponse(
     return {
       content: `Based on our documentation, ${context[0].content.slice(0, 200)}... You can read more about this in our help center article: "${context[0].title}".`,
       confidence: 0.85,
-      retrievedArticles: context.map(c => ({ id: c.id, title: c.title, score: 1 })),
+      retrievedArticles: context.map((c) => ({
+        id: c.id,
+        title: c.title,
+        score: 1,
+      })),
       promptTokens: 500,
       completionTokens: 100,
     };
@@ -119,7 +138,7 @@ export const botRouter = router({
         fallbackMessage: z.string().optional(),
         availableHours: z.any().optional(),
         timezone: z.string().optional(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const { projectId, ...data } = input;
@@ -143,7 +162,7 @@ export const botRouter = router({
         projectId: z.string(),
         conversationId: z.string(),
         message: z.string().min(1),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       // Get bot config
@@ -153,8 +172,8 @@ export const botRouter = router({
 
       if (!config || !config.enabled) {
         throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'AI bot is not enabled for this project',
+          code: "FORBIDDEN",
+          message: "AI bot is not enabled for this project",
         });
       }
 
@@ -163,7 +182,7 @@ export const botRouter = router({
         where: { id: input.conversationId },
         include: {
           messages: {
-            orderBy: { createdAt: 'asc' },
+            orderBy: { createdAt: "asc" },
             take: 20, // Last 20 messages for context
           },
         },
@@ -171,8 +190,8 @@ export const botRouter = router({
 
       if (!conversation) {
         throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Conversation not found',
+          code: "NOT_FOUND",
+          message: "Conversation not found",
         });
       }
 
@@ -180,7 +199,7 @@ export const botRouter = router({
       await ctx.prisma.botMessage.create({
         data: {
           conversationId: input.conversationId,
-          role: 'user',
+          role: "user",
           content: input.message,
         },
       });
@@ -188,12 +207,12 @@ export const botRouter = router({
       // Search knowledge base
       const relevantArticles = await searchKnowledgeBase(
         input.projectId,
-        input.message
+        input.message,
       );
 
       // Build conversation history
       const history = conversation.messages.map((m) => ({
-        role: m.direction === 'inbound' ? 'user' : 'assistant',
+        role: m.direction === "inbound" ? "user" : "assistant",
         content: m.body,
       }));
 
@@ -209,14 +228,14 @@ export const botRouter = router({
         },
         relevantArticles,
         history,
-        input.message
+        input.message,
       );
 
       // Save bot message
       const botMessage = await ctx.prisma.botMessage.create({
         data: {
           conversationId: input.conversationId,
-          role: 'assistant',
+          role: "assistant",
           content: response.content,
           confidence: response.confidence,
           retrievedArticles: response.retrievedArticles as any,
@@ -230,7 +249,7 @@ export const botRouter = router({
         data: {
           projectId: input.projectId,
           conversationId: input.conversationId,
-          direction: 'outbound',
+          direction: "outbound",
           body: response.content,
           meta: { fromBot: true, botMessageId: botMessage.id },
         },
@@ -270,14 +289,14 @@ export const botRouter = router({
       z.object({
         conversationId: z.string(),
         draft: z.string().optional(),
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
       const conversation = await ctx.prisma.conversation.findUnique({
         where: { id: input.conversationId },
         include: {
           messages: {
-            orderBy: { createdAt: 'desc' },
+            orderBy: { createdAt: "desc" },
             take: 5,
           },
         },
@@ -285,13 +304,13 @@ export const botRouter = router({
 
       if (!conversation) {
         throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Conversation not found',
+          code: "NOT_FOUND",
+          message: "Conversation not found",
         });
       }
 
       const lastUserMessage = conversation.messages.find(
-        (m) => m.direction === 'inbound'
+        (m) => m.direction === "inbound",
       );
 
       if (!lastUserMessage) {
@@ -306,25 +325,32 @@ export const botRouter = router({
       const relevantArticles = await searchKnowledgeBase(
         conversation.projectId,
         lastUserMessage.body,
-        3
+        3,
       );
 
       // Generate suggested replies (in production, call LLM)
       const suggestedReplies = [
-        `Thanks for reaching out! ${relevantArticles[0]?.content.slice(0, 100) || 'Let me help you with that.'}`,
+        `Thanks for reaching out! ${relevantArticles[0]?.content.slice(0, 100) || "Let me help you with that."}`,
         `I understand your concern. Could you provide more details about the issue?`,
         `I'd be happy to help! Let me look into this for you.`,
       ];
 
       // Detect intent (simplified - in production use classifier)
-      let detectedIntent = 'general_inquiry';
+      let detectedIntent = "general_inquiry";
       const messageText = lastUserMessage.body.toLowerCase();
-      if (messageText.includes('refund') || messageText.includes('money back')) {
-        detectedIntent = 'refund_request';
-      } else if (messageText.includes('bug') || messageText.includes('error') || messageText.includes('broken')) {
-        detectedIntent = 'bug_report';
-      } else if (messageText.includes('how') || messageText.includes('help')) {
-        detectedIntent = 'how_to_question';
+      if (
+        messageText.includes("refund") ||
+        messageText.includes("money back")
+      ) {
+        detectedIntent = "refund_request";
+      } else if (
+        messageText.includes("bug") ||
+        messageText.includes("error") ||
+        messageText.includes("broken")
+      ) {
+        detectedIntent = "bug_report";
+      } else if (messageText.includes("how") || messageText.includes("help")) {
+        detectedIntent = "how_to_question";
       }
 
       return {
@@ -345,7 +371,7 @@ export const botRouter = router({
         where: { id: input.conversationId },
         include: {
           messages: {
-            orderBy: { createdAt: 'asc' },
+            orderBy: { createdAt: "asc" },
           },
           user: true,
         },
@@ -353,35 +379,46 @@ export const botRouter = router({
 
       if (!conversation) {
         throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Conversation not found',
+          code: "NOT_FOUND",
+          message: "Conversation not found",
         });
       }
 
       // In production, call LLM to summarize
       const messageCount = conversation.messages.length;
       const userMessages = conversation.messages.filter(
-        (m) => m.direction === 'inbound'
+        (m) => m.direction === "inbound",
       );
 
       // Simple sentiment analysis (in production use model)
-      let sentiment: 'positive' | 'neutral' | 'negative' = 'neutral';
-      const allText = userMessages.map((m) => m.body).join(' ').toLowerCase();
-      if (allText.includes('thank') || allText.includes('great') || allText.includes('awesome')) {
-        sentiment = 'positive';
-      } else if (allText.includes('frustrated') || allText.includes('angry') || allText.includes('terrible')) {
-        sentiment = 'negative';
+      let sentiment: "positive" | "neutral" | "negative" = "neutral";
+      const allText = userMessages
+        .map((m) => m.body)
+        .join(" ")
+        .toLowerCase();
+      if (
+        allText.includes("thank") ||
+        allText.includes("great") ||
+        allText.includes("awesome")
+      ) {
+        sentiment = "positive";
+      } else if (
+        allText.includes("frustrated") ||
+        allText.includes("angry") ||
+        allText.includes("terrible")
+      ) {
+        sentiment = "negative";
       }
 
       return {
-        summary: `${messageCount} message conversation with ${conversation.user?.name || 'user'}. Topic: ${conversation.subject || 'General inquiry'}.`,
+        summary: `${messageCount} message conversation with ${conversation.user?.name || "user"}. Topic: ${conversation.subject || "General inquiry"}.`,
         keyPoints: [
-          `User initiated conversation about: ${conversation.subject || 'general inquiry'}`,
+          `User initiated conversation about: ${conversation.subject || "general inquiry"}`,
           `${messageCount} messages exchanged`,
           `Current status: ${conversation.status}`,
         ],
         sentiment,
-        suggestedTags: ['support', sentiment],
+        suggestedTags: ["support", sentiment],
       };
     }),
 });

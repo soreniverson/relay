@@ -1,27 +1,36 @@
-import { z } from 'zod';
-import { router, projectProcedure, publicProcedure, sdkProcedure } from '../lib/trpc';
-import { TRPCError } from '@trpc/server';
+import { z } from "zod";
+import {
+  router,
+  projectProcedure,
+  publicProcedure,
+  sdkProcedure,
+} from "../lib/trpc";
+import { TRPCError } from "@trpc/server";
 
 // Tour step schema
 const tourStepSchema = z.object({
   id: z.string(),
-  type: z.enum(['tooltip', 'modal', 'highlight', 'beacon']),
+  type: z.enum(["tooltip", "modal", "highlight", "beacon"]),
   target: z.string().optional(),
   title: z.string().optional(),
   content: z.string(),
   image: z.string().optional(),
   video: z.string().optional(),
-  position: z.enum(['top', 'bottom', 'left', 'right', 'auto']).optional(),
-  primaryButton: z.object({
-    label: z.string(),
-    action: z.enum(['next', 'complete', 'url']),
-    url: z.string().optional(),
-  }).optional(),
-  secondaryButton: z.object({
-    label: z.string(),
-    action: z.enum(['skip', 'back', 'dismiss']),
-  }).optional(),
-  advanceOn: z.enum(['click', 'input', 'custom']).optional(),
+  position: z.enum(["top", "bottom", "left", "right", "auto"]).optional(),
+  primaryButton: z
+    .object({
+      label: z.string(),
+      action: z.enum(["next", "complete", "url"]),
+      url: z.string().optional(),
+    })
+    .optional(),
+  secondaryButton: z
+    .object({
+      label: z.string(),
+      action: z.enum(["skip", "back", "dismiss"]),
+    })
+    .optional(),
+  advanceOn: z.enum(["click", "input", "custom"]).optional(),
   advanceSelector: z.string().optional(),
 });
 
@@ -44,7 +53,7 @@ export const toursRouter = router({
       z.object({
         projectId: z.string(),
         enabled: z.boolean().optional(),
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
       const tours = await ctx.prisma.tour.findMany({
@@ -52,7 +61,7 @@ export const toursRouter = router({
           projectId: input.projectId,
           ...(input.enabled !== undefined && { enabled: input.enabled }),
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
       });
 
       return tours;
@@ -71,7 +80,7 @@ export const toursRouter = router({
       });
 
       if (!tour) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Tour not found' });
+        throw new TRPCError({ code: "NOT_FOUND", message: "Tour not found" });
       }
 
       return tour;
@@ -88,7 +97,7 @@ export const toursRouter = router({
         showOnce: z.boolean().default(true),
         dismissible: z.boolean().default(true),
         enabled: z.boolean().default(false),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const tour = await ctx.prisma.tour.create({
@@ -118,7 +127,7 @@ export const toursRouter = router({
         showOnce: z.boolean().optional(),
         dismissible: z.boolean().optional(),
         enabled: z.boolean().optional(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const { id, ...data } = input;
@@ -165,13 +174,17 @@ export const toursRouter = router({
       });
 
       if (!tour) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Tour not found' });
+        throw new TRPCError({ code: "NOT_FOUND", message: "Tour not found" });
       }
 
       const [totalStarted, completed, dismissed] = await Promise.all([
         ctx.prisma.tourProgress.count({ where: { tourId: input.id } }),
-        ctx.prisma.tourProgress.count({ where: { tourId: input.id, completed: true } }),
-        ctx.prisma.tourProgress.count({ where: { tourId: input.id, dismissed: true } }),
+        ctx.prisma.tourProgress.count({
+          where: { tourId: input.id, completed: true },
+        }),
+        ctx.prisma.tourProgress.count({
+          where: { tourId: input.id, dismissed: true },
+        }),
       ]);
 
       // Get step-by-step funnel
@@ -190,9 +203,12 @@ export const toursRouter = router({
             stepIndex: index,
             title: step.title || `Step ${index + 1}`,
             reached: reachedCount,
-            dropOffRate: totalStarted > 0 ? ((totalStarted - reachedCount) / totalStarted) * 100 : 0,
+            dropOffRate:
+              totalStarted > 0
+                ? ((totalStarted - reachedCount) / totalStarted) * 100
+                : 0,
           };
-        })
+        }),
       );
 
       return {
@@ -217,7 +233,7 @@ export const toursRouter = router({
         sessionId: z.string(),
         url: z.string().optional(),
         userTraits: z.record(z.any()).optional(),
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
       // Get all enabled tours
@@ -243,7 +259,11 @@ export const toursRouter = router({
         const tourProgress = progressMap.get(tour.id);
 
         // If showOnce and already completed/dismissed, skip
-        if (tour.showOnce && tourProgress && (tourProgress.completed || tourProgress.dismissed)) {
+        if (
+          tour.showOnce &&
+          tourProgress &&
+          (tourProgress.completed || tourProgress.dismissed)
+        ) {
           return false;
         }
 
@@ -288,7 +308,7 @@ export const toursRouter = router({
         tourId: z.string(),
         sessionId: z.string(),
         userId: z.string().optional(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       // Create or update progress
@@ -331,7 +351,7 @@ export const toursRouter = router({
         currentStep: z.number().optional(),
         completed: z.boolean().optional(),
         dismissed: z.boolean().optional(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const progress = await ctx.prisma.tourProgress.update({

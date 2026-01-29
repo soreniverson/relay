@@ -3,31 +3,73 @@
 // Main widget class that coordinates all UI components
 // ============================================================================
 
-import { createElement, createStyleSheet } from './utils/dom';
-import { generateBaseCSS, generateResponsiveCSS } from './styles/base';
-import { onThemeChange, type ThemeMode } from './styles/theme';
-import { sharedComponentStyles } from './components/shared';
-import { formComponentStyles } from './components/forms';
-import { screenshotComponentStyles } from './components/screenshot';
-import { chatComponentStyles } from './components/chat';
-import { roadmapComponentStyles } from './components/roadmap';
-import { pageStyles } from './components/pages';
+import { createElement, createStyleSheet } from "./utils/dom";
+import { generateBaseCSS, generateResponsiveCSS } from "./styles/base";
+import { onThemeChange, type ThemeMode } from "./styles/theme";
+import { sharedComponentStyles } from "./components/shared";
+import { formComponentStyles } from "./components/forms";
+import { screenshotComponentStyles } from "./components/screenshot";
+import { chatComponentStyles } from "./components/chat";
+import { roadmapComponentStyles } from "./components/roadmap";
+import { pageStyles } from "./components/pages";
 
-import { createTrigger, triggerStyles, type TriggerResult } from './components/Trigger';
-import { createModal, modalStyles, type ModalResult } from './components/Modal';
-import { createBottomNav, bottomNavStyles, type BottomNavResult, type NavTab } from './components/BottomNav';
-import { createHomePage, type HomePageResult } from './components/pages/HomePage';
+import {
+  createTrigger,
+  triggerStyles,
+  type TriggerResult,
+} from "./components/Trigger";
+import { createModal, modalStyles, type ModalResult } from "./components/Modal";
+import {
+  createBottomNav,
+  bottomNavStyles,
+  type BottomNavResult,
+  type NavTab,
+} from "./components/BottomNav";
+import {
+  createHomePage,
+  type HomePageResult,
+} from "./components/pages/HomePage";
 
-import { createBugReportForm, type BugReportFormResult, type BugReportFormData } from './components/forms/BugReportForm';
-import { createFeedbackForm, type FeedbackFormResult, type FeedbackFormData } from './components/forms/FeedbackForm';
-import { createFeatureRequestForm, type FeatureRequestFormResult, type FeatureRequestFormData } from './components/forms/FeatureRequestForm';
-import { createScreenshotEditor, type ScreenshotEditorResult } from './components/screenshot/ScreenshotEditor';
+import {
+  createBugReportForm,
+  type BugReportFormResult,
+  type BugReportFormData,
+} from "./components/forms/BugReportForm";
+import {
+  createFeedbackForm,
+  type FeedbackFormResult,
+  type FeedbackFormData,
+} from "./components/forms/FeedbackForm";
+import {
+  createFeatureRequestForm,
+  type FeatureRequestFormResult,
+  type FeatureRequestFormData,
+} from "./components/forms/FeatureRequestForm";
+import {
+  createScreenshotEditor,
+  type ScreenshotEditorResult,
+} from "./components/screenshot/ScreenshotEditor";
 
-import { createConversationList, type ConversationListResult, type Conversation } from './components/chat/ConversationList';
-import { createMessageThread, type MessageThreadResult, type Message } from './components/chat/MessageThread';
-import { createChatInput, type ChatInputResult } from './components/chat/ChatInput';
+import {
+  createConversationList,
+  type ConversationListResult,
+  type Conversation,
+} from "./components/chat/ConversationList";
+import {
+  createMessageThread,
+  type MessageThreadResult,
+  type Message,
+} from "./components/chat/MessageThread";
+import {
+  createChatInput,
+  type ChatInputResult,
+} from "./components/chat/ChatInput";
 
-import { createRoadmapList, type RoadmapListResult, type RoadmapItemData } from './components/roadmap/RoadmapList';
+import {
+  createRoadmapList,
+  type RoadmapListResult,
+  type RoadmapItemData,
+} from "./components/roadmap/RoadmapList";
 
 import {
   getMockConversations,
@@ -36,11 +78,17 @@ import {
   toggleMockVote,
   addMockMessage,
   createMockConversation,
-} from './mockData';
+} from "./mockData";
 
-import type { Annotation, WidgetConfig } from '../types';
+import type { Annotation, WidgetConfig } from "../types";
 
-export type WidgetView = 'home' | 'messages' | 'messages-thread' | 'roadmap' | 'bug-report' | 'feature-request';
+export type WidgetView =
+  | "home"
+  | "messages"
+  | "messages-thread"
+  | "roadmap"
+  | "bug-report"
+  | "feature-request";
 
 // API response types
 export interface ApiConversation {
@@ -48,7 +96,7 @@ export interface ApiConversation {
   subject: string | null;
   lastMessage: {
     body: string;
-    direction: 'inbound' | 'outbound';
+    direction: "inbound" | "outbound";
     createdAt: string;
   } | null;
   unreadCount: number;
@@ -58,7 +106,7 @@ export interface ApiConversation {
 export interface ApiMessage {
   id: string;
   body: string;
-  direction: 'inbound' | 'outbound';
+  direction: "inbound" | "outbound";
   createdAt: string;
 }
 
@@ -66,23 +114,35 @@ export interface ApiRoadmapItem {
   id: string;
   title: string;
   description: string | null;
-  status: 'planned' | 'in_progress' | 'shipped';
+  status: "planned" | "in_progress" | "shipped";
   voteCount: number;
   hasVoted: boolean;
 }
 
 export interface WidgetCallbacks {
   // Form submissions
-  onBugSubmit: (data: BugReportFormData & { screenshotBlob?: Blob; annotations?: Annotation[] }) => Promise<void>;
+  onBugSubmit: (
+    data: BugReportFormData & {
+      screenshotBlob?: Blob;
+      annotations?: Annotation[];
+    },
+  ) => Promise<void>;
   onFeedbackSubmit: (data: FeedbackFormData) => Promise<void>;
   onFeatureRequestSubmit: (data: FeatureRequestFormData) => Promise<void>;
   onScreenshotCapture: () => Promise<Blob | null>;
 
   // Chat API
   onFetchConversations: () => Promise<ApiConversation[]>;
-  onFetchMessages: (conversationId: string) => Promise<{ messages: ApiMessage[]; hasMore: boolean }>;
-  onSendMessage: (conversationId: string, body: string) => Promise<{ messageId: string }>;
-  onStartConversation: (message: string) => Promise<{ conversationId: string; messageId: string }>;
+  onFetchMessages: (
+    conversationId: string,
+  ) => Promise<{ messages: ApiMessage[]; hasMore: boolean }>;
+  onSendMessage: (
+    conversationId: string,
+    body: string,
+  ) => Promise<{ messageId: string }>;
+  onStartConversation: (
+    message: string,
+  ) => Promise<{ conversationId: string; messageId: string }>;
   onMarkMessagesRead: (conversationId: string) => Promise<void>;
 
   // Roadmap API
@@ -269,7 +329,7 @@ export class Widget {
   private roadmapItems: RoadmapItemData[] = [];
 
   // State
-  private currentView: WidgetView = 'home';
+  private currentView: WidgetView = "home";
   private isOpen = false;
   private screenshotBlob: Blob | null = null;
   private annotations: Annotation[] = [];
@@ -289,7 +349,7 @@ export class Widget {
   constructor(options: WidgetOptions) {
     this.config = options.config;
     this.callbacks = options.callbacks;
-    this.themeMode = options.themeMode || 'auto';
+    this.themeMode = options.themeMode || "auto";
     this.useMockData = options.useMockData ?? false;
   }
 
@@ -300,23 +360,25 @@ export class Widget {
     if (this.container) return;
 
     // Create container
-    this.container = createElement('div', { id: 'relay-widget' }) as HTMLDivElement;
+    this.container = createElement("div", {
+      id: "relay-widget",
+    }) as HTMLDivElement;
 
     // Inject styles
     const styles = this.generateStyles();
-    const styleSheet = createStyleSheet(styles, 'relay-widget-styles');
+    const styleSheet = createStyleSheet(styles, "relay-widget-styles");
     this.container.appendChild(styleSheet);
 
     // Create trigger button
     this.trigger = createTrigger({
-      position: this.config.position || 'bottom-right',
+      position: this.config.position || "bottom-right",
       onClick: () => this.toggle(),
     });
     this.container.appendChild(this.trigger.element);
 
     // Create modal
     this.modal = createModal({
-      position: this.config.position || 'bottom-right',
+      position: this.config.position || "bottom-right",
       onClose: () => this.handleClose(),
     });
     this.container.appendChild(this.modal.overlay);
@@ -324,7 +386,7 @@ export class Widget {
 
     // Create bottom nav
     this.bottomNav = createBottomNav({
-      activeTab: 'home',
+      activeTab: "home",
       showMessages: this.config.showChat !== false,
       showRoadmap: this.config.showRoadmap !== false,
       onTabChange: (tab) => this.handleNavChange(tab),
@@ -332,18 +394,18 @@ export class Widget {
 
     // Create home page
     this.homePage = createHomePage({
-      greeting: 'Hi there!',
-      subtitle: 'How can we help you today?',
+      greeting: "Hi there!",
+      subtitle: "How can we help you today?",
       onChatSubmit: (message) => this.handleChatSubmit(message),
-      onReportBug: () => this.navigateTo('bug-report'),
-      onRequestFeature: () => this.navigateTo('feature-request'),
+      onReportBug: () => this.navigateTo("bug-report"),
+      onRequestFeature: () => this.navigateTo("feature-request"),
     });
 
     // Set up initial content
     this.renderCurrentView();
 
     // Listen for theme changes
-    if (this.themeMode === 'auto') {
+    if (this.themeMode === "auto") {
       this.removeThemeListener = onThemeChange(() => {
         this.updateTheme();
       });
@@ -429,7 +491,7 @@ export class Widget {
     // Reset to home after close animation
     setTimeout(() => {
       if (!this.isOpen) {
-        this.navigateTo('home');
+        this.navigateTo("home");
       }
     }, 200);
   }
@@ -484,9 +546,12 @@ export class Widget {
     // Helper to scope CSS selectors with #relay-widget
     const scopeCSS = (css: string): string => {
       // First, add #relay-widget prefix to all .relay- selectors
-      let scoped = css.replace(/\.relay-/g, '#relay-widget .relay-');
+      let scoped = css.replace(/\.relay-/g, "#relay-widget .relay-");
       // Then fix any double-prefixing that might occur
-      scoped = scoped.replace(/#relay-widget\s+#relay-widget/g, '#relay-widget');
+      scoped = scoped.replace(
+        /#relay-widget\s+#relay-widget/g,
+        "#relay-widget",
+      );
       return scoped;
     };
 
@@ -507,7 +572,7 @@ export class Widget {
   }
 
   private updateTheme(): void {
-    const styleEl = this.container?.querySelector('#relay-widget-styles');
+    const styleEl = this.container?.querySelector("#relay-widget-styles");
     if (styleEl) {
       styleEl.textContent = this.generateStyles();
     }
@@ -520,14 +585,14 @@ export class Widget {
 
   private handleNavChange(tab: NavTab): void {
     switch (tab) {
-      case 'home':
-        this.navigateTo('home');
+      case "home":
+        this.navigateTo("home");
         break;
-      case 'messages':
-        this.navigateTo('messages');
+      case "messages":
+        this.navigateTo("messages");
         break;
-      case 'roadmap':
-        this.navigateTo('roadmap');
+      case "roadmap":
+        this.navigateTo("roadmap");
         break;
     }
   }
@@ -537,12 +602,12 @@ export class Widget {
     this.renderCurrentView();
 
     // Update bottom nav if on main views
-    if (view === 'home' || view === 'messages' || view === 'roadmap') {
+    if (view === "home" || view === "messages" || view === "roadmap") {
       this.bottomNav?.setActiveTab(view as NavTab);
     }
 
     // Capture screenshot when navigating to bug report
-    if (view === 'bug-report' && !this.screenshotBlob) {
+    if (view === "bug-report" && !this.screenshotBlob) {
       this.captureScreenshot();
     }
   }
@@ -551,25 +616,25 @@ export class Widget {
     if (!this.modal) return;
 
     const contentEl = this.modal.contentEl;
-    contentEl.innerHTML = '';
+    contentEl.innerHTML = "";
 
     switch (this.currentView) {
-      case 'home':
+      case "home":
         this.renderHomeView(contentEl);
         break;
-      case 'messages':
+      case "messages":
         this.renderMessagesView(contentEl);
         break;
-      case 'messages-thread':
+      case "messages-thread":
         this.renderMessageThreadView(contentEl);
         break;
-      case 'roadmap':
+      case "roadmap":
         this.renderRoadmapView(contentEl);
         break;
-      case 'bug-report':
+      case "bug-report":
         this.renderBugReportView(contentEl);
         break;
-      case 'feature-request':
+      case "feature-request":
         this.renderFeatureRequestView(contentEl);
         break;
       default:
@@ -579,30 +644,34 @@ export class Widget {
 
   private renderHomeView(container: HTMLElement): void {
     // Create a wrapper for home content + nav
-    const wrapper = createElement('div', {
-      class: 'relay-view-wrapper',
+    const wrapper = createElement("div", {
+      class: "relay-view-wrapper",
     });
-    wrapper.style.cssText = 'display: flex; flex-direction: column; height: 100%;';
+    wrapper.style.cssText =
+      "display: flex; flex-direction: column; height: 100%;";
 
     // Minimal header with just close button
-    const header = createElement('div', { class: 'relay-page-header' });
-    header.style.borderBottom = 'none';
-    header.style.justifyContent = 'flex-end';
+    const header = createElement("div", { class: "relay-page-header" });
+    header.style.borderBottom = "none";
+    header.style.justifyContent = "flex-end";
 
-    const closeBtn = createElement('button', { type: 'button', class: 'relay-page-header__close' });
+    const closeBtn = createElement("button", {
+      type: "button",
+      class: "relay-page-header__close",
+    });
     closeBtn.innerHTML = CLOSE_ICON;
-    closeBtn.setAttribute('aria-label', 'Close');
-    closeBtn.addEventListener('click', () => this.close());
+    closeBtn.setAttribute("aria-label", "Close");
+    closeBtn.addEventListener("click", () => this.close());
     header.appendChild(closeBtn);
 
     // Home page content
     if (!this.homePage) {
       this.homePage = createHomePage({
-        greeting: 'Hi there!',
-        subtitle: 'How can we help you today?',
+        greeting: "Hi there!",
+        subtitle: "How can we help you today?",
         onChatSubmit: (message) => this.handleChatSubmit(message),
-        onReportBug: () => this.navigateTo('bug-report'),
-        onRequestFeature: () => this.navigateTo('feature-request'),
+        onReportBug: () => this.navigateTo("bug-report"),
+        onRequestFeature: () => this.navigateTo("feature-request"),
       });
     }
 
@@ -616,21 +685,22 @@ export class Widget {
   }
 
   private renderMessagesView(container: HTMLElement): void {
-    const wrapper = createElement('div');
-    wrapper.style.cssText = 'display: flex; flex-direction: column; height: 100%;';
+    const wrapper = createElement("div");
+    wrapper.style.cssText =
+      "display: flex; flex-direction: column; height: 100%;";
 
     // Header
-    const header = this.createPageHeader('Messages', false);
+    const header = this.createPageHeader("Messages", false);
 
     // Content - Conversation list
-    const content = createElement('div', { class: 'relay-page-content' });
+    const content = createElement("div", { class: "relay-page-content" });
 
     // Create list with loading state initially
     this.conversationList = createConversationList({
       conversations: [],
       onSelect: (conversation) => {
         this.currentConversation = conversation;
-        this.navigateTo('messages-thread');
+        this.navigateTo("messages-thread");
       },
       loading: true,
     });
@@ -656,44 +726,61 @@ export class Widget {
         this.conversationList?.setConversations(conversations);
         this.conversationList?.setLoading(false);
         // Update unread badge
-        const totalUnread = conversations.reduce((sum, c) => sum + c.unreadCount, 0);
+        const totalUnread = conversations.reduce(
+          (sum, c) => sum + c.unreadCount,
+          0,
+        );
         this.bottomNav?.setUnreadCount(totalUnread);
       } else {
         const conversations = await this.callbacks.onFetchConversations();
-        this.conversationList?.setConversations(conversations.map(c => ({
-          id: c.id,
-          subject: c.subject || 'New conversation',
-          lastMessage: c.lastMessage || { body: '', direction: 'inbound' as const, createdAt: c.createdAt },
-          unreadCount: c.unreadCount,
-          createdAt: c.createdAt,
-        })));
+        this.conversationList?.setConversations(
+          conversations.map((c) => ({
+            id: c.id,
+            subject: c.subject || "New conversation",
+            lastMessage: c.lastMessage || {
+              body: "",
+              direction: "inbound" as const,
+              createdAt: c.createdAt,
+            },
+            unreadCount: c.unreadCount,
+            createdAt: c.createdAt,
+          })),
+        );
         this.conversationList?.setLoading(false);
         // Update unread badge
-        const totalUnread = conversations.reduce((sum, c) => sum + c.unreadCount, 0);
+        const totalUnread = conversations.reduce(
+          (sum, c) => sum + c.unreadCount,
+          0,
+        );
         this.bottomNav?.setUnreadCount(totalUnread);
       }
     } catch (error) {
-      console.error('[Relay] Failed to fetch conversations:', error);
+      console.error("[Relay] Failed to fetch conversations:", error);
       this.conversationList?.setLoading(false);
-      this.showError('Failed to load messages');
+      this.showError("Failed to load messages");
     }
   }
 
   private renderMessageThreadView(container: HTMLElement): void {
     if (!this.currentConversation) {
-      this.navigateTo('messages');
+      this.navigateTo("messages");
       return;
     }
 
-    const wrapper = createElement('div');
-    wrapper.style.cssText = 'display: flex; flex-direction: column; height: 100%;';
+    const wrapper = createElement("div");
+    wrapper.style.cssText =
+      "display: flex; flex-direction: column; height: 100%;";
 
     // Header with back button
-    const header = this.createPageHeader(this.currentConversation.subject || 'Conversation', true, () => {
-      this.stopMessagePolling();
-      this.currentConversation = null;
-      this.navigateTo('messages');
-    });
+    const header = this.createPageHeader(
+      this.currentConversation.subject || "Conversation",
+      true,
+      () => {
+        this.stopMessagePolling();
+        this.currentConversation = null;
+        this.navigateTo("messages");
+      },
+    );
 
     // Message thread with loading state
     this.messageThread = createMessageThread({
@@ -704,7 +791,7 @@ export class Widget {
 
     // Chat input
     this.chatInput = createChatInput({
-      placeholder: 'Type a message...',
+      placeholder: "Type a message...",
       onSend: (message) => this.handleMessageSend(message),
     });
 
@@ -725,22 +812,28 @@ export class Widget {
     try {
       if (this.useMockData) {
         const messages = getMockMessages(this.currentConversation.id);
-        this.messageThread?.setMessages(messages.map(m => ({
-          id: m.id,
-          body: m.body,
-          direction: m.direction,
-          createdAt: m.createdAt,
-        })));
+        this.messageThread?.setMessages(
+          messages.map((m) => ({
+            id: m.id,
+            body: m.body,
+            direction: m.direction,
+            createdAt: m.createdAt,
+          })),
+        );
         this.messageThread?.setLoading(false);
         setTimeout(() => this.messageThread?.scrollToBottom(), 0);
       } else {
-        const { messages, hasMore } = await this.callbacks.onFetchMessages(this.currentConversation.id);
-        this.messageThread?.setMessages(messages.map(m => ({
-          id: m.id,
-          body: m.body,
-          direction: m.direction,
-          createdAt: m.createdAt,
-        })));
+        const { messages, hasMore } = await this.callbacks.onFetchMessages(
+          this.currentConversation.id,
+        );
+        this.messageThread?.setMessages(
+          messages.map((m) => ({
+            id: m.id,
+            body: m.body,
+            direction: m.direction,
+            createdAt: m.createdAt,
+          })),
+        );
         this.messageThread?.setLoading(false);
         setTimeout(() => this.messageThread?.scrollToBottom(), 0);
 
@@ -748,16 +841,16 @@ export class Widget {
         await this.callbacks.onMarkMessagesRead(this.currentConversation.id);
       }
     } catch (error) {
-      console.error('[Relay] Failed to fetch messages:', error);
+      console.error("[Relay] Failed to fetch messages:", error);
       this.messageThread?.setLoading(false);
-      this.showError('Failed to load messages');
+      this.showError("Failed to load messages");
     }
   }
 
   private startMessagePolling(): void {
     // Poll every 5 seconds for new messages
     this.messagePollingInterval = setInterval(() => {
-      if (this.currentConversation && this.currentView === 'messages-thread') {
+      if (this.currentConversation && this.currentView === "messages-thread") {
         this.pollForNewMessages();
       }
     }, 5000);
@@ -774,29 +867,34 @@ export class Widget {
     if (!this.currentConversation || this.useMockData) return;
 
     try {
-      const { messages } = await this.callbacks.onFetchMessages(this.currentConversation.id);
+      const { messages } = await this.callbacks.onFetchMessages(
+        this.currentConversation.id,
+      );
       // Update thread with new messages (component handles deduplication)
-      this.messageThread?.setMessages(messages.map(m => ({
-        id: m.id,
-        body: m.body,
-        direction: m.direction,
-        createdAt: m.createdAt,
-      })));
+      this.messageThread?.setMessages(
+        messages.map((m) => ({
+          id: m.id,
+          body: m.body,
+          direction: m.direction,
+          createdAt: m.createdAt,
+        })),
+      );
     } catch (error) {
       // Silently fail polling - don't show error for background refresh
-      console.warn('[Relay] Message polling failed:', error);
+      console.warn("[Relay] Message polling failed:", error);
     }
   }
 
   private renderBugReportView(container: HTMLElement): void {
-    const wrapper = createElement('div');
-    wrapper.style.cssText = 'display: flex; flex-direction: column; height: 100%;';
+    const wrapper = createElement("div");
+    wrapper.style.cssText =
+      "display: flex; flex-direction: column; height: 100%;";
 
     // Header with back button
-    const header = this.createPageHeader('Report a Bug', true);
+    const header = this.createPageHeader("Report a Bug", true);
 
     // Form content
-    const content = createElement('div', { class: 'relay-page-content' });
+    const content = createElement("div", { class: "relay-page-content" });
 
     if (!this.bugReportForm) {
       this.bugReportForm = createBugReportForm({
@@ -824,14 +922,15 @@ export class Widget {
   }
 
   private renderFeatureRequestView(container: HTMLElement): void {
-    const wrapper = createElement('div');
-    wrapper.style.cssText = 'display: flex; flex-direction: column; height: 100%;';
+    const wrapper = createElement("div");
+    wrapper.style.cssText =
+      "display: flex; flex-direction: column; height: 100%;";
 
     // Header with back button
-    const header = this.createPageHeader('Request a Feature', true);
+    const header = this.createPageHeader("Request a Feature", true);
 
     // Form content
-    const content = createElement('div', { class: 'relay-page-content' });
+    const content = createElement("div", { class: "relay-page-content" });
 
     if (!this.featureRequestForm) {
       this.featureRequestForm = createFeatureRequestForm({
@@ -850,14 +949,15 @@ export class Widget {
   }
 
   private renderRoadmapView(container: HTMLElement): void {
-    const wrapper = createElement('div');
-    wrapper.style.cssText = 'display: flex; flex-direction: column; height: 100%;';
+    const wrapper = createElement("div");
+    wrapper.style.cssText =
+      "display: flex; flex-direction: column; height: 100%;";
 
     // Header
-    const header = this.createPageHeader('Roadmap', false);
+    const header = this.createPageHeader("Roadmap", false);
 
     // Content - Roadmap list
-    const content = createElement('div', { class: 'relay-page-content' });
+    const content = createElement("div", { class: "relay-page-content" });
 
     // Create list with loading state
     this.roadmapList = createRoadmapList({
@@ -890,10 +990,10 @@ export class Widget {
         this.roadmapList?.setLoading(false);
       } else {
         const items = await this.callbacks.onFetchRoadmap();
-        this.roadmapItems = items.map(item => ({
+        this.roadmapItems = items.map((item) => ({
           id: item.id,
           title: item.title,
-          description: item.description || '',
+          description: item.description || "",
           status: item.status,
           voteCount: item.voteCount,
           hasVoted: item.hasVoted,
@@ -902,20 +1002,27 @@ export class Widget {
         this.roadmapList?.setLoading(false);
       }
     } catch (error) {
-      console.error('[Relay] Failed to fetch roadmap:', error);
+      console.error("[Relay] Failed to fetch roadmap:", error);
       this.roadmapList?.setLoading(false);
-      this.showError('Failed to load roadmap');
+      this.showError("Failed to load roadmap");
     }
   }
 
-  private createPageHeader(title: string, showBack: boolean, onBack?: () => void): HTMLElement {
-    const header = createElement('div', { class: 'relay-page-header' });
+  private createPageHeader(
+    title: string,
+    showBack: boolean,
+    onBack?: () => void,
+  ): HTMLElement {
+    const header = createElement("div", { class: "relay-page-header" });
 
     if (showBack) {
-      const backBtn = createElement('button', { type: 'button', class: 'relay-page-header__back' });
+      const backBtn = createElement("button", {
+        type: "button",
+        class: "relay-page-header__back",
+      });
       backBtn.innerHTML = BACK_ICON;
-      backBtn.setAttribute('aria-label', 'Go back');
-      backBtn.addEventListener('click', () => {
+      backBtn.setAttribute("aria-label", "Go back");
+      backBtn.addEventListener("click", () => {
         // Check for unsaved changes
         if (!this.confirmDiscard()) return;
         this.formDirty = false;
@@ -923,19 +1030,24 @@ export class Widget {
         if (onBack) {
           onBack();
         } else {
-          this.navigateTo('home');
+          this.navigateTo("home");
         }
       });
       header.appendChild(backBtn);
     }
 
-    const titleEl = createElement('h2', { class: 'relay-page-header__title' }, [title]);
+    const titleEl = createElement("h2", { class: "relay-page-header__title" }, [
+      title,
+    ]);
     header.appendChild(titleEl);
 
-    const closeBtn = createElement('button', { type: 'button', class: 'relay-page-header__close' });
+    const closeBtn = createElement("button", {
+      type: "button",
+      class: "relay-page-header__close",
+    });
     closeBtn.innerHTML = CLOSE_ICON;
-    closeBtn.setAttribute('aria-label', 'Close');
-    closeBtn.addEventListener('click', () => this.close());
+    closeBtn.setAttribute("aria-label", "Close");
+    closeBtn.addEventListener("click", () => this.close());
     header.appendChild(closeBtn);
 
     return header;
@@ -945,7 +1057,7 @@ export class Widget {
     try {
       // Hide widget before capturing
       if (this.container) {
-        this.container.style.visibility = 'hidden';
+        this.container.style.visibility = "hidden";
       }
 
       // Small delay to ensure widget is hidden
@@ -955,7 +1067,7 @@ export class Widget {
 
       // Show widget again
       if (this.container) {
-        this.container.style.visibility = 'visible';
+        this.container.style.visibility = "visible";
       }
 
       if (blob) {
@@ -963,9 +1075,9 @@ export class Widget {
         this.bugReportForm?.setScreenshotPreview(blob);
       }
     } catch (error) {
-      console.warn('[Relay] Screenshot capture failed:', error);
+      console.warn("[Relay] Screenshot capture failed:", error);
       if (this.container) {
-        this.container.style.visibility = 'visible';
+        this.container.style.visibility = "visible";
       }
     }
   }
@@ -994,8 +1106,8 @@ export class Widget {
       if (this.useMockData) {
         // Create a new mock conversation
         const conversation = createMockConversation(
-          message.substring(0, 50) + (message.length > 50 ? '...' : ''),
-          message
+          message.substring(0, 50) + (message.length > 50 ? "..." : ""),
+          message,
         );
         this.currentConversation = {
           id: conversation.id,
@@ -1005,27 +1117,28 @@ export class Widget {
           createdAt: conversation.createdAt,
         };
         // Navigate to the thread view
-        this.navigateTo('messages-thread');
+        this.navigateTo("messages-thread");
       } else {
         // Start a real conversation via API
         const result = await this.callbacks.onStartConversation(message);
         this.currentConversation = {
           id: result.conversationId,
-          subject: message.substring(0, 50) + (message.length > 50 ? '...' : ''),
+          subject:
+            message.substring(0, 50) + (message.length > 50 ? "..." : ""),
           lastMessage: {
             body: message,
-            direction: 'inbound',
+            direction: "inbound",
             createdAt: new Date().toISOString(),
           },
           unreadCount: 0,
           createdAt: new Date().toISOString(),
         };
         // Navigate to the thread view
-        this.navigateTo('messages-thread');
+        this.navigateTo("messages-thread");
       }
     } catch (error) {
-      console.error('[Relay] Chat message failed:', error);
-      this.showError('Failed to start conversation');
+      console.error("[Relay] Chat message failed:", error);
+      this.showError("Failed to start conversation");
     }
   }
 
@@ -1033,7 +1146,9 @@ export class Widget {
     try {
       await this.callbacks.onBugSubmit({
         ...data,
-        screenshotBlob: data.includeScreenshot ? this.screenshotBlob || undefined : undefined,
+        screenshotBlob: data.includeScreenshot
+          ? this.screenshotBlob || undefined
+          : undefined,
         annotations: this.annotations,
       });
 
@@ -1045,11 +1160,11 @@ export class Widget {
         this.bugReportForm?.reset();
         this.screenshotBlob = null;
         this.annotations = [];
-        this.navigateTo('home');
+        this.navigateTo("home");
       }, 2000);
     } catch (error) {
-      console.error('[Relay] Bug report submission failed:', error);
-      this.showError('Failed to submit bug report. Please try again.');
+      console.error("[Relay] Bug report submission failed:", error);
+      this.showError("Failed to submit bug report. Please try again.");
     }
   }
 
@@ -1062,15 +1177,17 @@ export class Widget {
       // Reset after delay and go back home
       setTimeout(() => {
         this.feedbackForm?.reset();
-        this.navigateTo('home');
+        this.navigateTo("home");
       }, 2000);
     } catch (error) {
-      console.error('[Relay] Feedback submission failed:', error);
-      this.showError('Failed to submit feedback. Please try again.');
+      console.error("[Relay] Feedback submission failed:", error);
+      this.showError("Failed to submit feedback. Please try again.");
     }
   }
 
-  private async handleFeatureRequestSubmit(data: FeatureRequestFormData): Promise<void> {
+  private async handleFeatureRequestSubmit(
+    data: FeatureRequestFormData,
+  ): Promise<void> {
     try {
       await this.callbacks.onFeatureRequestSubmit(data);
       this.formDirty = false;
@@ -1079,11 +1196,11 @@ export class Widget {
       // Reset after delay and go back home
       setTimeout(() => {
         this.featureRequestForm?.reset();
-        this.navigateTo('home');
+        this.navigateTo("home");
       }, 2000);
     } catch (error) {
-      console.error('[Relay] Feature request submission failed:', error);
-      this.showError('Failed to submit feature request. Please try again.');
+      console.error("[Relay] Feature request submission failed:", error);
+      this.showError("Failed to submit feature request. Please try again.");
     }
   }
 
@@ -1095,7 +1212,7 @@ export class Widget {
     const tempMessage: Message = {
       id: tempId,
       body: message,
-      direction: 'inbound',
+      direction: "inbound",
       createdAt: new Date().toISOString(),
     };
     this.messageThread?.addMessage(tempMessage);
@@ -1107,11 +1224,14 @@ export class Widget {
         addMockMessage(this.currentConversation.id, message);
       } else {
         // Call real API
-        await this.callbacks.onSendMessage(this.currentConversation.id, message);
+        await this.callbacks.onSendMessage(
+          this.currentConversation.id,
+          message,
+        );
       }
     } catch (error) {
-      console.error('[Relay] Message send failed:', error);
-      this.showError('Failed to send message');
+      console.error("[Relay] Message send failed:", error);
+      this.showError("Failed to send message");
       // Could remove the optimistic message here, but keeping it for now
     }
   }
@@ -1126,7 +1246,7 @@ export class Widget {
     this.roadmapList?.updateItem(updatedItem);
 
     // Update local state
-    const index = this.roadmapItems.findIndex(i => i.id === item.id);
+    const index = this.roadmapItems.findIndex((i) => i.id === item.id);
     if (index !== -1) {
       this.roadmapItems[index] = updatedItem;
     }
@@ -1143,13 +1263,13 @@ export class Widget {
         }
       }
     } catch (error) {
-      console.error('[Relay] Vote failed:', error);
+      console.error("[Relay] Vote failed:", error);
       // Revert optimistic update
       this.roadmapList?.updateItem(item);
       if (index !== -1) {
         this.roadmapItems[index] = item;
       }
-      this.showError('Failed to update vote');
+      this.showError("Failed to update vote");
     }
   }
 
@@ -1159,29 +1279,36 @@ export class Widget {
 
   private showError(message: string): void {
     this.lastError = message;
-    console.error('[Relay]', message);
-    this.showToast(message, 'error');
+    console.error("[Relay]", message);
+    this.showToast(message, "error");
   }
 
-  private showToast(message: string, type: 'error' | 'success' = 'error'): void {
+  private showToast(
+    message: string,
+    type: "error" | "success" = "error",
+  ): void {
     if (!this.modal) return;
 
     // Remove any existing toast
-    const existingToast = this.modal.contentEl.querySelector('.relay-toast');
+    const existingToast = this.modal.contentEl.querySelector(".relay-toast");
     if (existingToast) {
       existingToast.remove();
     }
 
     // Create toast
-    const toast = createElement('div', {
-      class: `relay-toast ${type === 'success' ? 'relay-toast--success' : ''}`,
-    }, [message]);
+    const toast = createElement(
+      "div",
+      {
+        class: `relay-toast ${type === "success" ? "relay-toast--success" : ""}`,
+      },
+      [message],
+    );
 
     this.modal.contentEl.appendChild(toast);
 
     // Auto-remove after 3 seconds
     setTimeout(() => {
-      toast.classList.add('relay-toast--exit');
+      toast.classList.add("relay-toast--exit");
       setTimeout(() => toast.remove(), 150);
     }, 3000);
   }
@@ -1196,7 +1323,9 @@ export class Widget {
 
   private confirmDiscard(): boolean {
     if (!this.formDirty) return true;
-    return window.confirm('You have unsaved changes. Are you sure you want to leave?');
+    return window.confirm(
+      "You have unsaved changes. Are you sure you want to leave?",
+    );
   }
 }
 

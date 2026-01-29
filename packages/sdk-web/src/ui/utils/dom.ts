@@ -8,8 +8,11 @@
  */
 export function createElement<K extends keyof HTMLElementTagNameMap>(
   tag: K,
-  attrs?: Partial<HTMLElementTagNameMap[K]> & { class?: string; data?: Record<string, string> },
-  children?: (Node | string)[]
+  attrs?: Partial<HTMLElementTagNameMap[K]> & {
+    class?: string;
+    data?: Record<string, string>;
+  },
+  children?: (Node | string)[],
 ): HTMLElementTagNameMap[K] {
   const el = document.createElement(tag);
 
@@ -27,7 +30,7 @@ export function createElement<K extends keyof HTMLElementTagNameMap>(
     }
 
     for (const [key, value] of Object.entries(rest)) {
-      if (key.startsWith('on') && typeof value === 'function') {
+      if (key.startsWith("on") && typeof value === "function") {
         el.addEventListener(key.slice(2).toLowerCase(), value as EventListener);
       } else if (value !== undefined && value !== null) {
         (el as any)[key] = value;
@@ -37,7 +40,7 @@ export function createElement<K extends keyof HTMLElementTagNameMap>(
 
   if (children) {
     for (const child of children) {
-      if (typeof child === 'string') {
+      if (typeof child === "string") {
         el.appendChild(document.createTextNode(child));
       } else {
         el.appendChild(child);
@@ -72,10 +75,13 @@ export function clearChildren(el: Element): void {
 /**
  * Replaces all children of an element
  */
-export function replaceChildren(el: Element, ...children: (Node | string)[]): void {
+export function replaceChildren(
+  el: Element,
+  ...children: (Node | string)[]
+): void {
   clearChildren(el);
   for (const child of children) {
-    if (typeof child === 'string') {
+    if (typeof child === "string") {
       el.appendChild(document.createTextNode(child));
     } else {
       el.appendChild(child);
@@ -100,7 +106,11 @@ export function removeClass(el: Element, className: string): void {
 /**
  * Toggles a CSS class
  */
-export function toggleClass(el: Element, className: string, force?: boolean): void {
+export function toggleClass(
+  el: Element,
+  className: string,
+  force?: boolean,
+): void {
   el.classList.toggle(className, force);
 }
 
@@ -114,13 +124,13 @@ export function waitForAnimation(el: Element, timeout = 300): Promise<void> {
     const done = () => {
       if (resolved) return;
       resolved = true;
-      el.removeEventListener('animationend', done);
-      el.removeEventListener('transitionend', done);
+      el.removeEventListener("animationend", done);
+      el.removeEventListener("transitionend", done);
       resolve();
     };
 
-    el.addEventListener('animationend', done);
-    el.addEventListener('transitionend', done);
+    el.addEventListener("animationend", done);
+    el.addEventListener("transitionend", done);
 
     // Fallback timeout in case animation doesn't fire
     setTimeout(done, timeout);
@@ -130,7 +140,10 @@ export function waitForAnimation(el: Element, timeout = 300): Promise<void> {
 /**
  * Sets inline styles
  */
-export function setStyles(el: HTMLElement, styles: Record<string, string | undefined>): void {
+export function setStyles(
+  el: HTMLElement,
+  styles: Record<string, string | undefined>,
+): void {
   for (const [key, value] of Object.entries(styles)) {
     if (value !== undefined) {
       (el.style as any)[key] = value;
@@ -142,7 +155,7 @@ export function setStyles(el: HTMLElement, styles: Record<string, string | undef
  * Creates a style element with CSS content
  */
 export function createStyleSheet(css: string, id?: string): HTMLStyleElement {
-  const style = document.createElement('style');
+  const style = document.createElement("style");
   if (id) style.id = id;
   style.textContent = css;
   return style;
@@ -152,7 +165,7 @@ export function createStyleSheet(css: string, id?: string): HTMLStyleElement {
  * Generates a unique ID
  */
 let idCounter = 0;
-export function generateId(prefix = 'relay'): string {
+export function generateId(prefix = "relay"): string {
   return `${prefix}-${++idCounter}-${Date.now().toString(36)}`;
 }
 
@@ -160,7 +173,7 @@ export function generateId(prefix = 'relay'): string {
  * Escapes HTML to prevent XSS
  */
 export function escapeHtml(str: string): string {
-  const div = document.createElement('div');
+  const div = document.createElement("div");
   div.textContent = str;
   return div.innerHTML;
 }
@@ -171,8 +184,8 @@ export function escapeHtml(str: string): string {
 export function formatTime(timestamp: number | Date): string {
   const date = timestamp instanceof Date ? timestamp : new Date(timestamp);
   return date.toLocaleTimeString(undefined, {
-    hour: '2-digit',
-    minute: '2-digit',
+    hour: "2-digit",
+    minute: "2-digit",
   });
 }
 
@@ -189,7 +202,7 @@ export function formatRelativeTime(timestamp: number | Date): string {
   const hours = Math.floor(minutes / 60);
   const days = Math.floor(hours / 24);
 
-  if (seconds < 60) return 'just now';
+  if (seconds < 60) return "just now";
   if (minutes < 60) return `${minutes}m ago`;
   if (hours < 24) return `${hours}h ago`;
   if (days < 7) return `${days}d ago`;
@@ -202,7 +215,7 @@ export function formatRelativeTime(timestamp: number | Date): string {
  */
 export function debounce<T extends (...args: any[]) => void>(
   fn: T,
-  delay: number
+  delay: number,
 ): (...args: Parameters<T>) => void {
   let timeoutId: ReturnType<typeof setTimeout>;
   return (...args: Parameters<T>) => {
@@ -216,7 +229,7 @@ export function debounce<T extends (...args: any[]) => void>(
  */
 export function throttle<T extends (...args: any[]) => void>(
   fn: T,
-  limit: number
+  limit: number,
 ): (...args: Parameters<T>) => void {
   let lastCall = 0;
   return (...args: Parameters<T>) => {

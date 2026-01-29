@@ -1,7 +1,7 @@
-import { z } from 'zod';
-import { router, projectProcedure, publicProcedure } from '../lib/trpc';
-import { TRPCError } from '@trpc/server';
-import { Prisma } from '@prisma/client';
+import { z } from "zod";
+import { router, projectProcedure, publicProcedure } from "../lib/trpc";
+import { TRPCError } from "@trpc/server";
+import { Prisma } from "@prisma/client";
 
 export const knowledgeRouter = router({
   // ============================================================================
@@ -12,12 +12,12 @@ export const knowledgeRouter = router({
     .input(
       z.object({
         projectId: z.string(),
-        status: z.enum(['draft', 'published', 'archived']).optional(),
+        status: z.enum(["draft", "published", "archived"]).optional(),
         categoryId: z.string().optional(),
         search: z.string().optional(),
         page: z.number().default(1),
         pageSize: z.number().default(20),
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
       const where: Prisma.ArticleWhereInput = {
@@ -26,8 +26,8 @@ export const knowledgeRouter = router({
         ...(input.categoryId && { categoryId: input.categoryId }),
         ...(input.search && {
           OR: [
-            { title: { contains: input.search, mode: 'insensitive' } },
-            { content: { contains: input.search, mode: 'insensitive' } },
+            { title: { contains: input.search, mode: "insensitive" } },
+            { content: { contains: input.search, mode: "insensitive" } },
           ],
         }),
       };
@@ -36,7 +36,7 @@ export const knowledgeRouter = router({
         ctx.prisma.article.findMany({
           where,
           include: { category: true },
-          orderBy: { updatedAt: 'desc' },
+          orderBy: { updatedAt: "desc" },
           skip: (input.page - 1) * input.pageSize,
           take: input.pageSize,
         }),
@@ -63,7 +63,10 @@ export const knowledgeRouter = router({
       });
 
       if (!article) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Article not found' });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Article not found",
+        });
       }
 
       return article;
@@ -82,8 +85,11 @@ export const knowledgeRouter = router({
         include: { category: true },
       });
 
-      if (!article || article.status !== 'published') {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Article not found' });
+      if (!article || article.status !== "published") {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Article not found",
+        });
       }
 
       // Increment view count
@@ -104,11 +110,11 @@ export const knowledgeRouter = router({
         content: z.string(),
         excerpt: z.string().optional(),
         categoryId: z.string().optional(),
-        status: z.enum(['draft', 'published', 'archived']).default('draft'),
-        visibility: z.enum(['public', 'private']).default('public'),
+        status: z.enum(["draft", "published", "archived"]).default("draft"),
+        visibility: z.enum(["public", "private"]).default("public"),
         metaTitle: z.string().optional(),
         metaDescription: z.string().optional(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       // Generate HTML from markdown (simplified - in production use a proper parser)
@@ -128,7 +134,7 @@ export const knowledgeRouter = router({
           metaTitle: input.metaTitle,
           metaDescription: input.metaDescription,
           createdBy: ctx.adminUser?.id,
-          publishedAt: input.status === 'published' ? new Date() : null,
+          publishedAt: input.status === "published" ? new Date() : null,
         },
         include: { category: true },
       });
@@ -148,23 +154,26 @@ export const knowledgeRouter = router({
         content: z.string().optional(),
         excerpt: z.string().optional(),
         categoryId: z.string().nullable().optional(),
-        status: z.enum(['draft', 'published', 'archived']).optional(),
-        visibility: z.enum(['public', 'private']).optional(),
+        status: z.enum(["draft", "published", "archived"]).optional(),
+        visibility: z.enum(["public", "private"]).optional(),
         metaTitle: z.string().optional(),
         metaDescription: z.string().optional(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const { id, ...data } = input;
 
       const existing = await ctx.prisma.article.findUnique({ where: { id } });
       if (!existing) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Article not found' });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Article not found",
+        });
       }
 
       // If publishing for first time, set publishedAt
       const publishedAt =
-        data.status === 'published' && existing.status !== 'published'
+        data.status === "published" && existing.status !== "published"
           ? new Date()
           : undefined;
 
@@ -199,7 +208,7 @@ export const knowledgeRouter = router({
       z.object({
         articleId: z.string(),
         helpful: z.boolean(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       await ctx.prisma.article.update({
@@ -225,7 +234,7 @@ export const knowledgeRouter = router({
           _count: { select: { articles: true } },
           children: true,
         },
-        orderBy: { sortOrder: 'asc' },
+        orderBy: { sortOrder: "asc" },
       });
 
       return categories;
@@ -241,7 +250,7 @@ export const knowledgeRouter = router({
         icon: z.string().optional(),
         parentId: z.string().optional(),
         sortOrder: z.number().default(0),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const category = await ctx.prisma.articleCategory.create({
@@ -261,7 +270,7 @@ export const knowledgeRouter = router({
         icon: z.string().optional(),
         parentId: z.string().nullable().optional(),
         sortOrder: z.number().optional(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const { id, ...data } = input;
@@ -298,19 +307,19 @@ export const knowledgeRouter = router({
         projectId: z.string(),
         query: z.string().min(1),
         limit: z.number().default(5),
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
       // Simple text search - in production, use pgvector for semantic search
       const articles = await ctx.prisma.article.findMany({
         where: {
           projectId: input.projectId,
-          status: 'published',
-          visibility: 'public',
+          status: "published",
+          visibility: "public",
           OR: [
-            { title: { contains: input.query, mode: 'insensitive' } },
-            { content: { contains: input.query, mode: 'insensitive' } },
-            { excerpt: { contains: input.query, mode: 'insensitive' } },
+            { title: { contains: input.query, mode: "insensitive" } },
+            { content: { contains: input.query, mode: "insensitive" } },
+            { excerpt: { contains: input.query, mode: "insensitive" } },
           ],
         },
         select: {
@@ -338,19 +347,19 @@ export const knowledgeRouter = router({
           where: { projectId: input.projectId },
           include: {
             articles: {
-              where: { status: 'published', visibility: 'public' },
+              where: { status: "published", visibility: "public" },
               select: { id: true, title: true, slug: true, excerpt: true },
               take: 5,
-              orderBy: { viewCount: 'desc' },
+              orderBy: { viewCount: "desc" },
             },
           },
-          orderBy: { sortOrder: 'asc' },
+          orderBy: { sortOrder: "asc" },
         }),
         ctx.prisma.article.findMany({
           where: {
             projectId: input.projectId,
-            status: 'published',
-            visibility: 'public',
+            status: "published",
+            visibility: "public",
           },
           select: {
             id: true,
@@ -359,7 +368,7 @@ export const knowledgeRouter = router({
             excerpt: true,
             viewCount: true,
           },
-          orderBy: { viewCount: 'desc' },
+          orderBy: { viewCount: "desc" },
           take: 10,
         }),
       ]);

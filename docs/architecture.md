@@ -49,6 +49,7 @@ Relay is a multi-region feedback, bug reporting, and customer support platform w
 ### 2. Cell Architecture
 
 Each region is a "cell" with:
+
 - API server (Express + tRPC)
 - Worker service (async jobs)
 - PostgreSQL database
@@ -58,12 +59,14 @@ Each region is a "cell" with:
 ### 3. Service Boundaries
 
 **API Service (services/api)**
+
 - Handles all HTTP/WebSocket requests
 - tRPC for type-safe API
 - Session management
 - Real-time via WebSocket
 
 **Worker Service (services/worker)**
+
 - AI summarization and classification
 - Integration sync (Linear, Slack)
 - Email delivery
@@ -71,6 +74,7 @@ Each region is a "cell" with:
 - Scheduled jobs
 
 **Router Service (services/router)**
+
 - Edge routing
 - API key validation
 - Rate limiting
@@ -163,14 +167,14 @@ pnpm dev
 
 ## Technology Stack
 
-| Layer | Technology |
-|-------|------------|
+| Layer    | Technology                                         |
+| -------- | -------------------------------------------------- |
 | Frontend | Next.js 14, React, TypeScript, Tailwind, shadcn/ui |
-| API | Node.js, Express, tRPC, Prisma |
-| Database | PostgreSQL 16 |
-| Cache | Redis 7 |
-| Storage | S3 / MinIO |
-| Queue | Redis (Bull) |
-| Realtime | WebSocket (ws) |
-| Replay | rrweb |
-| AI | OpenAI (optional) |
+| API      | Node.js, Express, tRPC, Prisma                     |
+| Database | PostgreSQL 16                                      |
+| Cache    | Redis 7                                            |
+| Storage  | S3 / MinIO                                         |
+| Queue    | Redis (Bull)                                       |
+| Realtime | WebSocket (ws)                                     |
+| Replay   | rrweb                                              |
+| AI       | OpenAI (optional)                                  |

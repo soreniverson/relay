@@ -3,9 +3,9 @@
 // Initial chat message form
 // ============================================================================
 
-import { createElement, clearChildren } from '../../utils/dom';
-import { createTextarea, type TextareaResult } from '../shared/Textarea';
-import { createButton, setButtonLoading } from '../shared/Button';
+import { createElement, clearChildren } from "../../utils/dom";
+import { createTextarea, type TextareaResult } from "../shared/Textarea";
+import { createButton, setButtonLoading } from "../shared/Button";
 
 export interface ChatFormData {
   message: string;
@@ -74,14 +74,16 @@ export interface ChatFormResult {
 }
 
 export function createChatForm(config: ChatFormConfig): ChatFormResult {
-  const { placeholder = 'How can we help you?', onSubmit } = config;
+  const { placeholder = "How can we help you?", onSubmit } = config;
 
   // Create form element
-  const form = createElement('form', { class: 'relay-chat-form' }) as HTMLFormElement;
+  const form = createElement("form", {
+    class: "relay-chat-form",
+  }) as HTMLFormElement;
 
   // Message textarea
-  const messageTextarea = createTextarea('Message', {
-    name: 'message',
+  const messageTextarea = createTextarea("Message", {
+    name: "message",
     placeholder,
     required: true,
     rows: 4,
@@ -90,13 +92,13 @@ export function createChatForm(config: ChatFormConfig): ChatFormResult {
   });
 
   // Submit button
-  const submitBtn = createButton('Start Conversation', {
-    type: 'submit',
-    variant: 'primary',
+  const submitBtn = createButton("Start Conversation", {
+    type: "submit",
+    variant: "primary",
     fullWidth: true,
   });
 
-  const footer = createElement('div', { class: 'relay-chat-form__footer' });
+  const footer = createElement("div", { class: "relay-chat-form__footer" });
   footer.appendChild(submitBtn);
 
   // Assemble form
@@ -104,12 +106,12 @@ export function createChatForm(config: ChatFormConfig): ChatFormResult {
   form.appendChild(footer);
 
   // Form submission handler
-  form.addEventListener('submit', async (e) => {
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     // Validate
     if (!messageTextarea.getValue().trim()) {
-      messageTextarea.setError('Please enter a message');
+      messageTextarea.setError("Please enter a message");
       return;
     }
 
@@ -122,20 +124,20 @@ export function createChatForm(config: ChatFormConfig): ChatFormResult {
     };
 
     // Show loading state
-    setButtonLoading(submitBtn, true, 'Sending...');
+    setButtonLoading(submitBtn, true, "Sending...");
 
     try {
       await onSubmit(formData);
     } catch (error) {
       setButtonLoading(submitBtn, false);
-      console.error('[Relay] Chat message failed:', error);
+      console.error("[Relay] Chat message failed:", error);
     }
   });
 
   // Reset form
   const reset = () => {
     form.reset();
-    messageTextarea.setValue('');
+    messageTextarea.setValue("");
     messageTextarea.setError(null);
     setButtonLoading(submitBtn, false);
   };
@@ -143,15 +145,19 @@ export function createChatForm(config: ChatFormConfig): ChatFormResult {
   // Show success state
   const showSuccess = () => {
     clearChildren(form);
-    form.className = '';
+    form.className = "";
 
-    const successEl = createElement('div', { class: 'relay-chat-form__success' });
+    const successEl = createElement("div", {
+      class: "relay-chat-form__success",
+    });
 
-    const icon = createElement('div', { class: 'relay-chat-form__success-icon' });
+    const icon = createElement("div", {
+      class: "relay-chat-form__success-icon",
+    });
     icon.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>`;
 
-    const title = createElement('h4', {}, ['Message sent!']);
-    const message = createElement('p', {}, ["We'll get back to you soon."]);
+    const title = createElement("h4", {}, ["Message sent!"]);
+    const message = createElement("p", {}, ["We'll get back to you soon."]);
 
     successEl.appendChild(icon);
     successEl.appendChild(title);

@@ -3,9 +3,9 @@
 // Canvas overlay for drawing annotations
 // ============================================================================
 
-import { createElement, generateId } from '../../utils/dom';
-import type { Annotation } from '../../../types';
-import type { AnnotationTool } from './AnnotationToolbar';
+import { createElement, generateId } from "../../utils/dom";
+import type { Annotation } from "../../../types";
+import type { AnnotationTool } from "./AnnotationToolbar";
 
 export interface AnnotationLayerConfig {
   width: number;
@@ -60,8 +60,16 @@ export interface AnnotationLayerResult {
   redraw: () => void;
 }
 
-export function createAnnotationLayer(config: AnnotationLayerConfig): AnnotationLayerResult {
-  const { width, height, tool = 'arrow', color = '#ef4444', onAnnotationAdd } = config;
+export function createAnnotationLayer(
+  config: AnnotationLayerConfig,
+): AnnotationLayerResult {
+  const {
+    width,
+    height,
+    tool = "arrow",
+    color = "#ef4444",
+    onAnnotationAdd,
+  } = config;
 
   let currentTool: AnnotationTool = tool;
   let currentColor: string = color;
@@ -73,27 +81,31 @@ export function createAnnotationLayer(config: AnnotationLayerConfig): Annotation
   let currentAnnotation: Partial<Annotation> | null = null;
 
   // Create container
-  const container = createElement('div', { class: 'relay-annotation-layer' }) as HTMLDivElement;
+  const container = createElement("div", {
+    class: "relay-annotation-layer",
+  }) as HTMLDivElement;
 
   // Create canvas
-  const canvas = createElement('canvas', {
-    class: 'relay-annotation-layer__canvas',
+  const canvas = createElement("canvas", {
+    class: "relay-annotation-layer__canvas",
     width: width,
     height: height,
   }) as HTMLCanvasElement;
 
-  const ctx = canvas.getContext('2d')!;
+  const ctx = canvas.getContext("2d")!;
 
   container.appendChild(canvas);
 
   // Get mouse position relative to canvas
-  const getMousePos = (e: MouseEvent | TouchEvent): { x: number; y: number } => {
+  const getMousePos = (
+    e: MouseEvent | TouchEvent,
+  ): { x: number; y: number } => {
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
 
     let clientX: number, clientY: number;
-    if ('touches' in e) {
+    if ("touches" in e) {
       clientX = e.touches[0].clientX;
       clientY = e.touches[0].clientY;
     } else {
@@ -122,7 +134,10 @@ export function createAnnotationLayer(config: AnnotationLayerConfig): Annotation
   };
 
   // Draw a single annotation
-  const drawAnnotation = (context: CanvasRenderingContext2D, annotation: Annotation | Partial<Annotation>) => {
+  const drawAnnotation = (
+    context: CanvasRenderingContext2D,
+    annotation: Annotation | Partial<Annotation>,
+  ) => {
     context.strokeStyle = annotation.color || currentColor;
     context.fillStyle = annotation.color || currentColor;
     context.lineWidth = 3;
@@ -133,19 +148,27 @@ export function createAnnotationLayer(config: AnnotationLayerConfig): Annotation
     const h = annotation.height || 0;
 
     switch (annotation.type) {
-      case 'rectangle':
+      case "rectangle":
         context.strokeRect(x, y, w, h);
         break;
 
-      case 'circle':
+      case "circle":
         context.beginPath();
         const radiusX = Math.abs(w) / 2;
         const radiusY = Math.abs(h) / 2;
-        context.ellipse(x + w / 2, y + h / 2, radiusX, radiusY, 0, 0, 2 * Math.PI);
+        context.ellipse(
+          x + w / 2,
+          y + h / 2,
+          radiusX,
+          radiusY,
+          0,
+          0,
+          2 * Math.PI,
+        );
         context.stroke();
         break;
 
-      case 'arrow':
+      case "arrow":
         // Draw line
         context.beginPath();
         context.moveTo(x, y);
@@ -159,30 +182,30 @@ export function createAnnotationLayer(config: AnnotationLayerConfig): Annotation
         context.moveTo(x + w, y + h);
         context.lineTo(
           x + w - headLength * Math.cos(angle - Math.PI / 6),
-          y + h - headLength * Math.sin(angle - Math.PI / 6)
+          y + h - headLength * Math.sin(angle - Math.PI / 6),
         );
         context.lineTo(
           x + w - headLength * Math.cos(angle + Math.PI / 6),
-          y + h - headLength * Math.sin(angle + Math.PI / 6)
+          y + h - headLength * Math.sin(angle + Math.PI / 6),
         );
         context.closePath();
         context.fill();
         break;
 
-      case 'highlight':
-        context.fillStyle = (annotation.color || currentColor) + '40'; // 25% opacity
+      case "highlight":
+        context.fillStyle = (annotation.color || currentColor) + "40"; // 25% opacity
         context.fillRect(x, y, w, h);
         break;
 
-      case 'blur':
+      case "blur":
         // Simplified blur effect - just a semi-transparent rectangle
-        context.fillStyle = 'rgba(128, 128, 128, 0.6)';
+        context.fillStyle = "rgba(128, 128, 128, 0.6)";
         context.fillRect(x, y, w, h);
         break;
 
-      case 'text':
+      case "text":
         if (annotation.text) {
-          context.font = '16px sans-serif';
+          context.font = "16px sans-serif";
           context.fillText(annotation.text, x, y);
         }
         break;
@@ -198,25 +221,25 @@ export function createAnnotationLayer(config: AnnotationLayerConfig): Annotation
       textInput.remove();
     }
 
-    textInput = createElement('input', {
-      type: 'text',
-      class: 'relay-annotation-layer__text-input',
+    textInput = createElement("input", {
+      type: "text",
+      class: "relay-annotation-layer__text-input",
     }) as HTMLInputElement;
     textInput.style.left = `${(x / canvas.width) * 100}%`;
     textInput.style.top = `${(y / canvas.height) * 100}%`;
     textInput.style.color = currentColor;
     textInput.style.borderColor = currentColor;
 
-    textInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
+    textInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
         finishTextInput();
-      } else if (e.key === 'Escape') {
+      } else if (e.key === "Escape") {
         textInput?.remove();
         textInput = null;
       }
     });
 
-    textInput.addEventListener('blur', finishTextInput);
+    textInput.addEventListener("blur", finishTextInput);
 
     container.appendChild(textInput);
     textInput.focus();
@@ -230,12 +253,12 @@ export function createAnnotationLayer(config: AnnotationLayerConfig): Annotation
     }
 
     const rect = canvas.getBoundingClientRect();
-    const x = parseFloat(textInput.style.left) / 100 * canvas.width;
-    const y = parseFloat(textInput.style.top) / 100 * canvas.height;
+    const x = (parseFloat(textInput.style.left) / 100) * canvas.width;
+    const y = (parseFloat(textInput.style.top) / 100) * canvas.height;
 
     const annotation: Annotation = {
-      id: generateId('annotation'),
-      type: 'text',
+      id: generateId("annotation"),
+      type: "text",
       x,
       y: y + 16, // Offset for text baseline
       color: currentColor,
@@ -253,7 +276,7 @@ export function createAnnotationLayer(config: AnnotationLayerConfig): Annotation
 
   // Mouse/touch event handlers
   const handleStart = (e: MouseEvent | TouchEvent) => {
-    if (currentTool === 'text') {
+    if (currentTool === "text") {
       const pos = getMousePos(e);
       createTextInput(pos.x, pos.y);
       return;
@@ -265,7 +288,7 @@ export function createAnnotationLayer(config: AnnotationLayerConfig): Annotation
     startY = pos.y;
 
     currentAnnotation = {
-      id: generateId('annotation'),
+      id: generateId("annotation"),
       type: currentTool,
       x: startX,
       y: startY,
@@ -306,27 +329,30 @@ export function createAnnotationLayer(config: AnnotationLayerConfig): Annotation
   };
 
   // Bind events
-  canvas.addEventListener('mousedown', handleStart);
-  canvas.addEventListener('mousemove', handleMove);
-  canvas.addEventListener('mouseup', handleEnd);
-  canvas.addEventListener('mouseleave', handleEnd);
+  canvas.addEventListener("mousedown", handleStart);
+  canvas.addEventListener("mousemove", handleMove);
+  canvas.addEventListener("mouseup", handleEnd);
+  canvas.addEventListener("mouseleave", handleEnd);
 
-  canvas.addEventListener('touchstart', (e) => {
+  canvas.addEventListener("touchstart", (e) => {
     e.preventDefault();
     handleStart(e);
   });
-  canvas.addEventListener('touchmove', (e) => {
+  canvas.addEventListener("touchmove", (e) => {
     e.preventDefault();
     handleMove(e);
   });
-  canvas.addEventListener('touchend', handleEnd);
+  canvas.addEventListener("touchend", handleEnd);
 
   return {
     element: container,
     canvas,
     setTool: (newTool: AnnotationTool) => {
       currentTool = newTool;
-      container.classList.toggle('relay-annotation-layer--text', newTool === 'text');
+      container.classList.toggle(
+        "relay-annotation-layer--text",
+        newTool === "text",
+      );
     },
     setColor: (newColor: string) => {
       currentColor = newColor;

@@ -3,8 +3,8 @@
 // Full DOM replay using rrweb
 // ============================================================================
 
-import type { record, eventWithTime } from 'rrweb';
-import type { ReplayConfig } from '../types';
+import type { record, eventWithTime } from "rrweb";
+import type { ReplayConfig } from "../types";
 
 interface ReplayCapture {
   start(config?: ReplayConfig): void;
@@ -19,7 +19,7 @@ const CHUNK_INTERVAL_MS = 5000; // Send chunk every 5 seconds
 const MAX_EVENTS_PER_CHUNK = 5000;
 
 export function createReplayCapture(
-  onChunk?: (events: eventWithTime[], chunkIndex: number) => void
+  onChunk?: (events: eventWithTime[], chunkIndex: number) => void,
 ): ReplayCapture {
   let stopFn: (() => void) | null | undefined = null;
   let events: eventWithTime[] = [];
@@ -48,7 +48,7 @@ export function createReplayCapture(
       if (recording) return;
 
       // Dynamically import rrweb
-      const rrweb = await import('rrweb');
+      const rrweb = await import("rrweb");
       rrwebRecord = rrweb.record;
 
       recording = true;
@@ -58,7 +58,7 @@ export function createReplayCapture(
 
       // Default privacy settings
       const defaultMaskTextSelector = 'input[type="password"], .relay-mask';
-      const defaultBlockSelector = '.relay-block';
+      const defaultBlockSelector = ".relay-block";
 
       stopFn = rrwebRecord({
         emit(event) {
@@ -86,7 +86,7 @@ export function createReplayCapture(
           mouseInteraction: true,
           scroll: 150, // Record scroll every 150ms
           media: 800,
-          input: 'last',
+          input: "last",
         },
         slimDOMOptions: {
           script: true,

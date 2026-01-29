@@ -22,6 +22,7 @@ User Session → rrweb Events → Chunks (5s each) → S3 Storage
 ```
 
 Each chunk is:
+
 - Compressed with gzip
 - Privacy-sanitized
 - Uploaded via presigned URL
@@ -39,10 +40,10 @@ S3 → Fetch Chunks → Decompress → rrweb Player → Rendered Replay
 ### Basic Setup
 
 ```javascript
-import Relay from '@relay/sdk-web';
+import Relay from "@relay/sdk-web";
 
 Relay.init({
-  apiKey: 'rly_...',
+  apiKey: "rly_...",
   capture: {
     replay: true, // Enable automatic replay recording
   },
@@ -74,13 +75,13 @@ Relay.init({
 });
 
 // Start recording when user opens bug reporter
-Relay.on('widget:open', () => {
+Relay.on("widget:open", () => {
   Relay.startRecording();
 });
 
 // Recording is automatically attached to bug report
 await Relay.captureBug({
-  title: 'Something broke',
+  title: "Something broke",
   includeReplay: true,
 });
 ```
@@ -90,6 +91,7 @@ await Relay.captureBug({
 ### Default Masking
 
 By default, rrweb masks:
+
 - All text input values
 - Password fields completely
 - Elements with `.relay-mask` class
@@ -100,17 +102,10 @@ By default, rrweb masks:
 Relay.init({
   privacy: {
     // Mask specific elements
-    maskSelectors: [
-      '.credit-card',
-      '[data-sensitive]',
-      '.pii',
-    ],
+    maskSelectors: [".credit-card", "[data-sensitive]", ".pii"],
 
     // Block elements entirely (not captured)
-    blockSelectors: [
-      '.secret-data',
-      '#private-modal',
-    ],
+    blockSelectors: [".secret-data", "#private-modal"],
 
     // Mask all text (not just inputs)
     maskAllText: false,
@@ -125,9 +120,7 @@ Relay.init({
 <div class="relay-mask">Sensitive: SSN ***-**-1234</div>
 
 <!-- Block this element completely -->
-<div class="relay-block">
-  This content will not be captured
-</div>
+<div class="relay-block">This content will not be captured</div>
 ```
 
 ### Server-Side Sanitization
@@ -145,11 +138,11 @@ Replay data is also sanitized server-side before storage:
 
 Recording adds minimal overhead:
 
-| Metric | Impact |
-|--------|--------|
-| CPU | ~1-3% additional |
-| Memory | ~5-20MB depending on page complexity |
-| Network | ~50-200KB/minute compressed |
+| Metric  | Impact                               |
+| ------- | ------------------------------------ |
+| CPU     | ~1-3% additional                     |
+| Memory  | ~5-20MB depending on page complexity |
+| Network | ~50-200KB/minute compressed          |
 
 ### Optimization
 
@@ -158,14 +151,14 @@ Relay.init({
   replay: {
     // Reduce mutation sampling
     sampling: {
-      mousemove: 50,     // Sample every 50ms
+      mousemove: 50, // Sample every 50ms
       mouseInteraction: true,
-      scroll: 150,       // Sample every 150ms
-      input: 'last',     // Only capture final value
+      scroll: 150, // Sample every 150ms
+      input: "last", // Only capture final value
     },
 
     // Exclude non-essential elements
-    blockClass: 'no-replay',
+    blockClass: "no-replay",
 
     // Limit recording duration
     maxDuration: 5 * 60 * 1000, // 5 minutes
@@ -198,13 +191,13 @@ Events are batched and uploaded in chunks:
 
 ### Keyboard Shortcuts
 
-| Key | Action |
-|-----|--------|
-| Space | Play/Pause |
-| ← | Skip back 5s |
-| → | Skip forward 5s |
-| 1-4 | Set speed |
-| F | Fullscreen |
+| Key   | Action          |
+| ----- | --------------- |
+| Space | Play/Pause      |
+| ←     | Skip back 5s    |
+| →     | Skip forward 5s |
+| 1-4   | Set speed       |
+| F     | Fullscreen      |
 
 ### Embedded Player
 
@@ -240,6 +233,7 @@ s3://relay-{region}-media/
 Default retention: 30 days (configurable 7-90 days)
 
 After retention period:
+
 1. Chunks deleted from S3
 2. Replay record marked as expired
 3. Interaction still available but replay link shows "Expired"
@@ -267,7 +261,7 @@ console.log(Relay.isRecording()); // Should be true
 console.log(window.rrweb); // Should be defined
 
 // Check for errors
-Relay.on('error', (e) => console.log('Relay error:', e));
+Relay.on("error", (e) => console.log("Relay error:", e));
 ```
 
 ### Replay Playback Issues
@@ -289,32 +283,32 @@ If replays are too large:
 
 ### rrweb Event Types
 
-| Type | Description |
-|------|-------------|
-| 0 | DomContentLoaded |
-| 1 | Load |
-| 2 | FullSnapshot |
-| 3 | IncrementalSnapshot |
-| 4 | Meta |
-| 5 | Custom |
-| 6 | Plugin |
+| Type | Description         |
+| ---- | ------------------- |
+| 0    | DomContentLoaded    |
+| 1    | Load                |
+| 2    | FullSnapshot        |
+| 3    | IncrementalSnapshot |
+| 4    | Meta                |
+| 5    | Custom              |
+| 6    | Plugin              |
 
 ### Incremental Snapshot Sources
 
-| Source | Description |
-|--------|-------------|
-| 0 | Mutation |
-| 1 | MouseMove |
-| 2 | MouseInteraction |
-| 3 | Scroll |
-| 4 | ViewportResize |
-| 5 | Input |
-| 6 | TouchMove |
-| 7 | MediaInteraction |
-| 8 | StyleSheetRule |
-| 9 | CanvasMutation |
-| 10 | Font |
-| 11 | Log |
+| Source | Description      |
+| ------ | ---------------- |
+| 0      | Mutation         |
+| 1      | MouseMove        |
+| 2      | MouseInteraction |
+| 3      | Scroll           |
+| 4      | ViewportResize   |
+| 5      | Input            |
+| 6      | TouchMove        |
+| 7      | MediaInteraction |
+| 8      | StyleSheetRule   |
+| 9      | CanvasMutation   |
+| 10     | Font             |
+| 11     | Log              |
 
 ### Worker Processing
 

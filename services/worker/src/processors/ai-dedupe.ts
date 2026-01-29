@@ -1,12 +1,12 @@
-import { Job } from 'bullmq';
-import OpenAI from 'openai';
-import { prisma } from '../index.js';
-import crypto from 'crypto';
+import { Job } from "bullmq";
+import OpenAI from "openai";
+import { prisma } from "../index.js";
+import crypto from "crypto";
 
 interface AiDedupeJob {
   interactionId?: string;
   projectId?: string;
-  type?: 'new' | 'periodic';
+  type?: "new" | "periodic";
 }
 
 const openai = process.env.OPENAI_API_KEY
@@ -16,12 +16,12 @@ const openai = process.env.OPENAI_API_KEY
 export async function aiDedupeProcessor(job: Job<AiDedupeJob>) {
   const { interactionId, projectId, type } = job.data;
 
-  if (type === 'periodic') {
+  if (type === "periodic") {
     return await runPeriodicDeduplication();
   }
 
   if (!interactionId || !projectId) {
-    throw new Error('interactionId and projectId required for new dedupe');
+    throw new Error("interactionId and projectId required for new dedupe");
   }
 
   console.log(`Processing dedupe for interaction ${interactionId}`);
@@ -34,7 +34,7 @@ export async function aiDedupeProcessor(job: Job<AiDedupeJob>) {
 
   const settings = project?.settings as Record<string, unknown> | null;
   if (!settings?.aiEnabled) {
-    return { skipped: true, reason: 'ai_disabled' };
+    return { skipped: true, reason: "ai_disabled" };
   }
 
   // Fetch the new interaction
@@ -47,8 +47,8 @@ export async function aiDedupeProcessor(job: Job<AiDedupeJob>) {
   }
 
   // Only dedupe bugs and feedback
-  if (!['bug', 'feedback'].includes(interaction.type)) {
-    return { skipped: true, reason: 'not_applicable_type' };
+  if (!["bug", "feedback"].includes(interaction.type)) {
+    return { skipped: true, reason: "not_applicable_type" };
   }
 
   // Get recent similar interactions
@@ -112,15 +112,19 @@ async function findSimilarCandidates(interaction: any) {
       aiDuplicateGroupId: true,
       aiLabels: true,
     },
-    orderBy: { createdAt: 'desc' },
+    orderBy: { createdAt: "desc" },
     take: 100,
   });
 }
 
 async function findBestMatch(
   interaction: any,
-  candidates: any[]
-): Promise<{ groupId: string; interactionId: string; confidence: number } | null> {
+  candidates: any[],
+): Promise<{
+  groupId: string;
+  interactionId: string;
+  confidence: number;
+} | null> {
   const interactionText = extractText(interaction);
 
   // First pass: simple text similarity
@@ -143,10 +147,10 @@ async function findBestMatch(
   if (openai && topCandidates.length > 0) {
     try {
       const result = await openai.chat.completions.create({
-        model: 'gpt-4-turbo-preview',
+        model: "gpt-4-turbo-preview",
         messages: [
           {
-            role: 'system',
+            role: "system",
             content: `You are a duplicate bug detector. Compare the NEW bug report with EXISTING reports and determine if any are duplicates (same root cause).
 
 Respond with JSON: {"match": "id_of_best_match" or null, "confidence": 0.0-1.0}
@@ -154,20 +158,20 @@ Respond with JSON: {"match": "id_of_best_match" or null, "confidence": 0.0-1.0}
 Only return a match if confidence > 0.7.`,
           },
           {
-            role: 'user',
+            role: "user",
             content: `NEW REPORT:
 ${interactionText}
 
 EXISTING REPORTS:
-${topCandidates.map((c) => `[${c.id}]: ${extractText(c)}`).join('\n\n')}`,
+${topCandidates.map((c) => `[${c.id}]: ${extractText(c)}`).join("\n\n")}`,
           },
         ],
         max_tokens: 100,
         temperature: 0.2,
-        response_format: { type: 'json_object' },
+        response_format: { type: "json_object" },
       });
 
-      const result_1 = JSON.parse(result.choices[0]?.message?.content || '{}');
+      const result_1 = JSON.parse(result.choices[0]?.message?.content || "{}");
 
       if (result_1.match && result_1.confidence > 0.7) {
         const matched = topCandidates.find((c) => c.id === result_1.match);
@@ -180,7 +184,7 @@ ${topCandidates.map((c) => `[${c.id}]: ${extractText(c)}`).join('\n\n')}`,
         }
       }
     } catch (error) {
-      console.error('OpenAI dedupe error:', error);
+      console.error("OpenAI dedupe error:", error);
     }
   }
 
@@ -210,7 +214,7 @@ function extractText(interaction: any): string {
     if (contentJson.description) parts.push(String(contentJson.description));
   }
 
-  return parts.join(' ').toLowerCase();
+  return parts.join(" ").toLowerCase();
 }
 
 function calculateSimilarity(text1: string, text2: string): number {
@@ -228,12 +232,12 @@ function calculateSimilarity(text1: string, text2: string): number {
 
 function generateGroupId(interaction: any): string {
   const text = extractText(interaction);
-  const hash = crypto.createHash('sha256').update(text).digest('hex');
+  const hash = crypto.createHash("sha256").update(text).digest("hex");
   return `grp_${hash.slice(0, 16)}`;
 }
 
 async function runPeriodicDeduplication() {
-  console.log('Running periodic deduplication scan...');
+  console.log("Running periodic deduplication scan...");
 
   // Get all projects with AI enabled
   const projects = await prisma.project.findMany({
@@ -250,7 +254,7 @@ async function runPeriodicDeduplication() {
     const ungrouped = await prisma.interaction.findMany({
       where: {
         projectId: project.id,
-        type: { in: ['bug', 'feedback'] },
+        type: { in: ["bug", "feedback"] },
         aiDuplicateGroupId: null,
         createdAt: {
           gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Last 7 days

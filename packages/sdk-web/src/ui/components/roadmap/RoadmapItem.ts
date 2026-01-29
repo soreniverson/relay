@@ -3,9 +3,9 @@
 // Individual roadmap item with vote button
 // ============================================================================
 
-import { createElement, escapeHtml } from '../../utils/dom';
+import { createElement, escapeHtml } from "../../utils/dom";
 
-export type RoadmapStatus = 'planned' | 'in_progress' | 'shipped';
+export type RoadmapStatus = "planned" | "in_progress" | "shipped";
 
 export interface RoadmapItemData {
   id: string;
@@ -159,9 +159,9 @@ const ARROW_UP_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor
 const ARROW_UP_FILLED = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 4l-8 8h5v8h6v-8h5z"/></svg>`;
 
 const STATUS_LABELS: Record<RoadmapStatus, string> = {
-  planned: 'Planned',
-  in_progress: 'In Progress',
-  shipped: 'Shipped',
+  planned: "Planned",
+  in_progress: "In Progress",
+  shipped: "Shipped",
 };
 
 export interface RoadmapItemResult {
@@ -169,49 +169,63 @@ export interface RoadmapItemResult {
   update: (item: RoadmapItemData) => void;
 }
 
-export function createRoadmapItem(config: RoadmapItemConfig): RoadmapItemResult {
+export function createRoadmapItem(
+  config: RoadmapItemConfig,
+): RoadmapItemResult {
   const { item: initialItem, onVote } = config;
 
   let item = { ...initialItem };
 
-  const container = createElement('div', { class: 'relay-roadmap-item' });
+  const container = createElement("div", { class: "relay-roadmap-item" });
 
   // Vote section
-  const voteSection = createElement('div', { class: 'relay-roadmap-item__vote' });
+  const voteSection = createElement("div", {
+    class: "relay-roadmap-item__vote",
+  });
 
-  const voteBtn = createElement('button', {
-    type: 'button',
-    class: `relay-roadmap-item__vote-btn ${item.hasVoted ? 'relay-roadmap-item__vote-btn--voted' : ''}`,
+  const voteBtn = createElement("button", {
+    type: "button",
+    class: `relay-roadmap-item__vote-btn ${item.hasVoted ? "relay-roadmap-item__vote-btn--voted" : ""}`,
   }) as HTMLButtonElement;
   voteBtn.innerHTML = item.hasVoted ? ARROW_UP_FILLED : ARROW_UP_ICON;
-  voteBtn.setAttribute('aria-label', item.hasVoted ? 'Remove vote' : 'Vote');
+  voteBtn.setAttribute("aria-label", item.hasVoted ? "Remove vote" : "Vote");
 
-  const voteCount = createElement('span', { class: 'relay-roadmap-item__vote-count' }, [
-    String(item.voteCount),
-  ]);
+  const voteCount = createElement(
+    "span",
+    { class: "relay-roadmap-item__vote-count" },
+    [String(item.voteCount)],
+  );
 
   voteSection.appendChild(voteBtn);
   voteSection.appendChild(voteCount);
 
   // Content section
-  const content = createElement('div', { class: 'relay-roadmap-item__content' });
+  const content = createElement("div", {
+    class: "relay-roadmap-item__content",
+  });
 
-  const header = createElement('div', { class: 'relay-roadmap-item__header' });
+  const header = createElement("div", { class: "relay-roadmap-item__header" });
 
-  const title = createElement('h4', { class: 'relay-roadmap-item__title' }, [
+  const title = createElement("h4", { class: "relay-roadmap-item__title" }, [
     escapeHtml(item.title),
   ]);
 
-  const statusBadge = createElement('span', {
-    class: `relay-roadmap-item__status relay-roadmap-item__status--${item.status}`,
-  }, [STATUS_LABELS[item.status]]);
+  const statusBadge = createElement(
+    "span",
+    {
+      class: `relay-roadmap-item__status relay-roadmap-item__status--${item.status}`,
+    },
+    [STATUS_LABELS[item.status]],
+  );
 
   header.appendChild(title);
   header.appendChild(statusBadge);
 
-  const description = createElement('p', { class: 'relay-roadmap-item__description' }, [
-    escapeHtml(item.description),
-  ]);
+  const description = createElement(
+    "p",
+    { class: "relay-roadmap-item__description" },
+    [escapeHtml(item.description)],
+  );
 
   content.appendChild(header);
   content.appendChild(description);
@@ -220,7 +234,7 @@ export function createRoadmapItem(config: RoadmapItemConfig): RoadmapItemResult 
   container.appendChild(content);
 
   // Vote handler
-  voteBtn.addEventListener('click', () => {
+  voteBtn.addEventListener("click", () => {
     onVote(item);
   });
 
@@ -229,9 +243,12 @@ export function createRoadmapItem(config: RoadmapItemConfig): RoadmapItemResult 
     item = { ...newItem };
 
     // Update vote button
-    voteBtn.classList.toggle('relay-roadmap-item__vote-btn--voted', item.hasVoted);
+    voteBtn.classList.toggle(
+      "relay-roadmap-item__vote-btn--voted",
+      item.hasVoted,
+    );
     voteBtn.innerHTML = item.hasVoted ? ARROW_UP_FILLED : ARROW_UP_ICON;
-    voteBtn.setAttribute('aria-label', item.hasVoted ? 'Remove vote' : 'Vote');
+    voteBtn.setAttribute("aria-label", item.hasVoted ? "Remove vote" : "Vote");
 
     // Update vote count
     voteCount.textContent = String(item.voteCount);

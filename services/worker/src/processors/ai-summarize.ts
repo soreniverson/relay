@@ -1,6 +1,6 @@
-import { Job } from 'bullmq';
-import OpenAI from 'openai';
-import { prisma } from '../index.js';
+import { Job } from "bullmq";
+import OpenAI from "openai";
+import { prisma } from "../index.js";
 
 interface AiSummarizeJob {
   interactionId: string;
@@ -25,7 +25,7 @@ export async function aiSummarizeProcessor(job: Job<AiSummarizeJob>) {
   const settings = project?.settings as Record<string, unknown> | null;
   if (!settings?.aiEnabled) {
     console.log(`AI disabled for project ${projectId}, skipping`);
-    return { skipped: true, reason: 'ai_disabled' };
+    return { skipped: true, reason: "ai_disabled" };
   }
 
   // Fetch the interaction with logs
@@ -42,7 +42,7 @@ export async function aiSummarizeProcessor(job: Job<AiSummarizeJob>) {
 
   // Skip if already summarized
   if (interaction.aiSummary) {
-    return { skipped: true, reason: 'already_summarized' };
+    return { skipped: true, reason: "already_summarized" };
   }
 
   // Build context for summarization
@@ -80,18 +80,16 @@ function buildContext(interaction: any): string {
       parts.push(`Description: ${contentJson.description}`);
     }
     if (contentJson.steps && Array.isArray(contentJson.steps)) {
-      parts.push(`Steps to reproduce:\n${contentJson.steps.join('\n')}`);
+      parts.push(`Steps to reproduce:\n${contentJson.steps.join("\n")}`);
     }
   }
 
   // Console errors
   if (interaction.logs?.[0]?.console) {
     const console = interaction.logs[0].console as any[];
-    const errors = console.filter((l) => l.level === 'error').slice(0, 5);
+    const errors = console.filter((l) => l.level === "error").slice(0, 5);
     if (errors.length > 0) {
-      parts.push(
-        `Console Errors:\n${errors.map((e) => e.message).join('\n')}`
-      );
+      parts.push(`Console Errors:\n${errors.map((e) => e.message).join("\n")}`);
     }
   }
 
@@ -101,12 +99,12 @@ function buildContext(interaction: any): string {
     const failed = network.filter((n) => n.status >= 400).slice(0, 5);
     if (failed.length > 0) {
       parts.push(
-        `Failed Requests:\n${failed.map((n) => `${n.method} ${n.url} - ${n.status}`).join('\n')}`
+        `Failed Requests:\n${failed.map((n) => `${n.method} ${n.url} - ${n.status}`).join("\n")}`,
       );
     }
   }
 
-  return parts.join('\n\n');
+  return parts.join("\n\n");
 }
 
 async function generateSummary(context: string): Promise<string> {
@@ -117,10 +115,10 @@ async function generateSummary(context: string): Promise<string> {
 
   try {
     const response = await openai.chat.completions.create({
-      model: 'gpt-4-turbo-preview',
+      model: "gpt-4-turbo-preview",
       messages: [
         {
-          role: 'system',
+          role: "system",
           content: `You are a bug report summarizer. Create a concise 1-2 sentence summary of the issue. Focus on:
 1. What the user was trying to do
 2. What went wrong
@@ -129,7 +127,7 @@ async function generateSummary(context: string): Promise<string> {
 Be technical but concise. Do not include any personally identifiable information.`,
         },
         {
-          role: 'user',
+          role: "user",
           content: context,
         },
       ],
@@ -137,18 +135,20 @@ Be technical but concise. Do not include any personally identifiable information
       temperature: 0.3,
     });
 
-    return response.choices[0]?.message?.content || extractFallbackSummary(context);
+    return (
+      response.choices[0]?.message?.content || extractFallbackSummary(context)
+    );
   } catch (error) {
-    console.error('OpenAI API error:', error);
+    console.error("OpenAI API error:", error);
     return extractFallbackSummary(context);
   }
 }
 
 function extractFallbackSummary(context: string): string {
   // Simple fallback: extract first sentence or truncate
-  const lines = context.split('\n').filter((l) => l.trim());
+  const lines = context.split("\n").filter((l) => l.trim());
   const firstMeaningful = lines.find(
-    (l) => !l.startsWith('User Report:') && !l.startsWith('Title:')
+    (l) => !l.startsWith("User Report:") && !l.startsWith("Title:"),
   );
 
   if (firstMeaningful) {

@@ -1,33 +1,33 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Plus, ChevronDown, Search } from 'lucide-react';
-import { cn } from '@/lib/utils';
+} from "@/components/ui/dropdown-menu";
+import { MoreHorizontal, Plus, ChevronDown, Search } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface SurveyResponse {
   id: string;
@@ -41,7 +41,7 @@ interface SurveyResponse {
 interface Survey {
   id: string;
   name: string;
-  type: 'nps' | 'csat' | 'custom';
+  type: "nps" | "csat" | "custom";
   active: boolean;
   responseCount: number;
   score?: number;
@@ -55,102 +55,137 @@ interface Survey {
 
 const mockSurveys: Survey[] = [
   {
-    id: '1',
-    name: 'Monthly NPS Survey',
-    type: 'nps',
+    id: "1",
+    name: "Monthly NPS Survey",
+    type: "nps",
     active: true,
     responseCount: 234,
     score: 42,
-    question: 'How likely are you to recommend us to a friend or colleague?',
-    followUpQuestion: 'What is the primary reason for your score?',
-    thankYouMessage: 'Thank you for your feedback!',
-    targetingRules: ['Show after 7 days', 'Once per user'],
+    question: "How likely are you to recommend us to a friend or colleague?",
+    followUpQuestion: "What is the primary reason for your score?",
+    thankYouMessage: "Thank you for your feedback!",
+    targetingRules: ["Show after 7 days", "Once per user"],
     responses: [
-      { id: '1', score: 9, feedback: 'Great product, love the features!', userId: '1', userEmail: 'jane@example.com', createdAt: '2024-01-15' },
-      { id: '2', score: 10, feedback: 'Best tool I\'ve used', userId: '2', userEmail: 'john@example.com', createdAt: '2024-01-14' },
-      { id: '3', score: 7, feedback: 'Good but could be faster', userId: '3', userEmail: 'alice@example.com', createdAt: '2024-01-13' },
+      {
+        id: "1",
+        score: 9,
+        feedback: "Great product, love the features!",
+        userId: "1",
+        userEmail: "jane@example.com",
+        createdAt: "2024-01-15",
+      },
+      {
+        id: "2",
+        score: 10,
+        feedback: "Best tool I've used",
+        userId: "2",
+        userEmail: "john@example.com",
+        createdAt: "2024-01-14",
+      },
+      {
+        id: "3",
+        score: 7,
+        feedback: "Good but could be faster",
+        userId: "3",
+        userEmail: "alice@example.com",
+        createdAt: "2024-01-13",
+      },
     ],
-    createdAt: '2024-01-01T00:00:00Z',
+    createdAt: "2024-01-01T00:00:00Z",
   },
   {
-    id: '2',
-    name: 'Post-Checkout CSAT',
-    type: 'csat',
+    id: "2",
+    name: "Post-Checkout CSAT",
+    type: "csat",
     active: true,
     responseCount: 156,
     score: 4.2,
-    question: 'How satisfied are you with your purchase experience?',
-    followUpQuestion: 'How can we improve?',
-    thankYouMessage: 'Thanks for shopping with us!',
-    targetingRules: ['Show on /checkout/success', 'Show once per purchase'],
+    question: "How satisfied are you with your purchase experience?",
+    followUpQuestion: "How can we improve?",
+    thankYouMessage: "Thanks for shopping with us!",
+    targetingRules: ["Show on /checkout/success", "Show once per purchase"],
     responses: [
-      { id: '1', score: 5, feedback: 'Quick and easy checkout', userId: '1', userEmail: 'sarah@example.com', createdAt: '2024-01-15' },
-      { id: '2', score: 4, userId: '2', userEmail: 'mike@example.com', createdAt: '2024-01-14' },
+      {
+        id: "1",
+        score: 5,
+        feedback: "Quick and easy checkout",
+        userId: "1",
+        userEmail: "sarah@example.com",
+        createdAt: "2024-01-15",
+      },
+      {
+        id: "2",
+        score: 4,
+        userId: "2",
+        userEmail: "mike@example.com",
+        createdAt: "2024-01-14",
+      },
     ],
-    createdAt: '2024-01-10T00:00:00Z',
+    createdAt: "2024-01-10T00:00:00Z",
   },
   {
-    id: '3',
-    name: 'Feature Feedback Survey',
-    type: 'custom',
+    id: "3",
+    name: "Feature Feedback Survey",
+    type: "custom",
     active: false,
     responseCount: 89,
-    question: 'How useful did you find the export feature?',
-    followUpQuestion: 'What other features would you like to see?',
-    thankYouMessage: 'Your feedback helps us improve!',
-    targetingRules: ['Show to Pro users', 'After using export feature'],
+    question: "How useful did you find the export feature?",
+    followUpQuestion: "What other features would you like to see?",
+    thankYouMessage: "Your feedback helps us improve!",
+    targetingRules: ["Show to Pro users", "After using export feature"],
     responses: [],
-    createdAt: '2024-01-15T00:00:00Z',
+    createdAt: "2024-01-15T00:00:00Z",
   },
 ];
 
 const typeLabels: Record<string, string> = {
-  nps: 'NPS',
-  csat: 'CSAT',
-  custom: 'Custom',
+  nps: "NPS",
+  csat: "CSAT",
+  custom: "Custom",
 };
 
-
 const npsTemplate = {
-  question: 'How likely are you to recommend us to a friend or colleague?',
-  followUpQuestion: 'What is the primary reason for your score?',
-  thankYouMessage: 'Thank you for your feedback! We truly appreciate it.',
+  question: "How likely are you to recommend us to a friend or colleague?",
+  followUpQuestion: "What is the primary reason for your score?",
+  thankYouMessage: "Thank you for your feedback! We truly appreciate it.",
 };
 
 const csatTemplate = {
-  question: 'How satisfied are you with your experience?',
-  followUpQuestion: 'Is there anything we could do better?',
-  thankYouMessage: 'Thank you for your feedback!',
+  question: "How satisfied are you with your experience?",
+  followUpQuestion: "Is there anything we could do better?",
+  thankYouMessage: "Thank you for your feedback!",
 };
 
 const customTemplate = {
-  question: '',
-  followUpQuestion: '',
-  thankYouMessage: 'Thank you for your response!',
+  question: "",
+  followUpQuestion: "",
+  thankYouMessage: "Thank you for your response!",
 };
 
 export default function SurveysPage() {
   const [surveys, setSurveys] = useState(mockSurveys);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [createType, setCreateType] = useState<'nps' | 'csat' | 'custom'>('nps');
+  const [createType, setCreateType] = useState<"nps" | "csat" | "custom">(
+    "nps",
+  );
   const [viewResponsesId, setViewResponsesId] = useState<string | null>(null);
   const [newSurvey, setNewSurvey] = useState({
-    name: '',
+    name: "",
     question: npsTemplate.question,
     followUpQuestion: npsTemplate.followUpQuestion,
     thankYouMessage: npsTemplate.thankYouMessage,
-    targetUrl: '',
-    showAfterDays: '7',
-    frequency: 'once',
+    targetUrl: "",
+    showAfterDays: "7",
+    frequency: "once",
   });
 
   const filteredSurveys = surveys.filter((survey) => {
     if (typeFilter && survey.type !== typeFilter) return false;
-    if (statusFilter === 'active' && !survey.active) return false;
-    if (statusFilter === 'paused' && survey.active) return false;
+    if (statusFilter === "active" && !survey.active) return false;
+    if (statusFilter === "paused" && survey.active) return false;
     if (search) {
       const searchLower = search.toLowerCase();
       return survey.name.toLowerCase().includes(searchLower);
@@ -161,8 +196,8 @@ export default function SurveysPage() {
   const toggleActive = (id: string) => {
     setSurveys((prev) =>
       prev.map((survey) =>
-        survey.id === id ? { ...survey, active: !survey.active } : survey
-      )
+        survey.id === id ? { ...survey, active: !survey.active } : survey,
+      ),
     );
   };
 
@@ -170,10 +205,13 @@ export default function SurveysPage() {
     if (!newSurvey.name.trim()) return;
 
     const targetingRules: string[] = [];
-    if (newSurvey.targetUrl) targetingRules.push(`Show on ${newSurvey.targetUrl}`);
-    if (newSurvey.showAfterDays) targetingRules.push(`Show after ${newSurvey.showAfterDays} days`);
-    if (newSurvey.frequency === 'once') targetingRules.push('Once per user');
-    else if (newSurvey.frequency === 'monthly') targetingRules.push('Once per month');
+    if (newSurvey.targetUrl)
+      targetingRules.push(`Show on ${newSurvey.targetUrl}`);
+    if (newSurvey.showAfterDays)
+      targetingRules.push(`Show after ${newSurvey.showAfterDays} days`);
+    if (newSurvey.frequency === "once") targetingRules.push("Once per user");
+    else if (newSurvey.frequency === "monthly")
+      targetingRules.push("Once per month");
 
     const survey: Survey = {
       id: Date.now().toString(),
@@ -196,15 +234,20 @@ export default function SurveysPage() {
   };
 
   const resetForm = () => {
-    const template = createType === 'nps' ? npsTemplate : createType === 'csat' ? csatTemplate : customTemplate;
+    const template =
+      createType === "nps"
+        ? npsTemplate
+        : createType === "csat"
+          ? csatTemplate
+          : customTemplate;
     setNewSurvey({
-      name: '',
+      name: "",
       question: template.question,
       followUpQuestion: template.followUpQuestion,
       thankYouMessage: template.thankYouMessage,
-      targetUrl: '',
-      showAfterDays: '7',
-      frequency: 'once',
+      targetUrl: "",
+      showAfterDays: "7",
+      frequency: "once",
     });
   };
 
@@ -230,22 +273,29 @@ export default function SurveysPage() {
     setSurveys((prev) => [duplicate, ...prev]);
   };
 
-  const openCreateModal = (type: 'nps' | 'csat' | 'custom') => {
+  const openCreateModal = (type: "nps" | "csat" | "custom") => {
     setCreateType(type);
-    const template = type === 'nps' ? npsTemplate : type === 'csat' ? csatTemplate : customTemplate;
+    const template =
+      type === "nps"
+        ? npsTemplate
+        : type === "csat"
+          ? csatTemplate
+          : customTemplate;
     setNewSurvey({
-      name: '',
+      name: "",
       question: template.question,
       followUpQuestion: template.followUpQuestion,
       thankYouMessage: template.thankYouMessage,
-      targetUrl: '',
-      showAfterDays: '7',
-      frequency: 'once',
+      targetUrl: "",
+      showAfterDays: "7",
+      frequency: "once",
     });
     setIsCreateOpen(true);
   };
 
-  const viewingResponses = viewResponsesId ? surveys.find(s => s.id === viewResponsesId) : null;
+  const viewingResponses = viewResponsesId
+    ? surveys.find((s) => s.id === viewResponsesId)
+    : null;
 
   return (
     <div className="flex flex-col h-full">
@@ -259,22 +309,24 @@ export default function SurveysPage() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => openCreateModal('nps')}>
+            <DropdownMenuItem onClick={() => openCreateModal("nps")}>
               <div>
                 <div className="text-sm">NPS Survey</div>
                 <div className="text-xs text-muted-foreground">0-10 scale</div>
               </div>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => openCreateModal('csat')}>
+            <DropdownMenuItem onClick={() => openCreateModal("csat")}>
               <div>
                 <div className="text-sm">CSAT Survey</div>
                 <div className="text-xs text-muted-foreground">1-5 scale</div>
               </div>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => openCreateModal('custom')}>
+            <DropdownMenuItem onClick={() => openCreateModal("custom")}>
               <div>
                 <div className="text-sm">Custom Survey</div>
-                <div className="text-xs text-muted-foreground">Your own questions</div>
+                <div className="text-xs text-muted-foreground">
+                  Your own questions
+                </div>
               </div>
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -282,7 +334,10 @@ export default function SurveysPage() {
       </div>
 
       {/* Search and Filters */}
-      <div className="flex items-center gap-3 px-4 py-2 border-b border-border" style={{ borderBottomWidth: '0.5px' }}>
+      <div
+        className="flex items-center gap-3 px-4 py-2 border-b border-border"
+        style={{ borderBottomWidth: "0.5px" }}
+      >
         <div className="relative flex-1">
           <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/50" />
           <Input
@@ -296,19 +351,26 @@ export default function SurveysPage() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
-                {typeFilter ? typeLabels[typeFilter] : 'Type'}
+                {typeFilter ? typeLabels[typeFilter] : "Type"}
                 <ChevronDown className="h-3 w-3" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => setTypeFilter(null)}>
                 All
-                {!typeFilter && <span className="ml-auto text-foreground">✓</span>}
+                {!typeFilter && (
+                  <span className="ml-auto text-foreground">✓</span>
+                )}
               </DropdownMenuItem>
               {Object.entries(typeLabels).map(([value, label]) => (
-                <DropdownMenuItem key={value} onClick={() => setTypeFilter(value)}>
+                <DropdownMenuItem
+                  key={value}
+                  onClick={() => setTypeFilter(value)}
+                >
                   {label}
-                  {typeFilter === value && <span className="ml-auto text-foreground">✓</span>}
+                  {typeFilter === value && (
+                    <span className="ml-auto text-foreground">✓</span>
+                  )}
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
@@ -316,22 +378,32 @@ export default function SurveysPage() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
-                {statusFilter === 'active' ? 'Active' : statusFilter === 'paused' ? 'Paused' : 'Status'}
+                {statusFilter === "active"
+                  ? "Active"
+                  : statusFilter === "paused"
+                    ? "Paused"
+                    : "Status"}
                 <ChevronDown className="h-3 w-3" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => setStatusFilter(null)}>
                 All
-                {!statusFilter && <span className="ml-auto text-foreground">✓</span>}
+                {!statusFilter && (
+                  <span className="ml-auto text-foreground">✓</span>
+                )}
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setStatusFilter('active')}>
+              <DropdownMenuItem onClick={() => setStatusFilter("active")}>
                 Active
-                {statusFilter === 'active' && <span className="ml-auto text-foreground">✓</span>}
+                {statusFilter === "active" && (
+                  <span className="ml-auto text-foreground">✓</span>
+                )}
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setStatusFilter('paused')}>
+              <DropdownMenuItem onClick={() => setStatusFilter("paused")}>
                 Paused
-                {statusFilter === 'paused' && <span className="ml-auto text-foreground">✓</span>}
+                {statusFilter === "paused" && (
+                  <span className="ml-auto text-foreground">✓</span>
+                )}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -351,7 +423,7 @@ export default function SurveysPage() {
             <div
               key={survey.id}
               className="border-b border-border px-4 py-3 hover:bg-accent/30 transition-colors"
-              style={{ borderBottomWidth: '0.5px' }}
+              style={{ borderBottomWidth: "0.5px" }}
             >
               <div className="flex items-center gap-3">
                 {/* Content */}
@@ -364,13 +436,13 @@ export default function SurveysPage() {
                     <button
                       onClick={() => toggleActive(survey.id)}
                       className={cn(
-                        'text-[11px] leading-none px-1.5 py-1 rounded shrink-0 transition-colors',
+                        "text-[11px] leading-none px-1.5 py-1 rounded shrink-0 transition-colors",
                         survey.active
-                          ? 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20'
-                          : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                          ? "bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20"
+                          : "bg-muted text-muted-foreground hover:bg-muted/80",
                       )}
                     >
-                      {survey.active ? 'Active' : 'Paused'}
+                      {survey.active ? "Active" : "Paused"}
                     </button>
                   </div>
                   {/* Row 2: Type + Responses + Score + Targeting */}
@@ -389,7 +461,8 @@ export default function SurveysPage() {
                       <>
                         <span className="text-muted-foreground/40">·</span>
                         <span className="text-xs text-muted-foreground">
-                          Score: {survey.score}{survey.type === 'csat' && '/5'}
+                          Score: {survey.score}
+                          {survey.type === "csat" && "/5"}
                         </span>
                       </>
                     )}
@@ -412,17 +485,24 @@ export default function SurveysPage() {
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => setViewResponsesId(survey.id)}>
+                    <DropdownMenuItem
+                      onClick={() => setViewResponsesId(survey.id)}
+                    >
                       View Responses
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => toggleActive(survey.id)}>
-                      {survey.active ? 'Pause Survey' : 'Activate Survey'}
+                      {survey.active ? "Pause Survey" : "Activate Survey"}
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => handleDuplicate(survey.id)}>
+                    <DropdownMenuItem
+                      onClick={() => handleDuplicate(survey.id)}
+                    >
                       Duplicate
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleDelete(survey.id)} className="text-destructive">
+                    <DropdownMenuItem
+                      onClick={() => handleDelete(survey.id)}
+                      className="text-destructive"
+                    >
                       Delete
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -441,63 +521,105 @@ export default function SurveysPage() {
           </DialogHeader>
           <div className="grid gap-4 pt-2 max-h-[60vh] overflow-y-auto">
             <div className="grid gap-1.5">
-              <Label htmlFor="name" className="text-xs text-muted-foreground">Name</Label>
+              <Label htmlFor="name" className="text-xs text-muted-foreground">
+                Name
+              </Label>
               <Input
                 id="name"
-                placeholder={`e.g. ${createType === 'nps' ? 'Monthly NPS' : createType === 'csat' ? 'Post-Purchase CSAT' : 'Feature Feedback'}`}
+                placeholder={`e.g. ${createType === "nps" ? "Monthly NPS" : createType === "csat" ? "Post-Purchase CSAT" : "Feature Feedback"}`}
                 value={newSurvey.name}
-                onChange={(e) => setNewSurvey({ ...newSurvey, name: e.target.value })}
+                onChange={(e) =>
+                  setNewSurvey({ ...newSurvey, name: e.target.value })
+                }
               />
             </div>
 
             <div className="grid gap-1.5">
-              <Label htmlFor="question" className="text-xs text-muted-foreground">Question</Label>
+              <Label
+                htmlFor="question"
+                className="text-xs text-muted-foreground"
+              >
+                Question
+              </Label>
               <Textarea
                 id="question"
                 placeholder="Enter your question..."
                 value={newSurvey.question}
-                onChange={(e) => setNewSurvey({ ...newSurvey, question: e.target.value })}
+                onChange={(e) =>
+                  setNewSurvey({ ...newSurvey, question: e.target.value })
+                }
                 rows={2}
               />
             </div>
 
             <div className="grid gap-1.5">
-              <Label htmlFor="followUp" className="text-xs text-muted-foreground">Follow-up (optional)</Label>
+              <Label
+                htmlFor="followUp"
+                className="text-xs text-muted-foreground"
+              >
+                Follow-up (optional)
+              </Label>
               <Textarea
                 id="followUp"
                 placeholder="Ask for more details..."
                 value={newSurvey.followUpQuestion}
-                onChange={(e) => setNewSurvey({ ...newSurvey, followUpQuestion: e.target.value })}
+                onChange={(e) =>
+                  setNewSurvey({
+                    ...newSurvey,
+                    followUpQuestion: e.target.value,
+                  })
+                }
                 rows={2}
               />
             </div>
 
             <div className="grid gap-1.5">
-              <Label htmlFor="thankYou" className="text-xs text-muted-foreground">Thank you message</Label>
+              <Label
+                htmlFor="thankYou"
+                className="text-xs text-muted-foreground"
+              >
+                Thank you message
+              </Label>
               <Input
                 id="thankYou"
                 placeholder="Message shown after submission"
                 value={newSurvey.thankYouMessage}
-                onChange={(e) => setNewSurvey({ ...newSurvey, thankYouMessage: e.target.value })}
+                onChange={(e) =>
+                  setNewSurvey({
+                    ...newSurvey,
+                    thankYouMessage: e.target.value,
+                  })
+                }
               />
             </div>
 
             <div className="grid gap-1.5">
-              <Label htmlFor="targetUrl" className="text-xs text-muted-foreground">Target URL (optional)</Label>
+              <Label
+                htmlFor="targetUrl"
+                className="text-xs text-muted-foreground"
+              >
+                Target URL (optional)
+              </Label>
               <Input
                 id="targetUrl"
                 placeholder="e.g. /checkout/success"
                 value={newSurvey.targetUrl}
-                onChange={(e) => setNewSurvey({ ...newSurvey, targetUrl: e.target.value })}
+                onChange={(e) =>
+                  setNewSurvey({ ...newSurvey, targetUrl: e.target.value })
+                }
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="grid gap-1.5">
-                <Label className="text-xs text-muted-foreground">Show after</Label>
+                <Label className="text-xs text-muted-foreground">
+                  Show after
+                </Label>
                 <Select
                   value={newSurvey.showAfterDays}
-                  onValueChange={(value) => setNewSurvey({ ...newSurvey, showAfterDays: value })}
+                  onValueChange={(value) =>
+                    setNewSurvey({ ...newSurvey, showAfterDays: value })
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -513,10 +635,14 @@ export default function SurveysPage() {
               </div>
 
               <div className="grid gap-1.5">
-                <Label className="text-xs text-muted-foreground">Frequency</Label>
+                <Label className="text-xs text-muted-foreground">
+                  Frequency
+                </Label>
                 <Select
                   value={newSurvey.frequency}
-                  onValueChange={(value) => setNewSurvey({ ...newSurvey, frequency: value })}
+                  onValueChange={(value) =>
+                    setNewSurvey({ ...newSurvey, frequency: value })
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -531,10 +657,18 @@ export default function SurveysPage() {
             </div>
           </div>
           <DialogFooter className="pt-4">
-            <Button variant="ghost" size="sm" onClick={() => setIsCreateOpen(false)}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsCreateOpen(false)}
+            >
               Cancel
             </Button>
-            <Button size="sm" onClick={handleCreate} disabled={!newSurvey.name.trim() || !newSurvey.question.trim()}>
+            <Button
+              size="sm"
+              onClick={handleCreate}
+              disabled={!newSurvey.name.trim() || !newSurvey.question.trim()}
+            >
               Create
             </Button>
           </DialogFooter>
@@ -542,7 +676,10 @@ export default function SurveysPage() {
       </Dialog>
 
       {/* View Responses Modal */}
-      <Dialog open={!!viewResponsesId} onOpenChange={() => setViewResponsesId(null)}>
+      <Dialog
+        open={!!viewResponsesId}
+        onOpenChange={() => setViewResponsesId(null)}
+      >
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>{viewingResponses?.name}</DialogTitle>
@@ -552,7 +689,10 @@ export default function SurveysPage() {
             {viewingResponses?.score !== undefined && (
               <>
                 <span className="text-muted-foreground/40">·</span>
-                <span>Score: {viewingResponses.score}{viewingResponses.type === 'csat' ? '/5' : ''}</span>
+                <span>
+                  Score: {viewingResponses.score}
+                  {viewingResponses.type === "csat" ? "/5" : ""}
+                </span>
               </>
             )}
           </div>
@@ -567,24 +707,41 @@ export default function SurveysPage() {
                   <div
                     key={response.id}
                     className="border-b border-border py-3"
-                    style={{ borderBottomWidth: '0.5px' }}
+                    style={{ borderBottomWidth: "0.5px" }}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <span className={cn(
-                          'text-sm font-medium',
-                          viewingResponses.type === 'nps'
-                            ? response.score >= 9 ? 'text-emerald-400' : response.score >= 7 ? 'text-amber-400' : 'text-red-400'
-                            : response.score >= 4 ? 'text-emerald-400' : response.score >= 3 ? 'text-amber-400' : 'text-red-400'
-                        )}>
-                          {response.score}{viewingResponses.type === 'csat' && '/5'}
+                        <span
+                          className={cn(
+                            "text-sm font-medium",
+                            viewingResponses.type === "nps"
+                              ? response.score >= 9
+                                ? "text-emerald-400"
+                                : response.score >= 7
+                                  ? "text-amber-400"
+                                  : "text-red-400"
+                              : response.score >= 4
+                                ? "text-emerald-400"
+                                : response.score >= 3
+                                  ? "text-amber-400"
+                                  : "text-red-400",
+                          )}
+                        >
+                          {response.score}
+                          {viewingResponses.type === "csat" && "/5"}
                         </span>
-                        <span className="text-xs text-muted-foreground">{response.userEmail}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {response.userEmail}
+                        </span>
                       </div>
-                      <span className="text-xs text-muted-foreground/50">{response.createdAt}</span>
+                      <span className="text-xs text-muted-foreground/50">
+                        {response.createdAt}
+                      </span>
                     </div>
                     {response.feedback && (
-                      <p className="text-sm text-foreground mt-1">{response.feedback}</p>
+                      <p className="text-sm text-foreground mt-1">
+                        {response.feedback}
+                      </p>
                     )}
                   </div>
                 ))}

@@ -1,24 +1,25 @@
-import { initTRPC, TRPCError } from '@trpc/server';
-import superjson from 'superjson';
-import { type inferAsyncReturnType } from '@trpc/server';
-import { type CreateExpressContextOptions } from '@trpc/server/adapters/express';
-import { prisma } from './prisma';
-import { cache, rateLimit } from './redis';
-import { logger } from './logger';
-import { verifyApiKey, verifyJwt } from '../services/auth';
-import type { Project, AdminUser } from '@prisma/client';
+import { initTRPC, TRPCError } from "@trpc/server";
+import superjson from "superjson";
+import { type inferAsyncReturnType } from "@trpc/server";
+import { type CreateExpressContextOptions } from "@trpc/server/adapters/express";
+import { prisma } from "./prisma";
+import { cache, rateLimit } from "./redis";
+import { logger } from "./logger";
+import { verifyApiKey, verifyJwt } from "../services/auth";
+import type { Project, AdminUser } from "@prisma/client";
 
 // Context type
 export type Context = inferAsyncReturnType<typeof createContext>;
 
 // Create context for each request
 export async function createContext({ req, res }: CreateExpressContextOptions) {
-  const requestId = req.headers['x-request-id'] as string || crypto.randomUUID();
+  const requestId =
+    (req.headers["x-request-id"] as string) || crypto.randomUUID();
   const log = logger.child({ requestId });
 
   // Extract authorization
   const authHeader = req.headers.authorization;
-  const apiKey = req.headers['x-api-key'] as string;
+  const apiKey = req.headers["x-api-key"] as string;
 
   let project: Project | null = null;
   let adminUser: AdminUser | null = null;
@@ -34,7 +35,7 @@ export async function createContext({ req, res }: CreateExpressContextOptions) {
   }
 
   // JWT auth (for dashboard)
-  if (authHeader?.startsWith('Bearer ')) {
+  if (authHeader?.startsWith("Bearer ")) {
     const token = authHeader.slice(7);
     const userData = await verifyJwt(token);
     if (userData) {
@@ -55,7 +56,7 @@ export async function createContext({ req, res }: CreateExpressContextOptions) {
     project,
     projectId,
     adminUser,
-    region: process.env.REGION || 'us-west',
+    region: process.env.REGION || "us-west",
   };
 }
 
@@ -67,10 +68,7 @@ const t = initTRPC.context<Context>().create({
       ...shape,
       data: {
         ...shape.data,
-        zodError:
-          error.cause instanceof Error
-            ? error.cause.message
-            : null,
+        zodError: error.cause instanceof Error ? error.cause.message : null,
       },
     };
   },
@@ -86,8 +84,8 @@ export const mergeRouters = t.mergeRouters;
 const requireApiKey = middleware(async ({ ctx, next }) => {
   if (!ctx.project || !ctx.projectId) {
     throw new TRPCError({
-      code: 'UNAUTHORIZED',
-      message: 'Invalid or missing API key',
+      code: "UNAUTHORIZED",
+      message: "Invalid or missing API key",
     });
   }
 
@@ -104,8 +102,8 @@ const requireApiKey = middleware(async ({ ctx, next }) => {
 const requireAuth = middleware(async ({ ctx, next }) => {
   if (!ctx.adminUser) {
     throw new TRPCError({
-      code: 'UNAUTHORIZED',
-      message: 'Authentication required',
+      code: "UNAUTHORIZED",
+      message: "Authentication required",
     });
   }
 
@@ -121,8 +119,8 @@ const requireAuth = middleware(async ({ ctx, next }) => {
 const requireProjectAccess = middleware(async ({ ctx, next, rawInput }) => {
   if (!ctx.adminUser) {
     throw new TRPCError({
-      code: 'UNAUTHORIZED',
-      message: 'Authentication required',
+      code: "UNAUTHORIZED",
+      message: "Authentication required",
     });
   }
 
@@ -132,8 +130,8 @@ const requireProjectAccess = middleware(async ({ ctx, next, rawInput }) => {
 
   if (!projectId) {
     throw new TRPCError({
-      code: 'BAD_REQUEST',
-      message: 'Project ID required',
+      code: "BAD_REQUEST",
+      message: "Project ID required",
     });
   }
 
@@ -149,8 +147,8 @@ const requireProjectAccess = middleware(async ({ ctx, next, rawInput }) => {
 
   if (!membership) {
     throw new TRPCError({
-      code: 'FORBIDDEN',
-      message: 'You do not have access to this project',
+      code: "FORBIDDEN",
+      message: "You do not have access to this project",
     });
   }
 
@@ -160,8 +158,8 @@ const requireProjectAccess = middleware(async ({ ctx, next, rawInput }) => {
 
   if (!project) {
     throw new TRPCError({
-      code: 'NOT_FOUND',
-      message: 'Project not found',
+      code: "NOT_FOUND",
+      message: "Project not found",
     });
   }
 
@@ -178,12 +176,12 @@ const requireProjectAccess = middleware(async ({ ctx, next, rawInput }) => {
 // Rate limiting middleware
 const withRateLimit = (limit: number, windowSeconds: number) =>
   middleware(async ({ ctx, next }) => {
-    const key = ctx.projectId || ctx.adminUser?.id || ctx.req.ip || 'anonymous';
+    const key = ctx.projectId || ctx.adminUser?.id || ctx.req.ip || "anonymous";
     const result = await ctx.rateLimit.check(key, limit, windowSeconds);
 
     if (!result.allowed) {
       throw new TRPCError({
-        code: 'TOO_MANY_REQUESTS',
+        code: "TOO_MANY_REQUESTS",
         message: `Rate limit exceeded. Try again in ${Math.ceil((result.resetAt - Date.now()) / 1000)} seconds`,
       });
     }
@@ -197,7 +195,11 @@ export const authedProcedure = publicProcedure.use(requireAuth);
 export const projectProcedure = publicProcedure.use(requireProjectAccess);
 
 // With rate limiting
-export const sdkProcedureWithRateLimit = (limit: number, windowSeconds: number) =>
-  sdkProcedure.use(withRateLimit(limit, windowSeconds));
-export const authedProcedureWithRateLimit = (limit: number, windowSeconds: number) =>
-  authedProcedure.use(withRateLimit(limit, windowSeconds));
+export const sdkProcedureWithRateLimit = (
+  limit: number,
+  windowSeconds: number,
+) => sdkProcedure.use(withRateLimit(limit, windowSeconds));
+export const authedProcedureWithRateLimit = (
+  limit: number,
+  windowSeconds: number,
+) => authedProcedure.use(withRateLimit(limit, windowSeconds));

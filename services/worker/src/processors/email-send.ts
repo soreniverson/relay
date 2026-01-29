@@ -1,8 +1,8 @@
-import { Job } from 'bullmq';
-import { prisma } from '../index.js';
+import { Job } from "bullmq";
+import { prisma } from "../index.js";
 
 interface EmailSendJob {
-  type: 'magic_link' | 'notification' | 'digest';
+  type: "magic_link" | "notification" | "digest";
   to: string;
   subject?: string;
   templateId?: string;
@@ -15,11 +15,14 @@ export async function emailSendProcessor(job: Job<EmailSendJob>) {
   console.log(`Processing email: ${type} to ${to}`);
 
   switch (type) {
-    case 'magic_link':
-      return await sendMagicLinkEmail(to, data as { token: string; loginUrl: string });
-    case 'notification':
+    case "magic_link":
+      return await sendMagicLinkEmail(
+        to,
+        data as { token: string; loginUrl: string },
+      );
+    case "notification":
       return await sendNotificationEmail(to, subject!, templateId!, data!);
-    case 'digest':
+    case "digest":
       return await sendDigestEmail(to, data!);
     default:
       throw new Error(`Unknown email type: ${type}`);
@@ -28,7 +31,7 @@ export async function emailSendProcessor(job: Job<EmailSendJob>) {
 
 async function sendMagicLinkEmail(
   to: string,
-  data: { token: string; loginUrl: string }
+  data: { token: string; loginUrl: string },
 ) {
   const html = `
 <!DOCTYPE html>
@@ -69,7 +72,7 @@ async function sendMagicLinkEmail(
 
   return await sendEmail({
     to,
-    subject: 'Sign in to Relay',
+    subject: "Sign in to Relay",
     html,
   });
 }
@@ -78,18 +81,18 @@ async function sendNotificationEmail(
   to: string,
   subject: string,
   templateId: string,
-  data: Record<string, unknown>
+  data: Record<string, unknown>,
 ) {
   let html: string;
 
   switch (templateId) {
-    case 'new_bug_assigned':
+    case "new_bug_assigned":
       html = buildNewBugAssignedEmail(data);
       break;
-    case 'status_changed':
+    case "status_changed":
       html = buildStatusChangedEmail(data);
       break;
-    case 'new_comment':
+    case "new_comment":
       html = buildNewCommentEmail(data);
       break;
     default:
@@ -117,7 +120,7 @@ async function sendDigestEmail(to: string, data: Record<string, unknown>) {
     }>;
   };
 
-  const dashboardUrl = process.env.DASHBOARD_URL || 'http://localhost:3000';
+  const dashboardUrl = process.env.DASHBOARD_URL || "http://localhost:3000";
 
   const html = `
 <!DOCTYPE html>
@@ -172,12 +175,12 @@ async function sendDigestEmail(to: string, data: Record<string, unknown>) {
           ${issue.severity} · ${issue.status}
         </div>
       </div>
-    `
+    `,
       )
-      .join('')}
+      .join("")}
   </div>
   `
-      : ''
+      : ""
   }
 
   <div style="text-align: center; margin-bottom: 20px;">
@@ -218,7 +221,7 @@ function buildNewBugAssignedEmail(data: Record<string, unknown>): string {
 
   <div style="background: #f8fafc; border-radius: 8px; padding: 20px; margin: 20px 0;">
     <h3 style="margin-top: 0;">${title}</h3>
-    <p>${description?.slice(0, 300) || 'No description provided.'}</p>
+    <p>${description?.slice(0, 300) || "No description provided."}</p>
   </div>
 
   <a href="${url}" style="background: #6366f1; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 500; display: inline-block;">
@@ -286,12 +289,16 @@ function buildNewCommentEmail(data: Record<string, unknown>): string {
   `;
 }
 
-async function sendEmail(options: { to: string; subject: string; html: string }) {
+async function sendEmail(options: {
+  to: string;
+  subject: string;
+  html: string;
+}) {
   const smtpUrl = process.env.SMTP_URL;
 
   if (!smtpUrl) {
     // Development: log to console
-    console.log('📧 Email (dev mode):', {
+    console.log("📧 Email (dev mode):", {
       to: options.to,
       subject: options.subject,
     });
@@ -301,8 +308,8 @@ async function sendEmail(options: { to: string; subject: string; html: string })
   // Production: Use nodemailer or your email service
   // This is a placeholder - integrate with your email provider
   const response = await fetch(smtpUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       to: options.to,
       subject: options.subject,

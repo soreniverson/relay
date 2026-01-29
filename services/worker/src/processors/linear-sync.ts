@@ -1,8 +1,8 @@
-import { Job } from 'bullmq';
-import { prisma } from '../index.js';
+import { Job } from "bullmq";
+import { prisma } from "../index.js";
 
 interface LinearSyncJob {
-  type: 'create' | 'update' | 'sync';
+  type: "create" | "update" | "sync";
   interactionId?: string;
   projectId: string;
   issueData?: {
@@ -18,7 +18,14 @@ interface LinearApiResponse {
   data?: {
     issueCreate?: { issue: { identifier: string; url: string; id: string } };
     issueUpdate?: { issue: { identifier: string; url: string; id: string } };
-    issues?: { nodes: Array<{ id: string; identifier: string; title: string; state: { name: string; type: string } }> };
+    issues?: {
+      nodes: Array<{
+        id: string;
+        identifier: string;
+        title: string;
+        state: { name: string; type: string };
+      }>;
+    };
   };
 }
 
@@ -32,33 +39,33 @@ export async function linearSyncProcessor(job: Job<LinearSyncJob>) {
     where: {
       projectId_provider: {
         projectId,
-        provider: 'linear',
+        provider: "linear",
       },
     },
   });
 
   if (!integration || !integration.enabled) {
-    return { skipped: true, reason: 'integration_disabled' };
+    return { skipped: true, reason: "integration_disabled" };
   }
 
   const config = integration.config as Record<string, unknown>;
   const accessToken = config.accessToken as string;
 
   if (!accessToken) {
-    throw new Error('Linear access token not configured');
+    throw new Error("Linear access token not configured");
   }
 
   switch (type) {
-    case 'create':
+    case "create":
       return await createLinearIssue(
         accessToken,
         config,
         interactionId!,
-        issueData!
+        issueData!,
       );
-    case 'update':
+    case "update":
       return await updateLinearIssue(accessToken, interactionId!);
-    case 'sync':
+    case "sync":
       return await syncLinearIssues(accessToken, projectId, config);
     default:
       throw new Error(`Unknown sync type: ${type}`);
@@ -74,13 +81,13 @@ async function createLinearIssue(
     description: string;
     priority?: number;
     labelIds?: string[];
-  }
+  },
 ) {
   const teamId = config.teamId as string;
   const defaultLabelId = config.defaultLabelId as string | undefined;
 
   if (!teamId) {
-    throw new Error('Linear team ID not configured');
+    throw new Error("Linear team ID not configured");
   }
 
   // Fetch interaction for additional context
@@ -101,20 +108,20 @@ async function createLinearIssue(
   }
 
   // Add screenshot if available
-  const screenshot = interaction.media.find((m) => m.kind === 'screenshot');
+  const screenshot = interaction.media.find((m) => m.kind === "screenshot");
   if (screenshot) {
     description += `\n\n**Screenshot:** ${screenshot.url}`;
   }
 
   // Add link back to Relay
-  const relayUrl = process.env.DASHBOARD_URL || 'http://localhost:3000';
+  const relayUrl = process.env.DASHBOARD_URL || "http://localhost:3000";
   description += `\n\n---\n[View in Relay](${relayUrl}/dashboard/inbox/${interactionId})`;
 
   // Create issue via Linear API
-  const response = await fetch('https://api.linear.app/graphql', {
-    method: 'POST',
+  const response = await fetch("https://api.linear.app/graphql", {
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       Authorization: accessToken,
     },
     body: JSON.stringify({
@@ -144,7 +151,7 @@ async function createLinearIssue(
     }),
   });
 
-  const result = await response.json() as LinearApiResponse;
+  const result = (await response.json()) as LinearApiResponse;
 
   if (result.errors) {
     throw new Error(`Linear API error: ${JSON.stringify(result.errors)}`);
@@ -156,7 +163,7 @@ async function createLinearIssue(
   await prisma.interaction.update({
     where: { id: interactionId },
     data: {
-      linkedIssueProvider: 'linear',
+      linkedIssueProvider: "linear",
       linkedIssueId: issue.identifier,
       linkedIssueUrl: issue.url,
     },
@@ -166,9 +173,9 @@ async function createLinearIssue(
   await prisma.integrationLink.create({
     data: {
       projectId: interaction.projectId,
-      provider: 'linear',
+      provider: "linear",
       externalId: issue.id,
-      internalType: 'interaction',
+      internalType: "interaction",
       internalId: interactionId,
       externalUrl: issue.url,
     },
@@ -185,33 +192,33 @@ async function updateLinearIssue(accessToken: string, interactionId: string) {
     where: { id: interactionId },
     include: {
       integrationLinks: {
-        where: { provider: 'linear' },
+        where: { provider: "linear" },
       },
     },
   });
 
   if (!interaction || interaction.integrationLinks.length === 0) {
-    return { skipped: true, reason: 'no_linked_issue' };
+    return { skipped: true, reason: "no_linked_issue" };
   }
 
   const link = interaction.integrationLinks[0];
 
   // Map Relay status to Linear state
   const stateMap: Record<string, string> = {
-    new: 'backlog',
-    triaging: 'triage',
-    in_progress: 'started',
-    resolved: 'completed',
-    closed: 'canceled',
+    new: "backlog",
+    triaging: "triage",
+    in_progress: "started",
+    resolved: "completed",
+    closed: "canceled",
   };
 
-  const state = stateMap[interaction.status] || 'backlog';
+  const state = stateMap[interaction.status] || "backlog";
 
   // Update issue state
-  const response = await fetch('https://api.linear.app/graphql', {
-    method: 'POST',
+  const response = await fetch("https://api.linear.app/graphql", {
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       Authorization: accessToken,
     },
     body: JSON.stringify({
@@ -231,10 +238,10 @@ async function updateLinearIssue(accessToken: string, interactionId: string) {
     }),
   });
 
-  const result = await response.json() as LinearApiResponse;
+  const result = (await response.json()) as LinearApiResponse;
 
   if (result.errors) {
-    console.error('Linear update error:', result.errors);
+    console.error("Linear update error:", result.errors);
     return { success: false, errors: result.errors };
   }
 
@@ -244,26 +251,26 @@ async function updateLinearIssue(accessToken: string, interactionId: string) {
 async function syncLinearIssues(
   accessToken: string,
   projectId: string,
-  config: Record<string, unknown>
+  config: Record<string, unknown>,
 ) {
   // Get all linked issues for this project
   const links = await prisma.integrationLink.findMany({
     where: {
       projectId,
-      provider: 'linear',
-      internalType: 'interaction',
+      provider: "linear",
+      internalType: "interaction",
     },
   });
 
   if (links.length === 0) {
-    return { skipped: true, reason: 'no_linked_issues' };
+    return { skipped: true, reason: "no_linked_issues" };
   }
 
   // Fetch issue states from Linear
-  const response = await fetch('https://api.linear.app/graphql', {
-    method: 'POST',
+  const response = await fetch("https://api.linear.app/graphql", {
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       Authorization: accessToken,
     },
     body: JSON.stringify({
@@ -286,7 +293,7 @@ async function syncLinearIssues(
     }),
   });
 
-  const result = await response.json() as LinearApiResponse;
+  const result = (await response.json()) as LinearApiResponse;
 
   if (result.errors) {
     throw new Error(`Linear API error: ${JSON.stringify(result.errors)}`);
@@ -294,11 +301,11 @@ async function syncLinearIssues(
 
   // Map Linear states back to Relay status
   const linearToRelayStatus: Record<string, string> = {
-    backlog: 'new',
-    triage: 'triaging',
-    started: 'in_progress',
-    completed: 'resolved',
-    canceled: 'closed',
+    backlog: "new",
+    triage: "triaging",
+    started: "in_progress",
+    completed: "resolved",
+    canceled: "closed",
   };
 
   let updated = 0;
@@ -307,7 +314,7 @@ async function syncLinearIssues(
     const link = links.find((l) => l.externalId === issue.id);
     if (!link) continue;
 
-    const relayStatus = linearToRelayStatus[issue.state.type] || 'new';
+    const relayStatus = linearToRelayStatus[issue.state.type] || "new";
 
     await prisma.interaction.update({
       where: { id: link.internalId },
@@ -322,7 +329,7 @@ async function syncLinearIssues(
     where: {
       projectId_provider: {
         projectId,
-        provider: 'linear',
+        provider: "linear",
       },
     },
     data: { lastSyncAt: new Date() },

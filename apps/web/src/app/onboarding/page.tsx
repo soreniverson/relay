@@ -1,30 +1,30 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/stores/auth';
-import { trpc } from '@/lib/trpc';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/stores/auth";
+import { trpc } from "@/lib/trpc";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Loader2, CheckCircle, Copy, Check, ArrowRight } from 'lucide-react';
-import { cn } from '@/lib/utils';
+} from "@/components/ui/select";
+import { Loader2, CheckCircle, Copy, Check, ArrowRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-type Step = 'project' | 'setup' | 'complete';
+type Step = "project" | "setup" | "complete";
 
 export default function OnboardingPage() {
   const router = useRouter();
   const { user, setCurrentProject, setUser } = useAuthStore();
-  const [step, setStep] = useState<Step>('project');
-  const [projectName, setProjectName] = useState('');
-  const [region, setRegion] = useState<'us-west' | 'eu-west'>('us-west');
+  const [step, setStep] = useState<Step>("project");
+  const [projectName, setProjectName] = useState("");
+  const [region, setRegion] = useState<"us-west" | "eu-west">("us-west");
   const [createdProject, setCreatedProject] = useState<{
     id: string;
     name: string;
@@ -39,7 +39,7 @@ export default function OnboardingPage() {
         id: data.project.id,
         name: data.project.name,
         region: data.project.region,
-        role: 'owner',
+        role: "owner",
       };
 
       setCreatedProject({
@@ -57,7 +57,7 @@ export default function OnboardingPage() {
       }
 
       setCurrentProject(newProject);
-      setStep('setup');
+      setStep("setup");
     },
   });
 
@@ -76,7 +76,7 @@ export default function OnboardingPage() {
   };
 
   const handleComplete = () => {
-    router.push('/dashboard/inbox');
+    router.push("/dashboard/inbox");
   };
 
   return (
@@ -84,19 +84,21 @@ export default function OnboardingPage() {
       <div className="w-full max-w-xl">
         {/* Progress indicator */}
         <div className="flex items-center justify-center gap-2 mb-8">
-          {(['project', 'setup', 'complete'] as const).map((s, i) => (
+          {(["project", "setup", "complete"] as const).map((s, i) => (
             <div key={s} className="flex items-center">
               <div
                 className={cn(
-                  'w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors',
+                  "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors",
                   step === s
-                    ? 'bg-foreground text-background'
-                    : ['setup', 'complete'].indexOf(step) > ['project', 'setup', 'complete'].indexOf(s)
-                    ? 'bg-emerald-500 text-white'
-                    : 'bg-muted text-muted-foreground'
+                    ? "bg-foreground text-background"
+                    : ["setup", "complete"].indexOf(step) >
+                        ["project", "setup", "complete"].indexOf(s)
+                      ? "bg-emerald-500 text-white"
+                      : "bg-muted text-muted-foreground",
                 )}
               >
-                {['setup', 'complete'].indexOf(step) > ['project', 'setup', 'complete'].indexOf(s) ? (
+                {["setup", "complete"].indexOf(step) >
+                ["project", "setup", "complete"].indexOf(s) ? (
                   <CheckCircle className="h-4 w-4" />
                 ) : (
                   i + 1
@@ -105,8 +107,10 @@ export default function OnboardingPage() {
               {i < 2 && (
                 <div
                   className={cn(
-                    'w-12 h-0.5 mx-2',
-                    ['setup', 'complete'].indexOf(step) > i ? 'bg-emerald-500' : 'bg-muted'
+                    "w-12 h-0.5 mx-2",
+                    ["setup", "complete"].indexOf(step) > i
+                      ? "bg-emerald-500"
+                      : "bg-muted",
                   )}
                 />
               )}
@@ -115,8 +119,11 @@ export default function OnboardingPage() {
         </div>
 
         {/* Step 1: Create Project */}
-        {step === 'project' && (
-          <div className="bg-card border border-border rounded-lg p-6" style={{ borderWidth: '0.5px' }}>
+        {step === "project" && (
+          <div
+            className="bg-card border border-border rounded-lg p-6"
+            style={{ borderWidth: "0.5px" }}
+          >
             <div className="text-center mb-6">
               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-foreground text-background font-bold text-xl mb-4">
                 R
@@ -136,7 +143,7 @@ export default function OnboardingPage() {
                   value={projectName}
                   onChange={(e) => setProjectName(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter' && projectName.trim()) {
+                    if (e.key === "Enter" && projectName.trim()) {
                       handleCreateProject();
                     }
                   }}
@@ -148,7 +155,10 @@ export default function OnboardingPage() {
 
               <div className="grid gap-1.5">
                 <Label htmlFor="region">Data Region</Label>
-                <Select value={region} onValueChange={(v) => setRegion(v as 'us-west' | 'eu-west')}>
+                <Select
+                  value={region}
+                  onValueChange={(v) => setRegion(v as "us-west" | "eu-west")}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -173,7 +183,9 @@ export default function OnboardingPage() {
               <Button
                 className="w-full mt-4"
                 onClick={handleCreateProject}
-                disabled={!projectName.trim() || createProjectMutation.isPending}
+                disabled={
+                  !projectName.trim() || createProjectMutation.isPending
+                }
               >
                 {createProjectMutation.isPending ? (
                   <>
@@ -198,8 +210,11 @@ export default function OnboardingPage() {
         )}
 
         {/* Step 2: Setup Instructions */}
-        {step === 'setup' && createdProject && (
-          <div className="bg-card border border-border rounded-lg p-6" style={{ borderWidth: '0.5px' }}>
+        {step === "setup" && createdProject && (
+          <div
+            className="bg-card border border-border rounded-lg p-6"
+            style={{ borderWidth: "0.5px" }}
+          >
             <div className="text-center mb-6">
               <CheckCircle className="h-12 w-12 mx-auto text-emerald-500 mb-4" />
               <h1 className="text-2xl font-bold">Project Created!</h1>
@@ -211,15 +226,23 @@ export default function OnboardingPage() {
             <div className="space-y-6">
               {/* API Key */}
               <div>
-                <Label className="text-xs text-muted-foreground">Your API Key</Label>
+                <Label className="text-xs text-muted-foreground">
+                  Your API Key
+                </Label>
                 <div className="flex items-center gap-2 mt-1.5 p-3 bg-muted rounded-md font-mono text-sm">
-                  <code className="flex-1 break-all">{createdProject.apiKey}</code>
+                  <code className="flex-1 break-all">
+                    {createdProject.apiKey}
+                  </code>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => handleCopy(createdProject.apiKey)}
                   >
-                    {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                    {copied ? (
+                      <Check className="h-4 w-4" />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground mt-1.5">
@@ -229,7 +252,9 @@ export default function OnboardingPage() {
 
               {/* Install SDK */}
               <div>
-                <Label className="text-xs text-muted-foreground">1. Install the SDK</Label>
+                <Label className="text-xs text-muted-foreground">
+                  1. Install the SDK
+                </Label>
                 <div className="mt-1.5 p-3 bg-zinc-900 rounded-md font-mono text-sm text-zinc-100">
                   <code>npm install @relay/sdk</code>
                 </div>
@@ -237,7 +262,9 @@ export default function OnboardingPage() {
 
               {/* Initialize */}
               <div>
-                <Label className="text-xs text-muted-foreground">2. Initialize Relay</Label>
+                <Label className="text-xs text-muted-foreground">
+                  2. Initialize Relay
+                </Label>
                 <div className="mt-1.5 p-3 bg-zinc-900 rounded-md font-mono text-sm text-zinc-100 overflow-x-auto">
                   <pre>{`import Relay from '@relay/sdk';
 
@@ -247,7 +274,7 @@ Relay.init({
                 </div>
               </div>
 
-              <Button className="w-full" onClick={() => setStep('complete')}>
+              <Button className="w-full" onClick={() => setStep("complete")}>
                 Continue
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
@@ -256,15 +283,19 @@ Relay.init({
         )}
 
         {/* Step 3: Complete */}
-        {step === 'complete' && (
-          <div className="bg-card border border-border rounded-lg p-6" style={{ borderWidth: '0.5px' }}>
+        {step === "complete" && (
+          <div
+            className="bg-card border border-border rounded-lg p-6"
+            style={{ borderWidth: "0.5px" }}
+          >
             <div className="text-center mb-6">
               <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10 mb-4">
                 <CheckCircle className="h-8 w-8 text-emerald-500" />
               </div>
               <h1 className="text-2xl font-bold">You're all set!</h1>
               <p className="text-muted-foreground mt-2">
-                Your project is ready. Start collecting feedback from your users.
+                Your project is ready. Start collecting feedback from your
+                users.
               </p>
             </div>
 
@@ -275,7 +306,7 @@ Relay.init({
               <Button
                 variant="outline"
                 className="w-full"
-                onClick={() => window.open('https://docs.relay.dev', '_blank')}
+                onClick={() => window.open("https://docs.relay.dev", "_blank")}
               >
                 Read the Docs
               </Button>

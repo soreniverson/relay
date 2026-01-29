@@ -19,27 +19,32 @@ Please read and follow our [Code of Conduct](CODE_OF_CONDUCT.md) to keep our com
 
 1. Fork the repository
 2. Clone your fork:
+
    ```bash
    git clone https://github.com/YOUR_USERNAME/relay.git
    cd relay
    ```
 
 3. Add upstream remote:
+
    ```bash
    git remote add upstream https://github.com/your-org/relay.git
    ```
 
 4. Install dependencies:
+
    ```bash
    pnpm install
    ```
 
 5. Start infrastructure:
+
    ```bash
    docker-compose -f infra/local/docker-compose.yml up -d
    ```
 
 6. Set up database:
+
    ```bash
    cp .env.example .env
    pnpm db:generate
@@ -178,6 +183,7 @@ pnpm test:e2e
 ### Bug Reports
 
 Include:
+
 - Clear description
 - Steps to reproduce
 - Expected vs actual behavior
@@ -187,6 +193,7 @@ Include:
 ### Feature Requests
 
 Include:
+
 - Problem statement
 - Proposed solution
 - Use cases

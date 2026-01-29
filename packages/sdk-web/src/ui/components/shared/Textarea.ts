@@ -3,7 +3,7 @@
 // Multi-line text input with label and validation
 // ============================================================================
 
-import { createElement, generateId } from '../../utils/dom';
+import { createElement, generateId } from "../../utils/dom";
 
 export interface TextareaProps {
   name?: string;
@@ -123,38 +123,47 @@ export interface TextareaResult {
   getValue: () => string;
 }
 
-export function createTextarea(label: string, props: TextareaProps = {}): TextareaResult {
+export function createTextarea(
+  label: string,
+  props: TextareaProps = {},
+): TextareaResult {
   const {
     name,
     placeholder,
-    value = '',
+    value = "",
     required = false,
     disabled = false,
     maxLength,
     rows = 4,
     autoResize = false,
     autoFocus = false,
-    className = '',
+    className = "",
     onChange,
     onBlur,
   } = props;
 
-  const id = generateId('textarea');
+  const id = generateId("textarea");
 
   // Create container
-  const container = createElement('div', { class: `relay-textarea-group ${className}`.trim() });
+  const container = createElement("div", {
+    class: `relay-textarea-group ${className}`.trim(),
+  });
 
   // Create label
-  const labelEl = createElement('label', {
-    class: `relay-textarea-label ${required ? 'relay-textarea-label--required' : ''}`,
-    htmlFor: id,
-  }, [label]);
+  const labelEl = createElement(
+    "label",
+    {
+      class: `relay-textarea-label ${required ? "relay-textarea-label--required" : ""}`,
+      htmlFor: id,
+    },
+    [label],
+  );
 
   // Create textarea
-  const textarea = createElement('textarea', {
+  const textarea = createElement("textarea", {
     id,
     name: name || id,
-    class: `relay-textarea ${autoResize ? 'relay-textarea--auto-resize' : ''}`,
+    class: `relay-textarea ${autoResize ? "relay-textarea--auto-resize" : ""}`,
     placeholder,
     required,
     disabled,
@@ -168,13 +177,13 @@ export function createTextarea(label: string, props: TextareaProps = {}): Textar
   }
 
   // Create footer
-  const footer = createElement('div', { class: 'relay-textarea-footer' });
-  const errorEl = createElement('span', { class: 'relay-textarea-error' });
-  errorEl.style.display = 'none';
+  const footer = createElement("div", { class: "relay-textarea-footer" });
+  const errorEl = createElement("span", { class: "relay-textarea-error" });
+  errorEl.style.display = "none";
 
   let counterEl: HTMLSpanElement | null = null;
   if (maxLength) {
-    counterEl = createElement('span', { class: 'relay-textarea-counter' });
+    counterEl = createElement("span", { class: "relay-textarea-counter" });
     counterEl.textContent = `${value.length}/${maxLength}`;
   }
 
@@ -191,7 +200,7 @@ export function createTextarea(label: string, props: TextareaProps = {}): Textar
   // Auto-resize handler
   const adjustHeight = () => {
     if (autoResize) {
-      textarea.style.height = 'auto';
+      textarea.style.height = "auto";
       textarea.style.height = `${textarea.scrollHeight}px`;
     }
   };
@@ -201,17 +210,20 @@ export function createTextarea(label: string, props: TextareaProps = {}): Textar
     if (counterEl && maxLength) {
       const remaining = maxLength - textarea.value.length;
       counterEl.textContent = `${textarea.value.length}/${maxLength}`;
-      counterEl.classList.remove('relay-textarea-counter--warning', 'relay-textarea-counter--error');
+      counterEl.classList.remove(
+        "relay-textarea-counter--warning",
+        "relay-textarea-counter--error",
+      );
       if (remaining <= 0) {
-        counterEl.classList.add('relay-textarea-counter--error');
+        counterEl.classList.add("relay-textarea-counter--error");
       } else if (remaining <= maxLength * 0.1) {
-        counterEl.classList.add('relay-textarea-counter--warning');
+        counterEl.classList.add("relay-textarea-counter--warning");
       }
     }
   };
 
   // Event handlers
-  textarea.addEventListener('input', () => {
+  textarea.addEventListener("input", () => {
     adjustHeight();
     updateCounter();
     if (onChange) {
@@ -220,7 +232,7 @@ export function createTextarea(label: string, props: TextareaProps = {}): Textar
   });
 
   if (onBlur) {
-    textarea.addEventListener('blur', () => onBlur(textarea.value));
+    textarea.addEventListener("blur", () => onBlur(textarea.value));
   }
 
   // Initial adjustments
@@ -233,12 +245,12 @@ export function createTextarea(label: string, props: TextareaProps = {}): Textar
     setError: (error: string | null) => {
       if (error) {
         errorEl.textContent = error;
-        errorEl.style.display = 'block';
-        textarea.classList.add('relay-textarea--error');
+        errorEl.style.display = "block";
+        textarea.classList.add("relay-textarea--error");
       } else {
-        errorEl.textContent = '';
-        errorEl.style.display = 'none';
-        textarea.classList.remove('relay-textarea--error');
+        errorEl.textContent = "";
+        errorEl.style.display = "none";
+        textarea.classList.remove("relay-textarea--error");
       }
     },
     setValue: (newValue: string) => {

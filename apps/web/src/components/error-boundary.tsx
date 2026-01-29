@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { Component, ReactNode } from 'react';
-import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Component, ReactNode } from "react";
+import { AlertTriangle, RefreshCw, Home } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface Props {
   children: ReactNode;
@@ -26,7 +26,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     // Log error to console in development
-    console.error('Error caught by boundary:', error, errorInfo);
+    console.error("Error caught by boundary:", error, errorInfo);
 
     // TODO: Send to error tracking service (Sentry, etc.)
   }
@@ -49,9 +49,10 @@ export class ErrorBoundary extends Component<Props, State> {
             </div>
             <h2 className="text-xl font-semibold mb-2">Something went wrong</h2>
             <p className="text-muted-foreground mb-6">
-              We encountered an unexpected error. This has been logged and we'll look into it.
+              We encountered an unexpected error. This has been logged and we'll
+              look into it.
             </p>
-            {process.env.NODE_ENV === 'development' && this.state.error && (
+            {process.env.NODE_ENV === "development" && this.state.error && (
               <div className="mb-6 p-3 bg-muted rounded-md text-left">
                 <p className="text-xs font-mono text-destructive break-all">
                   {this.state.error.message}
@@ -63,7 +64,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 <RefreshCw className="mr-2 h-4 w-4" />
                 Try Again
               </Button>
-              <Button onClick={() => (window.location.href = '/dashboard')}>
+              <Button onClick={() => (window.location.href = "/dashboard")}>
                 <Home className="mr-2 h-4 w-4" />
                 Go Home
               </Button>

@@ -1,24 +1,24 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   Plus,
   Search,
@@ -28,21 +28,21 @@ import {
   BarChart2,
   Eye,
   ChevronDown,
-} from 'lucide-react';
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { cn } from '@/lib/utils';
+} from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 
 interface TourStep {
   id: string;
   title: string;
   content: string;
   target: string;
-  placement: 'top' | 'bottom' | 'left' | 'right';
+  placement: "top" | "bottom" | "left" | "right";
 }
 
 interface Tour {
@@ -60,60 +60,122 @@ interface Tour {
 
 const mockTours: Tour[] = [
   {
-    id: '1',
-    name: 'Welcome Tour',
-    description: 'Introduce new users to the dashboard',
+    id: "1",
+    name: "Welcome Tour",
+    description: "Introduce new users to the dashboard",
     steps: 5,
     stepDetails: [
-      { id: '1-1', title: 'Welcome!', content: 'Welcome to your dashboard. Let\'s get you started.', target: '#dashboard-header', placement: 'bottom' },
-      { id: '1-2', title: 'Navigation', content: 'Use the sidebar to navigate between sections.', target: '#sidebar', placement: 'right' },
-      { id: '1-3', title: 'Quick Actions', content: 'Create new items quickly from here.', target: '#quick-actions', placement: 'bottom' },
-      { id: '1-4', title: 'Recent Activity', content: 'See your recent activity at a glance.', target: '#activity', placement: 'left' },
-      { id: '1-5', title: 'Get Help', content: 'Need help? Click here anytime.', target: '#help-button', placement: 'top' },
+      {
+        id: "1-1",
+        title: "Welcome!",
+        content: "Welcome to your dashboard. Let's get you started.",
+        target: "#dashboard-header",
+        placement: "bottom",
+      },
+      {
+        id: "1-2",
+        title: "Navigation",
+        content: "Use the sidebar to navigate between sections.",
+        target: "#sidebar",
+        placement: "right",
+      },
+      {
+        id: "1-3",
+        title: "Quick Actions",
+        content: "Create new items quickly from here.",
+        target: "#quick-actions",
+        placement: "bottom",
+      },
+      {
+        id: "1-4",
+        title: "Recent Activity",
+        content: "See your recent activity at a glance.",
+        target: "#activity",
+        placement: "left",
+      },
+      {
+        id: "1-5",
+        title: "Get Help",
+        content: "Need help? Click here anytime.",
+        target: "#help-button",
+        placement: "top",
+      },
     ],
     enabled: true,
     viewCount: 1543,
     completionCount: 892,
-    targetUrl: '/dashboard',
-    createdAt: '2024-01-10',
+    targetUrl: "/dashboard",
+    createdAt: "2024-01-10",
   },
   {
-    id: '2',
-    name: 'Feature Onboarding',
-    description: 'Show users how to create their first project',
+    id: "2",
+    name: "Feature Onboarding",
+    description: "Show users how to create their first project",
     steps: 8,
     stepDetails: [
-      { id: '2-1', title: 'Create Project', content: 'Click here to create your first project.', target: '#create-btn', placement: 'bottom' },
-      { id: '2-2', title: 'Project Name', content: 'Give your project a meaningful name.', target: '#project-name', placement: 'right' },
-      { id: '2-3', title: 'Settings', content: 'Configure your project settings here.', target: '#settings', placement: 'bottom' },
+      {
+        id: "2-1",
+        title: "Create Project",
+        content: "Click here to create your first project.",
+        target: "#create-btn",
+        placement: "bottom",
+      },
+      {
+        id: "2-2",
+        title: "Project Name",
+        content: "Give your project a meaningful name.",
+        target: "#project-name",
+        placement: "right",
+      },
+      {
+        id: "2-3",
+        title: "Settings",
+        content: "Configure your project settings here.",
+        target: "#settings",
+        placement: "bottom",
+      },
     ],
     enabled: true,
     viewCount: 756,
     completionCount: 423,
-    targetUrl: '/projects/new',
-    createdAt: '2024-01-12',
+    targetUrl: "/projects/new",
+    createdAt: "2024-01-12",
   },
   {
-    id: '3',
-    name: 'Advanced Settings Tour',
-    description: 'Guide power users through advanced configuration',
+    id: "3",
+    name: "Advanced Settings Tour",
+    description: "Guide power users through advanced configuration",
     steps: 6,
     stepDetails: [
-      { id: '3-1', title: 'Advanced Options', content: 'Access advanced settings from here.', target: '#advanced', placement: 'bottom' },
-      { id: '3-2', title: 'Integrations', content: 'Connect with your favorite tools.', target: '#integrations', placement: 'right' },
+      {
+        id: "3-1",
+        title: "Advanced Options",
+        content: "Access advanced settings from here.",
+        target: "#advanced",
+        placement: "bottom",
+      },
+      {
+        id: "3-2",
+        title: "Integrations",
+        content: "Connect with your favorite tools.",
+        target: "#integrations",
+        placement: "right",
+      },
     ],
     enabled: false,
     viewCount: 234,
     completionCount: 178,
-    targetUrl: '/settings',
-    createdAt: '2024-01-14',
+    targetUrl: "/settings",
+    createdAt: "2024-01-14",
   },
 ];
 
 export default function ToursPage() {
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [tours, setTours] = useState(mockTours);
-  const [statusFilter, setStatusFilter] = useState<'active' | 'paused' | null>(null);
+  const [statusFilter, setStatusFilter] = useState<"active" | "paused" | null>(
+    null,
+  );
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
@@ -121,9 +183,9 @@ export default function ToursPage() {
   const [selectedTour, setSelectedTour] = useState<Tour | null>(null);
   const [previewStep, setPreviewStep] = useState(0);
   const [newTour, setNewTour] = useState({
-    name: '',
-    description: '',
-    targetUrl: '',
+    name: "",
+    description: "",
+    targetUrl: "",
   });
   const [editingTour, setEditingTour] = useState<{
     name: string;
@@ -131,24 +193,23 @@ export default function ToursPage() {
     targetUrl: string;
     stepDetails: TourStep[];
   }>({
-    name: '',
-    description: '',
-    targetUrl: '',
+    name: "",
+    description: "",
+    targetUrl: "",
     stepDetails: [],
   });
 
   const filteredTours = tours.filter((tour) => {
-    if (statusFilter === 'active' && !tour.enabled) return false;
-    if (statusFilter === 'paused' && tour.enabled) return false;
-    if (search && !tour.name.toLowerCase().includes(search.toLowerCase())) return false;
+    if (statusFilter === "active" && !tour.enabled) return false;
+    if (statusFilter === "paused" && tour.enabled) return false;
+    if (search && !tour.name.toLowerCase().includes(search.toLowerCase()))
+      return false;
     return true;
   });
 
   const toggleTour = (tourId: string) => {
     setTours((prev) =>
-      prev.map((t) =>
-        t.id === tourId ? { ...t, enabled: !t.enabled } : t
-      )
+      prev.map((t) => (t.id === tourId ? { ...t, enabled: !t.enabled } : t)),
     );
   };
 
@@ -164,12 +225,12 @@ export default function ToursPage() {
       enabled: false,
       viewCount: 0,
       completionCount: 0,
-      targetUrl: newTour.targetUrl || '/',
-      createdAt: new Date().toISOString().split('T')[0],
+      targetUrl: newTour.targetUrl || "/",
+      createdAt: new Date().toISOString().split("T")[0],
     };
 
     setTours((prev) => [tour, ...prev]);
-    setNewTour({ name: '', description: '', targetUrl: '' });
+    setNewTour({ name: "", description: "", targetUrl: "" });
     setIsCreateOpen(false);
   };
 
@@ -185,11 +246,14 @@ export default function ToursPage() {
       ...original,
       id: Date.now().toString(),
       name: `${original.name} (Copy)`,
-      stepDetails: original.stepDetails.map((s) => ({ ...s, id: `${Date.now()}-${s.id}` })),
+      stepDetails: original.stepDetails.map((s) => ({
+        ...s,
+        id: `${Date.now()}-${s.id}`,
+      })),
       enabled: false,
       viewCount: 0,
       completionCount: 0,
-      createdAt: new Date().toISOString().split('T')[0],
+      createdAt: new Date().toISOString().split("T")[0],
     };
 
     setTours((prev) => [duplicate, ...prev]);
@@ -220,8 +284,8 @@ export default function ToursPage() {
               stepDetails: editingTour.stepDetails,
               steps: editingTour.stepDetails.length,
             }
-          : t
-      )
+          : t,
+      ),
     );
     setIsEditOpen(false);
     setSelectedTour(null);
@@ -241,10 +305,10 @@ export default function ToursPage() {
   const addStep = () => {
     const newStep: TourStep = {
       id: Date.now().toString(),
-      title: '',
-      content: '',
-      target: '',
-      placement: 'bottom',
+      title: "",
+      content: "",
+      target: "",
+      placement: "bottom",
     };
     setEditingTour((prev) => ({
       ...prev,
@@ -256,7 +320,7 @@ export default function ToursPage() {
     setEditingTour((prev) => ({
       ...prev,
       stepDetails: prev.stepDetails.map((s) =>
-        s.id === stepId ? { ...s, [field]: value } : s
+        s.id === stepId ? { ...s, [field]: value } : s,
       ),
     }));
   };
@@ -273,13 +337,21 @@ export default function ToursPage() {
       {/* Header */}
       <div className="page-header">
         <h1 className="page-title">Tours</h1>
-        <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => setIsCreateOpen(true)}>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="h-7 w-7 p-0"
+          onClick={() => setIsCreateOpen(true)}
+        >
           <Plus className="h-4 w-4" />
         </Button>
       </div>
 
       {/* Search and Filters */}
-      <div className="flex items-center gap-3 px-4 py-2 border-b border-border" style={{ borderBottomWidth: '0.5px' }}>
+      <div
+        className="flex items-center gap-3 px-4 py-2 border-b border-border"
+        style={{ borderBottomWidth: "0.5px" }}
+      >
         <div className="relative flex-1">
           <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/50" />
           <Input
@@ -293,22 +365,32 @@ export default function ToursPage() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
-                {statusFilter === null ? 'Status' : statusFilter === 'active' ? 'Active' : 'Paused'}
+                {statusFilter === null
+                  ? "Status"
+                  : statusFilter === "active"
+                    ? "Active"
+                    : "Paused"}
                 <ChevronDown className="h-3 w-3" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => setStatusFilter(null)}>
                 All
-                {statusFilter === null && <span className="ml-auto text-foreground">✓</span>}
+                {statusFilter === null && (
+                  <span className="ml-auto text-foreground">✓</span>
+                )}
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setStatusFilter('active')}>
+              <DropdownMenuItem onClick={() => setStatusFilter("active")}>
                 Active
-                {statusFilter === 'active' && <span className="ml-auto text-foreground">✓</span>}
+                {statusFilter === "active" && (
+                  <span className="ml-auto text-foreground">✓</span>
+                )}
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setStatusFilter('paused')}>
+              <DropdownMenuItem onClick={() => setStatusFilter("paused")}>
                 Paused
-                {statusFilter === 'paused' && <span className="ml-auto text-foreground">✓</span>}
+                {statusFilter === "paused" && (
+                  <span className="ml-auto text-foreground">✓</span>
+                )}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -328,16 +410,16 @@ export default function ToursPage() {
             <div
               key={tour.id}
               className="border-b border-border px-4 py-3 hover:bg-accent/30 transition-colors"
-              style={{ borderBottomWidth: '0.5px' }}
+              style={{ borderBottomWidth: "0.5px" }}
             >
               <div className="flex items-center gap-3">
                 {/* Icon */}
                 <div
                   className={cn(
-                    'shrink-0 h-8 w-8 rounded-md flex items-center justify-center',
+                    "shrink-0 h-8 w-8 rounded-md flex items-center justify-center",
                     tour.enabled
-                      ? 'bg-foreground/10 text-foreground'
-                      : 'bg-muted/50 text-muted-foreground'
+                      ? "bg-foreground/10 text-foreground"
+                      : "bg-muted/50 text-muted-foreground",
                   )}
                 >
                   <Navigation className="h-4 w-4" />
@@ -359,8 +441,11 @@ export default function ToursPage() {
                     <span className="text-muted-foreground/40">·</span>
                     <span className="text-xs text-muted-foreground/70">
                       {tour.viewCount > 0
-                        ? Math.round((tour.completionCount / tour.viewCount) * 100)
-                        : 0}% completed
+                        ? Math.round(
+                            (tour.completionCount / tour.viewCount) * 100,
+                          )
+                        : 0}
+                      % completed
                     </span>
                     <span className="text-muted-foreground/40">·</span>
                     <span className="text-xs text-muted-foreground/50">
@@ -373,13 +458,13 @@ export default function ToursPage() {
                 <button
                   onClick={() => toggleTour(tour.id)}
                   className={cn(
-                    'shrink-0 text-[11px] leading-none px-1.5 py-1 rounded transition-colors',
+                    "shrink-0 text-[11px] leading-none px-1.5 py-1 rounded transition-colors",
                     tour.enabled
-                      ? 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20'
-                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                      ? "bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20"
+                      : "bg-muted text-muted-foreground hover:bg-muted/80",
                   )}
                 >
-                  {tour.enabled ? 'Active' : 'Paused'}
+                  {tour.enabled ? "Active" : "Paused"}
                 </button>
 
                 {/* Actions */}
@@ -402,7 +487,10 @@ export default function ToursPage() {
                     <DropdownMenuItem onClick={() => handleDuplicate(tour.id)}>
                       Duplicate
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleDelete(tour.id)} className="text-destructive">
+                    <DropdownMenuItem
+                      onClick={() => handleDelete(tour.id)}
+                      className="text-destructive"
+                    >
                       Delete
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -421,39 +509,65 @@ export default function ToursPage() {
           </DialogHeader>
           <div className="grid gap-4 pt-2">
             <div className="grid gap-1.5">
-              <Label htmlFor="name" className="text-xs text-muted-foreground">Name</Label>
+              <Label htmlFor="name" className="text-xs text-muted-foreground">
+                Name
+              </Label>
               <Input
                 id="name"
                 placeholder="e.g. Welcome Tour"
                 value={newTour.name}
-                onChange={(e) => setNewTour({ ...newTour, name: e.target.value })}
+                onChange={(e) =>
+                  setNewTour({ ...newTour, name: e.target.value })
+                }
               />
             </div>
             <div className="grid gap-1.5">
-              <Label htmlFor="description" className="text-xs text-muted-foreground">Description</Label>
+              <Label
+                htmlFor="description"
+                className="text-xs text-muted-foreground"
+              >
+                Description
+              </Label>
               <Textarea
                 id="description"
                 placeholder="Optional details"
                 value={newTour.description}
-                onChange={(e) => setNewTour({ ...newTour, description: e.target.value })}
+                onChange={(e) =>
+                  setNewTour({ ...newTour, description: e.target.value })
+                }
                 rows={3}
               />
             </div>
             <div className="grid gap-1.5">
-              <Label htmlFor="targetUrl" className="text-xs text-muted-foreground">Target URL</Label>
+              <Label
+                htmlFor="targetUrl"
+                className="text-xs text-muted-foreground"
+              >
+                Target URL
+              </Label>
               <Input
                 id="targetUrl"
                 placeholder="e.g. /dashboard"
                 value={newTour.targetUrl}
-                onChange={(e) => setNewTour({ ...newTour, targetUrl: e.target.value })}
+                onChange={(e) =>
+                  setNewTour({ ...newTour, targetUrl: e.target.value })
+                }
               />
             </div>
           </div>
           <DialogFooter className="pt-4">
-            <Button variant="ghost" size="sm" onClick={() => setIsCreateOpen(false)}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsCreateOpen(false)}
+            >
               Cancel
             </Button>
-            <Button size="sm" onClick={handleCreate} disabled={!newTour.name.trim()}>
+            <Button
+              size="sm"
+              onClick={handleCreate}
+              disabled={!newTour.name.trim()}
+            >
               Create
             </Button>
           </DialogFooter>
@@ -469,31 +583,58 @@ export default function ToursPage() {
           <div className="grid gap-4 pt-2">
             <div className="grid grid-cols-2 gap-3">
               <div className="grid gap-1.5">
-                <Label htmlFor="edit-name" className="text-xs text-muted-foreground">Name</Label>
+                <Label
+                  htmlFor="edit-name"
+                  className="text-xs text-muted-foreground"
+                >
+                  Name
+                </Label>
                 <Input
                   id="edit-name"
                   placeholder="e.g. Welcome Tour"
                   value={editingTour.name}
-                  onChange={(e) => setEditingTour({ ...editingTour, name: e.target.value })}
+                  onChange={(e) =>
+                    setEditingTour({ ...editingTour, name: e.target.value })
+                  }
                 />
               </div>
               <div className="grid gap-1.5">
-                <Label htmlFor="edit-targetUrl" className="text-xs text-muted-foreground">Target URL</Label>
+                <Label
+                  htmlFor="edit-targetUrl"
+                  className="text-xs text-muted-foreground"
+                >
+                  Target URL
+                </Label>
                 <Input
                   id="edit-targetUrl"
                   placeholder="e.g. /dashboard"
                   value={editingTour.targetUrl}
-                  onChange={(e) => setEditingTour({ ...editingTour, targetUrl: e.target.value })}
+                  onChange={(e) =>
+                    setEditingTour({
+                      ...editingTour,
+                      targetUrl: e.target.value,
+                    })
+                  }
                 />
               </div>
             </div>
             <div className="grid gap-1.5">
-              <Label htmlFor="edit-description" className="text-xs text-muted-foreground">Description</Label>
+              <Label
+                htmlFor="edit-description"
+                className="text-xs text-muted-foreground"
+              >
+                Description
+              </Label>
               <Textarea
                 id="edit-description"
                 placeholder="Optional details"
                 value={editingTour.description}
-                onChange={(e) => setEditingTour({ ...editingTour, description: e.target.value })}
+                onChange={(e) =>
+                  setEditingTour({
+                    ...editingTour,
+                    description: e.target.value,
+                  })
+                }
                 rows={2}
               />
             </div>
@@ -501,16 +642,27 @@ export default function ToursPage() {
             <div className="mt-2">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-xs text-muted-foreground">Steps</span>
-                <Button variant="ghost" size="sm" className="h-7" onClick={addStep}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7"
+                  onClick={addStep}
+                >
                   <Plus className="h-3.5 w-3.5 mr-1" />
                   Add
                 </Button>
               </div>
               <div className="space-y-3">
                 {editingTour.stepDetails.map((step, index) => (
-                  <div key={step.id} className="border border-border rounded-md p-3" style={{ borderWidth: '0.5px' }}>
+                  <div
+                    key={step.id}
+                    className="border border-border rounded-md p-3"
+                    style={{ borderWidth: "0.5px" }}
+                  >
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs text-muted-foreground">Step {index + 1}</span>
+                      <span className="text-xs text-muted-foreground">
+                        Step {index + 1}
+                      </span>
                       <button
                         onClick={() => removeStep(step.id)}
                         className="text-xs text-muted-foreground hover:text-destructive transition-colors"
@@ -523,26 +675,34 @@ export default function ToursPage() {
                         <Input
                           placeholder="Title"
                           value={step.title}
-                          onChange={(e) => updateStep(step.id, 'title', e.target.value)}
+                          onChange={(e) =>
+                            updateStep(step.id, "title", e.target.value)
+                          }
                           className="h-8 text-sm"
                         />
                         <Input
                           placeholder="#element-id"
                           value={step.target}
-                          onChange={(e) => updateStep(step.id, 'target', e.target.value)}
+                          onChange={(e) =>
+                            updateStep(step.id, "target", e.target.value)
+                          }
                           className="h-8 text-sm"
                         />
                       </div>
                       <Textarea
                         placeholder="Content"
                         value={step.content}
-                        onChange={(e) => updateStep(step.id, 'content', e.target.value)}
+                        onChange={(e) =>
+                          updateStep(step.id, "content", e.target.value)
+                        }
                         rows={2}
                         className="text-sm"
                       />
                       <Select
                         value={step.placement}
-                        onValueChange={(value) => updateStep(step.id, 'placement', value)}
+                        onValueChange={(value) =>
+                          updateStep(step.id, "placement", value)
+                        }
                       >
                         <SelectTrigger className="h-8 text-sm">
                           <SelectValue />
@@ -558,7 +718,10 @@ export default function ToursPage() {
                   </div>
                 ))}
                 {editingTour.stepDetails.length === 0 && (
-                  <div className="text-center py-6 text-muted-foreground border border-dashed border-border rounded-md" style={{ borderWidth: '0.5px' }}>
+                  <div
+                    className="text-center py-6 text-muted-foreground border border-dashed border-border rounded-md"
+                    style={{ borderWidth: "0.5px" }}
+                  >
                     <p className="text-xs">No steps yet</p>
                   </div>
                 )}
@@ -566,10 +729,18 @@ export default function ToursPage() {
             </div>
           </div>
           <DialogFooter className="pt-4">
-            <Button variant="ghost" size="sm" onClick={() => setIsEditOpen(false)}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsEditOpen(false)}
+            >
               Cancel
             </Button>
-            <Button size="sm" onClick={handleSaveEdit} disabled={!editingTour.name.trim()}>
+            <Button
+              size="sm"
+              onClick={handleSaveEdit}
+              disabled={!editingTour.name.trim()}
+            >
               Save
             </Button>
           </DialogFooter>
@@ -585,7 +756,10 @@ export default function ToursPage() {
 
           {selectedTour && selectedTour.stepDetails.length > 0 ? (
             <>
-              <div className="bg-muted/50 rounded-md p-3 border border-border" style={{ borderWidth: '0.5px' }}>
+              <div
+                className="bg-muted/50 rounded-md p-3 border border-border"
+                style={{ borderWidth: "0.5px" }}
+              >
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-[11px] bg-foreground/10 text-foreground px-1.5 py-0.5 rounded">
                     {previewStep + 1}/{selectedTour.stepDetails.length}
@@ -619,14 +793,20 @@ export default function ToursPage() {
                       key={index}
                       onClick={() => setPreviewStep(index)}
                       className={cn(
-                        'h-1.5 w-1.5 rounded-full transition-colors',
-                        index === previewStep ? 'bg-foreground' : 'bg-muted-foreground/30'
+                        "h-1.5 w-1.5 rounded-full transition-colors",
+                        index === previewStep
+                          ? "bg-foreground"
+                          : "bg-muted-foreground/30",
                       )}
                     />
                   ))}
                 </div>
                 <button
-                  onClick={() => setPreviewStep((p) => Math.min(selectedTour.stepDetails.length - 1, p + 1))}
+                  onClick={() =>
+                    setPreviewStep((p) =>
+                      Math.min(selectedTour.stepDetails.length - 1, p + 1),
+                    )
+                  }
                   disabled={previewStep === selectedTour.stepDetails.length - 1}
                   className="text-xs text-muted-foreground hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
@@ -661,44 +841,76 @@ export default function ToursPage() {
           {selectedTour && (
             <>
               <div className="grid grid-cols-2 gap-2">
-                <div className="bg-muted/50 rounded-md p-3 border border-border text-center" style={{ borderWidth: '0.5px' }}>
-                  <p className="text-xl font-semibold text-foreground">{selectedTour.viewCount.toLocaleString()}</p>
+                <div
+                  className="bg-muted/50 rounded-md p-3 border border-border text-center"
+                  style={{ borderWidth: "0.5px" }}
+                >
+                  <p className="text-xl font-semibold text-foreground">
+                    {selectedTour.viewCount.toLocaleString()}
+                  </p>
                   <p className="text-xs text-muted-foreground">Views</p>
                 </div>
-                <div className="bg-muted/50 rounded-md p-3 border border-border text-center" style={{ borderWidth: '0.5px' }}>
-                  <p className="text-xl font-semibold text-foreground">{selectedTour.completionCount.toLocaleString()}</p>
+                <div
+                  className="bg-muted/50 rounded-md p-3 border border-border text-center"
+                  style={{ borderWidth: "0.5px" }}
+                >
+                  <p className="text-xl font-semibold text-foreground">
+                    {selectedTour.completionCount.toLocaleString()}
+                  </p>
                   <p className="text-xs text-muted-foreground">Completions</p>
                 </div>
-                <div className="bg-muted/50 rounded-md p-3 border border-border text-center" style={{ borderWidth: '0.5px' }}>
+                <div
+                  className="bg-muted/50 rounded-md p-3 border border-border text-center"
+                  style={{ borderWidth: "0.5px" }}
+                >
                   <p className="text-xl font-semibold text-foreground">
                     {selectedTour.viewCount > 0
-                      ? Math.round((selectedTour.completionCount / selectedTour.viewCount) * 100)
-                      : 0}%
+                      ? Math.round(
+                          (selectedTour.completionCount /
+                            selectedTour.viewCount) *
+                            100,
+                        )
+                      : 0}
+                    %
                   </p>
                   <p className="text-xs text-muted-foreground">Completion</p>
                 </div>
-                <div className="bg-muted/50 rounded-md p-3 border border-border text-center" style={{ borderWidth: '0.5px' }}>
-                  <p className="text-xl font-semibold text-foreground">{selectedTour.steps}</p>
+                <div
+                  className="bg-muted/50 rounded-md p-3 border border-border text-center"
+                  style={{ borderWidth: "0.5px" }}
+                >
+                  <p className="text-xl font-semibold text-foreground">
+                    {selectedTour.steps}
+                  </p>
                   <p className="text-xs text-muted-foreground">Steps</p>
                 </div>
               </div>
 
               {selectedTour.stepDetails.length > 0 && (
                 <div className="mt-2">
-                  <span className="text-xs text-muted-foreground">Drop-off by step</span>
+                  <span className="text-xs text-muted-foreground">
+                    Drop-off by step
+                  </span>
                   <div className="space-y-1.5 mt-2">
                     {selectedTour.stepDetails.map((step, index) => {
-                      const dropOff = Math.max(0, 100 - (index * 15) - Math.random() * 10);
+                      const dropOff = Math.max(
+                        0,
+                        100 - index * 15 - Math.random() * 10,
+                      );
                       return (
                         <div key={step.id} className="flex items-center gap-2">
-                          <span className="text-xs text-muted-foreground/70 w-10">{index + 1}</span>
+                          <span className="text-xs text-muted-foreground/70 w-10">
+                            {index + 1}
+                          </span>
                           <div className="flex-1 bg-muted/50 rounded-full h-1.5">
                             <div
                               className="bg-foreground/40 h-1.5 rounded-full"
                               style={{ width: `${dropOff}%` }}
                             />
                           </div>
-                          <span className="text-xs text-muted-foreground/70 w-8">{Math.round(dropOff)}%</span>
+                          <span className="text-xs text-muted-foreground/70 w-8">
+                            {Math.round(dropOff)}%
+                          </span>
                         </div>
                       );
                     })}

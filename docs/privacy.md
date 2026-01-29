@@ -10,10 +10,10 @@ Relay is designed with privacy-first principles. This document covers data handl
 
 Relay supports data residency requirements through isolated regional deployments:
 
-| Region | Location | Identifier |
-|--------|----------|------------|
-| US-West | Oregon (us-west-2) | `us-west` |
-| EU-West | Ireland (eu-west-1) | `eu-west` |
+| Region  | Location            | Identifier |
+| ------- | ------------------- | ---------- |
+| US-West | Oregon (us-west-2)  | `us-west`  |
+| EU-West | Ireland (eu-west-1) | `eu-west`  |
 
 ### Data Isolation
 
@@ -31,8 +31,8 @@ Projects select their region at creation time. This cannot be changed later:
 
 ```typescript
 await Relay.createProject({
-  name: 'My App',
-  region: 'eu-west', // Data stays in EU
+  name: "My App",
+  region: "eu-west", // Data stays in EU
 });
 ```
 
@@ -54,15 +54,8 @@ Relay automatically masks sensitive data:
 ```javascript
 Relay.init({
   privacy: {
-    maskSelectors: [
-      '.sensitive-data',
-      '[data-private]',
-      '.credit-card',
-    ],
-    blockSelectors: [
-      '.secret-content',
-      '.do-not-capture',
-    ],
+    maskSelectors: [".sensitive-data", "[data-private]", ".credit-card"],
+    blockSelectors: [".secret-content", ".do-not-capture"],
   },
 });
 ```
@@ -100,8 +93,8 @@ Create privacy rules in the dashboard:
 ```javascript
 Relay.init({
   privacy: {
-    maskAllInputs: true,  // Mask all input values
-    maskAllText: false,   // Don't mask general text
+    maskAllInputs: true, // Mask all input values
+    maskAllText: false, // Don't mask general text
   },
 });
 ```
@@ -115,13 +108,10 @@ Relay.init({
     networkBodyCapture: false,
 
     // Mask specific headers
-    maskHeaders: ['Authorization', 'X-API-Key'],
+    maskHeaders: ["Authorization", "X-API-Key"],
 
     // Exclude URLs from capture
-    excludeUrls: [
-      /\/api\/auth/,
-      /payments\.stripe\.com/,
-    ],
+    excludeUrls: [/\/api\/auth/, /payments\.stripe\.com/],
   },
 });
 ```
@@ -130,13 +120,13 @@ Relay.init({
 
 ### Default Retention Periods
 
-| Data Type | Default | Configurable Range |
-|-----------|---------|-------------------|
-| Bug Reports | 365 days | 30-730 days |
-| Feedback | 365 days | 30-730 days |
-| Session Replays | 30 days | 7-90 days |
-| Chat Messages | 365 days | 30-730 days |
-| Audit Logs | 2 years | 1-7 years |
+| Data Type       | Default  | Configurable Range |
+| --------------- | -------- | ------------------ |
+| Bug Reports     | 365 days | 30-730 days        |
+| Feedback        | 365 days | 30-730 days        |
+| Session Replays | 30 days  | 7-90 days          |
+| Chat Messages   | 365 days | 30-730 days        |
+| Audit Logs      | 2 years  | 1-7 years          |
 
 ### Configuring Retention
 
@@ -191,6 +181,7 @@ POST /api/privacy/delete
 ```
 
 This deletes:
+
 - All sessions
 - All interactions
 - All replay data
@@ -258,7 +249,7 @@ GET /api/trpc/privacy.auditLogs
 ```javascript
 // Initialize without automatic capture
 Relay.init({
-  apiKey: 'rly_...',
+  apiKey: "rly_...",
   autoCapture: false,
 });
 
@@ -275,7 +266,7 @@ Relay.stopCapture();
 
 ```javascript
 // Listen for consent changes
-window.addEventListener('consentUpdated', (e) => {
+window.addEventListener("consentUpdated", (e) => {
   if (e.detail.analytics) {
     Relay.startCapture();
   } else {

@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Search, FileText, ChevronRight } from 'lucide-react';
+import { useState } from "react";
+import { Search, FileText, ChevronRight } from "lucide-react";
 
 interface Article {
   id: string;
@@ -13,44 +13,48 @@ interface Article {
 
 const articles: Article[] = [
   {
-    id: '1',
-    title: 'Getting Started with Relay',
-    excerpt: 'Learn how to set up Relay in your application and start collecting feedback.',
-    category: 'Onboarding',
-    readTime: '3 min',
+    id: "1",
+    title: "Getting Started with Relay",
+    excerpt:
+      "Learn how to set up Relay in your application and start collecting feedback.",
+    category: "Onboarding",
+    readTime: "3 min",
   },
   {
-    id: '2',
-    title: 'Setting Up Your First Project',
-    excerpt: 'Step-by-step guide to creating your first project and configuring your workspace.',
-    category: 'Onboarding',
-    readTime: '5 min',
+    id: "2",
+    title: "Setting Up Your First Project",
+    excerpt:
+      "Step-by-step guide to creating your first project and configuring your workspace.",
+    category: "Onboarding",
+    readTime: "5 min",
   },
   {
-    id: '3',
-    title: 'Understanding Feedback Collection',
-    excerpt: 'How feedback flows from users to your dashboard and best practices for organization.',
-    category: 'Features',
-    readTime: '4 min',
+    id: "3",
+    title: "Understanding Feedback Collection",
+    excerpt:
+      "How feedback flows from users to your dashboard and best practices for organization.",
+    category: "Features",
+    readTime: "4 min",
   },
   {
-    id: '4',
-    title: 'API Documentation',
-    excerpt: 'Complete API reference for developers building custom integrations.',
-    category: 'Developers',
-    readTime: '10 min',
+    id: "4",
+    title: "API Documentation",
+    excerpt:
+      "Complete API reference for developers building custom integrations.",
+    category: "Developers",
+    readTime: "10 min",
   },
 ];
 
 const categories = [
-  { name: 'Onboarding', description: 'Get started quickly' },
-  { name: 'Features', description: 'Learn what you can do' },
-  { name: 'Developers', description: 'API & integrations' },
-  { name: 'Troubleshooting', description: 'Common issues & fixes' },
+  { name: "Onboarding", description: "Get started quickly" },
+  { name: "Features", description: "Learn what you can do" },
+  { name: "Developers", description: "API & integrations" },
+  { name: "Troubleshooting", description: "Common issues & fixes" },
 ];
 
 export default function HelpCenterPage() {
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   const filteredArticles = articles.filter((article) => {
@@ -68,7 +72,9 @@ export default function HelpCenterPage() {
       {/* Header */}
       <header className="border-b border-border/50 bg-card/30">
         <div className="max-w-4xl mx-auto px-6 py-4">
-          <span className="text-base font-medium text-foreground/90">Help Center</span>
+          <span className="text-base font-medium text-foreground/90">
+            Help Center
+          </span>
         </div>
       </header>
 
@@ -104,8 +110,12 @@ export default function HelpCenterPage() {
                 onClick={() => setSelectedCategory(cat.name)}
                 className="p-4 rounded-lg border border-border/50 bg-card/30 text-left transition-colors hover:bg-card/50 hover:border-border"
               >
-                <h3 className="text-sm font-medium text-foreground/90 mb-0.5">{cat.name}</h3>
-                <p className="text-xs text-muted-foreground/70">{cat.description}</p>
+                <h3 className="text-sm font-medium text-foreground/90 mb-0.5">
+                  {cat.name}
+                </h3>
+                <p className="text-xs text-muted-foreground/70">
+                  {cat.description}
+                </p>
               </button>
             ))}
           </div>
@@ -136,7 +146,7 @@ export default function HelpCenterPage() {
         {/* Section Title */}
         {!search && (
           <h2 className="text-sm font-medium text-muted-foreground mb-4">
-            {selectedCategory || 'All Articles'}
+            {selectedCategory || "All Articles"}
           </h2>
         )}
 
@@ -166,8 +176,12 @@ export default function HelpCenterPage() {
           {filteredArticles.length === 0 && (
             <div className="text-center py-12">
               <FileText className="h-10 w-10 mx-auto mb-3 text-muted-foreground/30" />
-              <p className="text-base text-muted-foreground/70 mb-1">No articles found</p>
-              <p className="text-sm text-muted-foreground/50">Try a different search term</p>
+              <p className="text-base text-muted-foreground/70 mb-1">
+                No articles found
+              </p>
+              <p className="text-sm text-muted-foreground/50">
+                Try a different search term
+              </p>
             </div>
           )}
         </div>

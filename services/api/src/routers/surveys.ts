@@ -1,16 +1,23 @@
-import { z } from 'zod';
-import { TRPCError } from '@trpc/server';
-import { Prisma } from '@prisma/client';
-import { router, projectProcedure, sdkProcedure } from '../lib/trpc';
-import { createSurveySchema, updateSurveySchema, paginationSchema } from '@relay/shared';
+import { z } from "zod";
+import { TRPCError } from "@trpc/server";
+import { Prisma } from "@prisma/client";
+import { router, projectProcedure, sdkProcedure } from "../lib/trpc";
+import {
+  createSurveySchema,
+  updateSurveySchema,
+  paginationSchema,
+} from "@relay/shared";
 
 export const surveysRouter = router({
   // List surveys (dashboard)
   list: projectProcedure
     .input(
-      z.object({ projectId: z.string().uuid() }).merge(paginationSchema).extend({
-        active: z.boolean().optional(),
-      })
+      z
+        .object({ projectId: z.string().uuid() })
+        .merge(paginationSchema)
+        .extend({
+          active: z.boolean().optional(),
+        }),
     )
     .query(async ({ input, ctx }) => {
       const { page, pageSize, active } = input;
@@ -26,7 +33,7 @@ export const surveysRouter = router({
       const [surveys, total] = await Promise.all([
         ctx.prisma.survey.findMany({
           where,
-          orderBy: { createdAt: 'desc' },
+          orderBy: { createdAt: "desc" },
           skip: (page - 1) * pageSize,
           take: pageSize,
         }),
@@ -56,14 +63,16 @@ export const surveysRouter = router({
 
   // Get single survey with responses
   get: projectProcedure
-    .input(z.object({ projectId: z.string().uuid(), surveyId: z.string().uuid() }))
+    .input(
+      z.object({ projectId: z.string().uuid(), surveyId: z.string().uuid() }),
+    )
     .query(async ({ input, ctx }) => {
       const survey = await ctx.prisma.survey.findUnique({
         where: { id: input.surveyId, projectId: ctx.projectId },
         include: {
           responses: {
             take: 100,
-            orderBy: { createdAt: 'desc' },
+            orderBy: { createdAt: "desc" },
             include: {
               interaction: {
                 select: {
@@ -86,8 +95,8 @@ export const surveysRouter = router({
 
       if (!survey) {
         throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Survey not found',
+          code: "NOT_FOUND",
+          message: "Survey not found",
         });
       }
 
@@ -126,10 +135,10 @@ export const surveysRouter = router({
       await ctx.prisma.auditLog.create({
         data: {
           projectId: ctx.projectId,
-          actorType: 'admin',
+          actorType: "admin",
           actorId: ctx.adminUser!.id,
-          action: 'survey.created',
-          targetType: 'survey',
+          action: "survey.created",
+          targetType: "survey",
           targetId: survey.id,
         },
       });
@@ -140,7 +149,9 @@ export const surveysRouter = router({
   // Update survey
   update: projectProcedure
     .input(
-      z.object({ projectId: z.string().uuid(), surveyId: z.string().uuid() }).merge(updateSurveySchema)
+      z
+        .object({ projectId: z.string().uuid(), surveyId: z.string().uuid() })
+        .merge(updateSurveySchema),
     )
     .mutation(async ({ input, ctx }) => {
       const survey = await ctx.prisma.survey.update({
@@ -156,10 +167,10 @@ export const surveysRouter = router({
       await ctx.prisma.auditLog.create({
         data: {
           projectId: ctx.projectId,
-          actorType: 'admin',
+          actorType: "admin",
           actorId: ctx.adminUser!.id,
-          action: 'survey.updated',
-          targetType: 'survey',
+          action: "survey.updated",
+          targetType: "survey",
           targetId: survey.id,
         },
       });
@@ -169,7 +180,9 @@ export const surveysRouter = router({
 
   // Delete survey
   delete: projectProcedure
-    .input(z.object({ projectId: z.string().uuid(), surveyId: z.string().uuid() }))
+    .input(
+      z.object({ projectId: z.string().uuid(), surveyId: z.string().uuid() }),
+    )
     .mutation(async ({ input, ctx }) => {
       await ctx.prisma.survey.delete({
         where: { id: input.surveyId, projectId: ctx.projectId },
@@ -178,10 +191,10 @@ export const surveysRouter = router({
       await ctx.prisma.auditLog.create({
         data: {
           projectId: ctx.projectId,
-          actorType: 'admin',
+          actorType: "admin",
           actorId: ctx.adminUser!.id,
-          action: 'survey.deleted',
-          targetType: 'survey',
+          action: "survey.deleted",
+          targetType: "survey",
           targetId: input.surveyId,
         },
       });
@@ -196,7 +209,7 @@ export const surveysRouter = router({
         projectId: z.string().uuid(),
         surveyId: z.string().uuid(),
         active: z.boolean(),
-      })
+      }),
     )
     .mutation(async ({ input, ctx }) => {
       const survey = await ctx.prisma.survey.update({
@@ -209,7 +222,9 @@ export const surveysRouter = router({
 
   // Get response analytics
   analytics: projectProcedure
-    .input(z.object({ projectId: z.string().uuid(), surveyId: z.string().uuid() }))
+    .input(
+      z.object({ projectId: z.string().uuid(), surveyId: z.string().uuid() }),
+    )
     .query(async ({ input, ctx }) => {
       const survey = await ctx.prisma.survey.findUnique({
         where: { id: input.surveyId, projectId: ctx.projectId },
@@ -217,8 +232,8 @@ export const surveysRouter = router({
 
       if (!survey) {
         throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Survey not found',
+          code: "NOT_FOUND",
+          message: "Survey not found",
         });
       }
 
@@ -228,31 +243,42 @@ export const surveysRouter = router({
       });
 
       // Aggregate responses by question
-      const definition = survey.definition as { questions: Array<{ id: string; type: string; text: string }> };
+      const definition = survey.definition as {
+        questions: Array<{ id: string; type: string; text: string }>;
+      };
       const analytics: Record<string, unknown> = {};
 
       for (const question of definition.questions) {
-        const questionResponses = responses.map((r) => {
-          const respData = r.responses as Record<string, unknown>;
-          return respData[question.id];
-        }).filter(Boolean);
+        const questionResponses = responses
+          .map((r) => {
+            const respData = r.responses as Record<string, unknown>;
+            return respData[question.id];
+          })
+          .filter(Boolean);
 
-        if (question.type === 'nps' || question.type === 'rating') {
-          const numericResponses = questionResponses.map(Number).filter((n) => !isNaN(n));
-          const avg = numericResponses.length > 0
-            ? numericResponses.reduce((a, b) => a + b, 0) / numericResponses.length
-            : 0;
-
-          // For NPS, calculate score
-          if (question.type === 'nps') {
-            const promoters = numericResponses.filter((n) => n >= 9).length;
-            const detractors = numericResponses.filter((n) => n <= 6).length;
-            const npsScore = numericResponses.length > 0
-              ? Math.round(((promoters - detractors) / numericResponses.length) * 100)
+        if (question.type === "nps" || question.type === "rating") {
+          const numericResponses = questionResponses
+            .map(Number)
+            .filter((n) => !isNaN(n));
+          const avg =
+            numericResponses.length > 0
+              ? numericResponses.reduce((a, b) => a + b, 0) /
+                numericResponses.length
               : 0;
 
+          // For NPS, calculate score
+          if (question.type === "nps") {
+            const promoters = numericResponses.filter((n) => n >= 9).length;
+            const detractors = numericResponses.filter((n) => n <= 6).length;
+            const npsScore =
+              numericResponses.length > 0
+                ? Math.round(
+                    ((promoters - detractors) / numericResponses.length) * 100,
+                  )
+                : 0;
+
             analytics[question.id] = {
-              type: 'nps',
+              type: "nps",
               avg: Math.round(avg * 10) / 10,
               npsScore,
               promoters,
@@ -262,7 +288,7 @@ export const surveysRouter = router({
             };
           } else {
             analytics[question.id] = {
-              type: 'rating',
+              type: "rating",
               avg: Math.round(avg * 10) / 10,
               distribution: [1, 2, 3, 4, 5].map((n) => ({
                 value: n,
@@ -271,7 +297,10 @@ export const surveysRouter = router({
               total: numericResponses.length,
             };
           }
-        } else if (question.type === 'single_choice' || question.type === 'multi_choice') {
+        } else if (
+          question.type === "single_choice" ||
+          question.type === "multi_choice"
+        ) {
           const counts: Record<string, number> = {};
           questionResponses.forEach((r) => {
             const choices = Array.isArray(r) ? r : [r];
@@ -282,13 +311,16 @@ export const surveysRouter = router({
 
           analytics[question.id] = {
             type: question.type,
-            distribution: Object.entries(counts).map(([value, count]) => ({ value, count })),
+            distribution: Object.entries(counts).map(([value, count]) => ({
+              value,
+              count,
+            })),
             total: questionResponses.length,
           };
         } else {
           // Text responses
           analytics[question.id] = {
-            type: 'text',
+            type: "text",
             responses: questionResponses.slice(0, 50), // Last 50 responses
             total: questionResponses.length,
           };
@@ -310,7 +342,7 @@ export const surveysRouter = router({
         userId: z.string().optional(),
         url: z.string().url().optional(),
         traits: z.record(z.unknown()).optional(),
-      })
+      }),
     )
     .query(async ({ input, ctx }) => {
       // Get active surveys
@@ -333,21 +365,23 @@ export const surveysRouter = router({
         };
 
         // Date range
-        if (targeting.startDate && new Date(targeting.startDate) > now) return false;
-        if (targeting.endDate && new Date(targeting.endDate) < now) return false;
+        if (targeting.startDate && new Date(targeting.startDate) > now)
+          return false;
+        if (targeting.endDate && new Date(targeting.endDate) < now)
+          return false;
 
         // Page targeting
         if (input.url) {
           if (targeting.showOnPages && targeting.showOnPages.length > 0) {
             const matches = targeting.showOnPages.some((pattern) => {
-              const regex = new RegExp(pattern.replace(/\*/g, '.*'));
+              const regex = new RegExp(pattern.replace(/\*/g, ".*"));
               return regex.test(input.url!);
             });
             if (!matches) return false;
           }
           if (targeting.excludePages && targeting.excludePages.length > 0) {
             const matches = targeting.excludePages.some((pattern) => {
-              const regex = new RegExp(pattern.replace(/\*/g, '.*'));
+              const regex = new RegExp(pattern.replace(/\*/g, ".*"));
               return regex.test(input.url!);
             });
             if (matches) return false;
@@ -393,7 +427,7 @@ export const surveysRouter = router({
         surveyId: z.string().uuid(),
         sessionId: z.string().uuid(),
         responses: z.record(z.unknown()),
-      })
+      }),
     )
     .mutation(async ({ input, ctx }) => {
       const survey = await ctx.prisma.survey.findUnique({
@@ -402,8 +436,8 @@ export const surveysRouter = router({
 
       if (!survey) {
         throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Survey not found',
+          code: "NOT_FOUND",
+          message: "Survey not found",
         });
       }
 
@@ -411,8 +445,8 @@ export const surveysRouter = router({
       const interaction = await ctx.prisma.interaction.create({
         data: {
           projectId: ctx.projectId,
-          type: 'survey',
-          source: 'widget',
+          type: "survey",
+          source: "widget",
           sessionId: input.sessionId,
           contentJson: {
             surveyId: input.surveyId,

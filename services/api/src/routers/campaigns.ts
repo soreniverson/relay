@@ -1,7 +1,7 @@
-import { z } from 'zod';
-import { router, projectProcedure } from '../lib/trpc';
-import { TRPCError } from '@trpc/server';
-import { Prisma } from '@prisma/client';
+import { z } from "zod";
+import { router, projectProcedure } from "../lib/trpc";
+import { TRPCError } from "@trpc/server";
+import { Prisma } from "@prisma/client";
 
 export const campaignsRouter = router({
   // ============================================================================
@@ -12,8 +12,10 @@ export const campaignsRouter = router({
     .input(
       z.object({
         projectId: z.string(),
-        status: z.enum(['draft', 'scheduled', 'sending', 'sent', 'cancelled']).optional(),
-      })
+        status: z
+          .enum(["draft", "scheduled", "sending", "sent", "cancelled"])
+          .optional(),
+      }),
     )
     .query(async ({ ctx, input }) => {
       const campaigns = await ctx.prisma.emailCampaign.findMany({
@@ -21,7 +23,7 @@ export const campaignsRouter = router({
           projectId: input.projectId,
           ...(input.status && { status: input.status }),
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         include: {
           _count: {
             select: { sends: true },
@@ -40,13 +42,16 @@ export const campaignsRouter = router({
         include: {
           sends: {
             take: 100,
-            orderBy: { sentAt: 'desc' },
+            orderBy: { sentAt: "desc" },
           },
         },
       });
 
       if (!campaign) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Campaign not found' });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Campaign not found",
+        });
       }
 
       return campaign;
@@ -65,7 +70,7 @@ export const campaignsRouter = router({
         replyTo: z.string().email().optional(),
         segmentRules: z.record(z.any()).optional(),
         scheduledAt: z.date().optional(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const campaign = await ctx.prisma.emailCampaign.create({
@@ -80,7 +85,7 @@ export const campaignsRouter = router({
           replyTo: input.replyTo,
           segmentRules: input.segmentRules as Prisma.JsonObject | undefined,
           scheduledAt: input.scheduledAt,
-          status: input.scheduledAt ? 'scheduled' : 'draft',
+          status: input.scheduledAt ? "scheduled" : "draft",
         },
       });
 
@@ -100,7 +105,7 @@ export const campaignsRouter = router({
         replyTo: z.string().email().optional(),
         segmentRules: z.record(z.any()).optional(),
         scheduledAt: z.date().nullable().optional(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const { id, ...data } = input;
@@ -111,13 +116,16 @@ export const campaignsRouter = router({
       });
 
       if (!existing) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Campaign not found' });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Campaign not found",
+        });
       }
 
-      if (existing.status === 'sending' || existing.status === 'sent') {
+      if (existing.status === "sending" || existing.status === "sent") {
         throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'Cannot edit a campaign that is sending or has been sent',
+          code: "BAD_REQUEST",
+          message: "Cannot edit a campaign that is sending or has been sent",
         });
       }
 
@@ -126,7 +134,7 @@ export const campaignsRouter = router({
         data: {
           ...data,
           segmentRules: data.segmentRules as Prisma.JsonObject | undefined,
-          status: data.scheduledAt ? 'scheduled' : existing.status,
+          status: data.scheduledAt ? "scheduled" : existing.status,
         },
       });
 
@@ -141,13 +149,16 @@ export const campaignsRouter = router({
       });
 
       if (!existing) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Campaign not found' });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Campaign not found",
+        });
       }
 
-      if (existing.status === 'sending') {
+      if (existing.status === "sending") {
         throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'Cannot delete a campaign that is currently sending',
+          code: "BAD_REQUEST",
+          message: "Cannot delete a campaign that is currently sending",
         });
       }
 
@@ -165,7 +176,7 @@ export const campaignsRouter = router({
       z.object({
         id: z.string(),
         scheduledAt: z.date(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const campaign = await ctx.prisma.emailCampaign.findUnique({
@@ -173,20 +184,23 @@ export const campaignsRouter = router({
       });
 
       if (!campaign) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Campaign not found' });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Campaign not found",
+        });
       }
 
-      if (campaign.status !== 'draft') {
+      if (campaign.status !== "draft") {
         throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'Only draft campaigns can be scheduled',
+          code: "BAD_REQUEST",
+          message: "Only draft campaigns can be scheduled",
         });
       }
 
       if (input.scheduledAt <= new Date()) {
         throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'Scheduled time must be in the future',
+          code: "BAD_REQUEST",
+          message: "Scheduled time must be in the future",
         });
       }
 
@@ -194,7 +208,7 @@ export const campaignsRouter = router({
         where: { id: input.id },
         data: {
           scheduledAt: input.scheduledAt,
-          status: 'scheduled',
+          status: "scheduled",
         },
       });
 
@@ -210,13 +224,16 @@ export const campaignsRouter = router({
       });
 
       if (!campaign) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Campaign not found' });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Campaign not found",
+        });
       }
 
-      if (campaign.status !== 'draft' && campaign.status !== 'scheduled') {
+      if (campaign.status !== "draft" && campaign.status !== "scheduled") {
         throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'Campaign has already been sent or is currently sending',
+          code: "BAD_REQUEST",
+          message: "Campaign has already been sent or is currently sending",
         });
       }
 
@@ -224,13 +241,16 @@ export const campaignsRouter = router({
       await ctx.prisma.emailCampaign.update({
         where: { id: input.id },
         data: {
-          status: 'sending',
+          status: "sending",
           sentAt: new Date(),
         },
       });
 
       // Get target users based on segment rules
-      const segmentRules = campaign.segmentRules as Record<string, unknown> | null;
+      const segmentRules = campaign.segmentRules as Record<
+        string,
+        unknown
+      > | null;
       const where: Prisma.EndUserWhereInput = {
         projectId: campaign.projectId,
         email: { not: null },
@@ -248,25 +268,27 @@ export const campaignsRouter = router({
 
       // Create send records (in production, actually send emails via SendGrid/Postmark/SES)
       const sends = await Promise.all(
-        users.filter((u) => u.email).map(async (user) => {
-          // In production, send via email provider here
-          return ctx.prisma.emailSend.create({
-            data: {
-              campaignId: campaign.id,
-              userId: user.id,
-              email: user.email!,
-              status: 'sent', // Simulated
-              sentAt: new Date(),
-            },
-          });
-        })
+        users
+          .filter((u) => u.email)
+          .map(async (user) => {
+            // In production, send via email provider here
+            return ctx.prisma.emailSend.create({
+              data: {
+                campaignId: campaign.id,
+                userId: user.id,
+                email: user.email!,
+                status: "sent", // Simulated
+                sentAt: new Date(),
+              },
+            });
+          }),
       );
 
       // Mark campaign as sent
       await ctx.prisma.emailCampaign.update({
         where: { id: input.id },
         data: {
-          status: 'sent',
+          status: "sent",
           recipientCount: sends.length,
           sentCount: sends.length,
         },
@@ -287,20 +309,23 @@ export const campaignsRouter = router({
       });
 
       if (!campaign) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Campaign not found' });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Campaign not found",
+        });
       }
 
-      if (campaign.status !== 'scheduled') {
+      if (campaign.status !== "scheduled") {
         throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'Only scheduled campaigns can be cancelled',
+          code: "BAD_REQUEST",
+          message: "Only scheduled campaigns can be cancelled",
         });
       }
 
       const updated = await ctx.prisma.emailCampaign.update({
         where: { id: input.id },
         data: {
-          status: 'cancelled',
+          status: "cancelled",
           scheduledAt: null,
         },
       });
@@ -317,7 +342,10 @@ export const campaignsRouter = router({
       });
 
       if (!original) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Campaign not found' });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Campaign not found",
+        });
       }
 
       const duplicate = await ctx.prisma.emailCampaign.create({
@@ -332,7 +360,7 @@ export const campaignsRouter = router({
           fromEmail: original.fromEmail,
           replyTo: original.replyTo,
           segmentRules: original.segmentRules as Prisma.JsonObject | undefined,
-          status: 'draft',
+          status: "draft",
         },
       });
 
@@ -351,16 +379,29 @@ export const campaignsRouter = router({
       });
 
       if (!campaign) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Campaign not found' });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Campaign not found",
+        });
       }
 
-      const [sends, opened, clicked, bounced, unsubscribed] = await Promise.all([
-        ctx.prisma.emailSend.count({ where: { campaignId: input.id } }),
-        ctx.prisma.emailSend.count({ where: { campaignId: input.id, openedAt: { not: null } } }),
-        ctx.prisma.emailSend.count({ where: { campaignId: input.id, clickedAt: { not: null } } }),
-        ctx.prisma.emailSend.count({ where: { campaignId: input.id, bouncedAt: { not: null } } }),
-        ctx.prisma.emailSend.count({ where: { campaignId: input.id, unsubAt: { not: null } } }),
-      ]);
+      const [sends, opened, clicked, bounced, unsubscribed] = await Promise.all(
+        [
+          ctx.prisma.emailSend.count({ where: { campaignId: input.id } }),
+          ctx.prisma.emailSend.count({
+            where: { campaignId: input.id, openedAt: { not: null } },
+          }),
+          ctx.prisma.emailSend.count({
+            where: { campaignId: input.id, clickedAt: { not: null } },
+          }),
+          ctx.prisma.emailSend.count({
+            where: { campaignId: input.id, bouncedAt: { not: null } },
+          }),
+          ctx.prisma.emailSend.count({
+            where: { campaignId: input.id, unsubAt: { not: null } },
+          }),
+        ],
+      );
 
       const delivered = sends - bounced;
 
@@ -384,14 +425,14 @@ export const campaignsRouter = router({
     .input(
       z.object({
         id: z.string(),
-        metric: z.enum(['opens', 'clicks']),
-      })
+        metric: z.enum(["opens", "clicks"]),
+      }),
     )
     .query(async ({ ctx, input }) => {
       const sends = await ctx.prisma.emailSend.findMany({
         where: {
           campaignId: input.id,
-          ...(input.metric === 'opens'
+          ...(input.metric === "opens"
             ? { openedAt: { not: null } }
             : { clickedAt: { not: null } }),
         },
@@ -404,7 +445,7 @@ export const campaignsRouter = router({
       // Group by hour
       const hourlyData = new Map<string, number>();
       sends.forEach((send) => {
-        const date = input.metric === 'opens' ? send.openedAt : send.clickedAt;
+        const date = input.metric === "opens" ? send.openedAt : send.clickedAt;
         if (date) {
           const hour = new Date(date).toISOString().slice(0, 13);
           hourlyData.set(hour, (hourlyData.get(hour) || 0) + 1);
@@ -423,10 +464,10 @@ export const campaignsRouter = router({
   getTemplates: projectProcedure.query(async () => {
     return [
       {
-        id: 'welcome',
-        name: 'Welcome Email',
-        description: 'Welcome new users to your product',
-        subject: 'Welcome to {{product_name}}, {{name}}!',
+        id: "welcome",
+        name: "Welcome Email",
+        description: "Welcome new users to your product",
+        subject: "Welcome to {{product_name}}, {{name}}!",
         previewText: "We're excited to have you on board",
         content: `
 # Welcome, {{name}}!
@@ -442,10 +483,10 @@ Here are some things you can do to get started:
         `.trim(),
       },
       {
-        id: 'product-update',
-        name: 'Product Update',
-        description: 'Announce new features or updates',
-        subject: 'New in {{product_name}}: {{feature_name}}',
+        id: "product-update",
+        name: "Product Update",
+        description: "Announce new features or updates",
+        subject: "New in {{product_name}}: {{feature_name}}",
         previewText: "Check out what's new",
         content: `
 # Introducing {{feature_name}}
@@ -458,11 +499,11 @@ We've been working hard to bring you something special.
         `.trim(),
       },
       {
-        id: 'feedback-request',
-        name: 'Feedback Request',
-        description: 'Ask users for feedback',
+        id: "feedback-request",
+        name: "Feedback Request",
+        description: "Ask users for feedback",
         subject: "We'd love your feedback, {{name}}",
-        previewText: 'Your opinion matters to us',
+        previewText: "Your opinion matters to us",
         content: `
 # How are we doing?
 
@@ -476,10 +517,10 @@ Your feedback helps us improve and build features you'll love.
         `.trim(),
       },
       {
-        id: 're-engagement',
-        name: 'Re-engagement',
-        description: 'Win back inactive users',
-        subject: 'We miss you, {{name}}!',
+        id: "re-engagement",
+        name: "Re-engagement",
+        description: "Win back inactive users",
+        subject: "We miss you, {{name}}!",
         previewText: "Come see what you've been missing",
         content: `
 # It's been a while!
@@ -505,16 +546,16 @@ We noticed you haven't logged in recently. Here's what's new since you've been a
         subject: z.string(),
         content: z.string(),
         sampleData: z.record(z.string()).optional(),
-      })
+      }),
     )
     .mutation(async ({ input }) => {
       const { sampleData = {} } = input;
 
       // Default sample data
       const data: Record<string, string> = {
-        name: 'John',
-        email: 'john@example.com',
-        product_name: 'Your Product',
+        name: "John",
+        email: "john@example.com",
+        product_name: "Your Product",
         ...sampleData,
       };
 
@@ -523,7 +564,7 @@ We noticed you haven't logged in recently. Here's what's new since you've been a
       let content = input.content;
 
       for (const [key, value] of Object.entries(data)) {
-        const regex = new RegExp(`{{${key}}}`, 'g');
+        const regex = new RegExp(`{{${key}}}`, "g");
         subject = subject.replace(regex, value);
         content = content.replace(regex, value);
       }

@@ -1,20 +1,36 @@
-import { z } from 'zod';
-import { TRPCError } from '@trpc/server';
-import { router, projectProcedure } from '../lib/trpc';
-import { pubsub } from '../lib/redis';
-import { getPresignedDownloadUrl, getBucketName } from '../lib/storage';
+import { z } from "zod";
+import { TRPCError } from "@trpc/server";
+import { router, projectProcedure } from "../lib/trpc";
+import { pubsub } from "../lib/redis";
+import { getPresignedDownloadUrl, getBucketName } from "../lib/storage";
 import {
   inboxQuerySchema,
   interactionStatusSchema,
   severitySchema,
-} from '@relay/shared';
+} from "@relay/shared";
 
 export const interactionsRouter = router({
   // Get inbox (paginated interactions)
   inbox: projectProcedure
     .input(z.object({ projectId: z.string().uuid() }).merge(inboxQuerySchema))
     .query(async ({ input, ctx }) => {
-      const { page, pageSize, types, statuses, severities, tags, assigneeId, userId, sessionId, startDate, endDate, search, hasReplay, field, direction } = input;
+      const {
+        page,
+        pageSize,
+        types,
+        statuses,
+        severities,
+        tags,
+        assigneeId,
+        userId,
+        sessionId,
+        startDate,
+        endDate,
+        search,
+        hasReplay,
+        field,
+        direction,
+      } = input;
 
       const where: Record<string, unknown> = {
         projectId: ctx.projectId,
@@ -43,15 +59,21 @@ export const interactionsRouter = router({
         where.sessionId = sessionId;
       }
       if (startDate) {
-        where.createdAt = { ...((where.createdAt as Record<string, unknown>) || {}), gte: startDate };
+        where.createdAt = {
+          ...((where.createdAt as Record<string, unknown>) || {}),
+          gte: startDate,
+        };
       }
       if (endDate) {
-        where.createdAt = { ...((where.createdAt as Record<string, unknown>) || {}), lte: endDate };
+        where.createdAt = {
+          ...((where.createdAt as Record<string, unknown>) || {}),
+          lte: endDate,
+        };
       }
       if (search) {
         where.OR = [
-          { contentText: { contains: search, mode: 'insensitive' } },
-          { contentJson: { path: ['title'], string_contains: search } },
+          { contentText: { contains: search, mode: "insensitive" } },
+          { contentJson: { path: ["title"], string_contains: search } },
         ];
       }
       if (hasReplay) {
@@ -133,7 +155,12 @@ export const interactionsRouter = router({
 
   // Get single interaction with all details
   get: projectProcedure
-    .input(z.object({ projectId: z.string().uuid(), interactionId: z.string().uuid() }))
+    .input(
+      z.object({
+        projectId: z.string().uuid(),
+        interactionId: z.string().uuid(),
+      }),
+    )
     .query(async ({ input, ctx }) => {
       const interaction = await ctx.prisma.interaction.findUnique({
         where: { id: input.interactionId, projectId: ctx.projectId },
@@ -143,8 +170,8 @@ export const interactionsRouter = router({
           media: true,
           logs: true,
           replays: {
-            where: { status: 'ready' },
-            orderBy: { startedAt: 'desc' },
+            where: { status: "ready" },
+            orderBy: { startedAt: "desc" },
             take: 1,
           },
           feedbackLinks: {
@@ -171,8 +198,8 @@ export const interactionsRouter = router({
 
       if (!interaction) {
         throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Interaction not found',
+          code: "NOT_FOUND",
+          message: "Interaction not found",
         });
       }
 
@@ -180,12 +207,12 @@ export const interactionsRouter = router({
       const mediaWithUrls = await Promise.all(
         interaction.media.map(async (m) => {
           const signedUrl = await getPresignedDownloadUrl(
-            getBucketName(ctx.region, 'media'),
+            getBucketName(ctx.region, "media"),
             m.storageKey,
-            3600
+            3600,
           );
           return { ...m, signedUrl };
-        })
+        }),
       );
 
       return {
@@ -202,7 +229,7 @@ export const interactionsRouter = router({
         projectId: z.string().uuid(),
         interactionId: z.string().uuid(),
         status: interactionStatusSchema,
-      })
+      }),
     )
     .mutation(async ({ input, ctx }) => {
       const interaction = await ctx.prisma.interaction.update({
@@ -214,10 +241,10 @@ export const interactionsRouter = router({
       await ctx.prisma.auditLog.create({
         data: {
           projectId: ctx.projectId,
-          actorType: 'admin',
+          actorType: "admin",
           actorId: ctx.adminUser!.id,
-          action: 'interaction.status_changed',
-          targetType: 'interaction',
+          action: "interaction.status_changed",
+          targetType: "interaction",
           targetId: input.interactionId,
           meta: { newStatus: input.status },
         },
@@ -225,7 +252,7 @@ export const interactionsRouter = router({
 
       // Publish realtime event
       await pubsub.publish(`project:${ctx.projectId}`, {
-        type: 'interaction.updated',
+        type: "interaction.updated",
         projectId: ctx.projectId,
         payload: {
           id: interaction.id,
@@ -243,7 +270,7 @@ export const interactionsRouter = router({
         projectId: z.string().uuid(),
         interactionId: z.string().uuid(),
         severity: severitySchema.nullable(),
-      })
+      }),
     )
     .mutation(async ({ input, ctx }) => {
       const interaction = await ctx.prisma.interaction.update({
@@ -254,10 +281,10 @@ export const interactionsRouter = router({
       await ctx.prisma.auditLog.create({
         data: {
           projectId: ctx.projectId,
-          actorType: 'admin',
+          actorType: "admin",
           actorId: ctx.adminUser!.id,
-          action: 'interaction.severity_changed',
-          targetType: 'interaction',
+          action: "interaction.severity_changed",
+          targetType: "interaction",
           targetId: input.interactionId,
           meta: { newSeverity: input.severity },
         },
@@ -273,7 +300,7 @@ export const interactionsRouter = router({
         projectId: z.string().uuid(),
         interactionId: z.string().uuid(),
         assigneeId: z.string().uuid().nullable(),
-      })
+      }),
     )
     .mutation(async ({ input, ctx }) => {
       const interaction = await ctx.prisma.interaction.update({
@@ -284,10 +311,10 @@ export const interactionsRouter = router({
       await ctx.prisma.auditLog.create({
         data: {
           projectId: ctx.projectId,
-          actorType: 'admin',
+          actorType: "admin",
           actorId: ctx.adminUser!.id,
-          action: 'interaction.assigned',
-          targetType: 'interaction',
+          action: "interaction.assigned",
+          targetType: "interaction",
           targetId: input.interactionId,
           meta: { assigneeId: input.assigneeId },
         },
@@ -303,7 +330,7 @@ export const interactionsRouter = router({
         projectId: z.string().uuid(),
         interactionId: z.string().uuid(),
         tags: z.array(z.string().max(100)),
-      })
+      }),
     )
     .mutation(async ({ input, ctx }) => {
       await ctx.prisma.interaction.update({
@@ -321,7 +348,7 @@ export const interactionsRouter = router({
         projectId: z.string().uuid(),
         interactionIds: z.array(z.string().uuid()),
         status: interactionStatusSchema,
-      })
+      }),
     )
     .mutation(async ({ input, ctx }) => {
       await ctx.prisma.interaction.updateMany({
@@ -337,10 +364,10 @@ export const interactionsRouter = router({
         await ctx.prisma.auditLog.create({
           data: {
             projectId: ctx.projectId,
-            actorType: 'admin',
+            actorType: "admin",
             actorId: ctx.adminUser!.id,
-            action: 'interaction.status_changed',
-            targetType: 'interaction',
+            action: "interaction.status_changed",
+            targetType: "interaction",
             targetId: interactionId,
             meta: { newStatus: input.status, bulk: true },
           },
@@ -352,7 +379,9 @@ export const interactionsRouter = router({
 
   // Get replay data
   getReplay: projectProcedure
-    .input(z.object({ projectId: z.string().uuid(), replayId: z.string().uuid() }))
+    .input(
+      z.object({ projectId: z.string().uuid(), replayId: z.string().uuid() }),
+    )
     .query(async ({ input, ctx }) => {
       const replay = await ctx.prisma.replay.findUnique({
         where: { id: input.replayId, projectId: ctx.projectId },
@@ -364,22 +393,29 @@ export const interactionsRouter = router({
 
       if (!replay) {
         throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Replay not found',
+          code: "NOT_FOUND",
+          message: "Replay not found",
         });
       }
 
       // Generate signed URLs for chunks
-      const chunks = (replay.chunks as Array<{ index: number; storageKey: string; eventCount: number; startTime: number; endTime: number }>) || [];
+      const chunks =
+        (replay.chunks as Array<{
+          index: number;
+          storageKey: string;
+          eventCount: number;
+          startTime: number;
+          endTime: number;
+        }>) || [];
       const chunksWithUrls = await Promise.all(
         chunks.map(async (chunk) => {
           const signedUrl = await getPresignedDownloadUrl(
-            getBucketName(ctx.region, 'replay'),
+            getBucketName(ctx.region, "replay"),
             chunk.storageKey,
-            3600
+            3600,
           );
           return { ...chunk, signedUrl };
-        })
+        }),
       );
 
       return {
@@ -398,7 +434,12 @@ export const interactionsRouter = router({
 
   // Get duplicate suggestions
   getDuplicates: projectProcedure
-    .input(z.object({ projectId: z.string().uuid(), interactionId: z.string().uuid() }))
+    .input(
+      z.object({
+        projectId: z.string().uuid(),
+        interactionId: z.string().uuid(),
+      }),
+    )
     .query(async ({ input, ctx }) => {
       const interaction = await ctx.prisma.interaction.findUnique({
         where: { id: input.interactionId, projectId: ctx.projectId },
@@ -406,8 +447,8 @@ export const interactionsRouter = router({
 
       if (!interaction) {
         throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Interaction not found',
+          code: "NOT_FOUND",
+          message: "Interaction not found",
         });
       }
 
@@ -420,7 +461,7 @@ export const interactionsRouter = router({
             id: { not: input.interactionId },
           },
           take: 10,
-          orderBy: { createdAt: 'desc' },
+          orderBy: { createdAt: "desc" },
           select: {
             id: true,
             type: true,
@@ -443,7 +484,7 @@ export const interactionsRouter = router({
         projectId: z.string().uuid(),
         primaryId: z.string().uuid(),
         duplicateIds: z.array(z.string().uuid()),
-      })
+      }),
     )
     .mutation(async ({ input, ctx }) => {
       // Close duplicates and link to primary
@@ -453,7 +494,7 @@ export const interactionsRouter = router({
           projectId: ctx.projectId,
         },
         data: {
-          status: 'closed',
+          status: "closed",
           tags: {
             push: `merged:${input.primaryId}`,
           },
@@ -463,10 +504,10 @@ export const interactionsRouter = router({
       await ctx.prisma.auditLog.create({
         data: {
           projectId: ctx.projectId,
-          actorType: 'admin',
+          actorType: "admin",
           actorId: ctx.adminUser!.id,
-          action: 'interaction.merged',
-          targetType: 'interaction',
+          action: "interaction.merged",
+          targetType: "interaction",
           targetId: input.primaryId,
           meta: { duplicateIds: input.duplicateIds },
         },
@@ -477,16 +518,21 @@ export const interactionsRouter = router({
 
   // Get interaction timeline/activity
   getActivity: projectProcedure
-    .input(z.object({ projectId: z.string().uuid(), interactionId: z.string().uuid() }))
+    .input(
+      z.object({
+        projectId: z.string().uuid(),
+        interactionId: z.string().uuid(),
+      }),
+    )
     .query(async ({ input, ctx }) => {
       // Get audit logs for this interaction
       const auditLogs = await ctx.prisma.auditLog.findMany({
         where: {
           projectId: ctx.projectId,
-          targetType: 'interaction',
+          targetType: "interaction",
           targetId: input.interactionId,
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         take: 50,
       });
 

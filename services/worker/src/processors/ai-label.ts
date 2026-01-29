@@ -1,6 +1,6 @@
-import { Job } from 'bullmq';
-import OpenAI from 'openai';
-import { prisma } from '../index.js';
+import { Job } from "bullmq";
+import OpenAI from "openai";
+import { prisma } from "../index.js";
 
 interface AiLabelJob {
   interactionId: string;
@@ -8,24 +8,24 @@ interface AiLabelJob {
 }
 
 const PREDEFINED_LABELS = [
-  'bug',
-  'crash',
-  'performance',
-  'ui',
-  'ux',
-  'api',
-  'authentication',
-  'data-loss',
-  'security',
-  'mobile',
-  'desktop',
-  'browser-specific',
-  'network',
-  'timeout',
-  'validation',
-  'feature-request',
-  'documentation',
-  'accessibility',
+  "bug",
+  "crash",
+  "performance",
+  "ui",
+  "ux",
+  "api",
+  "authentication",
+  "data-loss",
+  "security",
+  "mobile",
+  "desktop",
+  "browser-specific",
+  "network",
+  "timeout",
+  "validation",
+  "feature-request",
+  "documentation",
+  "accessibility",
 ];
 
 const openai = process.env.OPENAI_API_KEY
@@ -45,7 +45,7 @@ export async function aiLabelProcessor(job: Job<AiLabelJob>) {
 
   const settings = project?.settings as Record<string, unknown> | null;
   if (!settings?.aiEnabled) {
-    return { skipped: true, reason: 'ai_disabled' };
+    return { skipped: true, reason: "ai_disabled" };
   }
 
   // Fetch interaction
@@ -60,7 +60,7 @@ export async function aiLabelProcessor(job: Job<AiLabelJob>) {
 
   // Skip if already labeled by AI
   if (interaction.aiLabels && (interaction.aiLabels as string[]).length > 0) {
-    return { skipped: true, reason: 'already_labeled' };
+    return { skipped: true, reason: "already_labeled" };
   }
 
   // Build context
@@ -94,29 +94,34 @@ function buildLabelContext(interaction: any): string {
   const contentJson = interaction.contentJson as Record<string, unknown> | null;
   if (contentJson) {
     if (contentJson.title) parts.push(`Title: ${contentJson.title}`);
-    if (contentJson.description) parts.push(`Description: ${contentJson.description}`);
+    if (contentJson.description)
+      parts.push(`Description: ${contentJson.description}`);
   }
 
   // Add error context
   if (interaction.logs?.[0]?.errors) {
     const errors = interaction.logs[0].errors as any[];
     if (errors.length > 0) {
-      parts.push(`Errors: ${errors.map((e) => e.message).join(', ')}`);
+      parts.push(`Errors: ${errors.map((e) => e.message).join(", ")}`);
     }
   }
 
   // Add technical context
-  const techContext = interaction.technicalContext as Record<string, unknown> | null;
+  const techContext = interaction.technicalContext as Record<
+    string,
+    unknown
+  > | null;
   if (techContext) {
     if (techContext.url) parts.push(`URL: ${techContext.url}`);
-    if (techContext.userAgent) parts.push(`User Agent: ${techContext.userAgent}`);
+    if (techContext.userAgent)
+      parts.push(`User Agent: ${techContext.userAgent}`);
   }
 
-  return parts.join('\n');
+  return parts.join("\n");
 }
 
 async function generateLabels(
-  context: string
+  context: string,
 ): Promise<{ labels: string[]; confidence: number }> {
   // First, apply deterministic rules
   const deterministicLabels = applyDeterministicRules(context);
@@ -127,30 +132,30 @@ async function generateLabels(
 
   try {
     const response = await openai.chat.completions.create({
-      model: 'gpt-4-turbo-preview',
+      model: "gpt-4-turbo-preview",
       messages: [
         {
-          role: 'system',
+          role: "system",
           content: `You are a bug report classifier. Analyze the report and assign 1-3 relevant labels from this list:
-${PREDEFINED_LABELS.join(', ')}
+${PREDEFINED_LABELS.join(", ")}
 
 Respond with JSON only: {"labels": ["label1", "label2"], "confidence": 0.85}
 
 Only use labels from the provided list. Confidence should be 0.0-1.0 based on how certain you are.`,
         },
         {
-          role: 'user',
+          role: "user",
           content: context,
         },
       ],
       max_tokens: 100,
       temperature: 0.2,
-      response_format: { type: 'json_object' },
+      response_format: { type: "json_object" },
     });
 
-    const result = JSON.parse(response.choices[0]?.message?.content || '{}');
+    const result = JSON.parse(response.choices[0]?.message?.content || "{}");
     const aiLabels = (result.labels || []).filter((l: string) =>
-      PREDEFINED_LABELS.includes(l)
+      PREDEFINED_LABELS.includes(l),
     );
 
     // Merge with deterministic labels
@@ -161,7 +166,7 @@ Only use labels from the provided list. Confidence should be 0.0-1.0 based on ho
       confidence: result.confidence || 0.8,
     };
   } catch (error) {
-    console.error('OpenAI API error:', error);
+    console.error("OpenAI API error:", error);
     return { labels: deterministicLabels, confidence: 0.6 };
   }
 }
@@ -172,65 +177,65 @@ function applyDeterministicRules(context: string): string[] {
 
   // Crash detection
   if (
-    lower.includes('crash') ||
-    lower.includes('uncaught') ||
-    lower.includes('unhandled')
+    lower.includes("crash") ||
+    lower.includes("uncaught") ||
+    lower.includes("unhandled")
   ) {
-    labels.push('crash');
+    labels.push("crash");
   }
 
   // Performance
   if (
-    lower.includes('slow') ||
-    lower.includes('loading') ||
-    lower.includes('timeout') ||
-    lower.includes('performance')
+    lower.includes("slow") ||
+    lower.includes("loading") ||
+    lower.includes("timeout") ||
+    lower.includes("performance")
   ) {
-    labels.push('performance');
+    labels.push("performance");
   }
 
   // Network
   if (
-    lower.includes('network') ||
-    lower.includes('api') ||
-    lower.includes('request failed') ||
-    lower.includes('500') ||
-    lower.includes('502') ||
-    lower.includes('503')
+    lower.includes("network") ||
+    lower.includes("api") ||
+    lower.includes("request failed") ||
+    lower.includes("500") ||
+    lower.includes("502") ||
+    lower.includes("503")
   ) {
-    labels.push('network');
+    labels.push("network");
   }
 
   // Authentication
   if (
-    lower.includes('login') ||
-    lower.includes('auth') ||
-    lower.includes('401') ||
-    lower.includes('403') ||
-    lower.includes('permission')
+    lower.includes("login") ||
+    lower.includes("auth") ||
+    lower.includes("401") ||
+    lower.includes("403") ||
+    lower.includes("permission")
   ) {
-    labels.push('authentication');
+    labels.push("authentication");
   }
 
   // Mobile
   if (
-    lower.includes('mobile') ||
-    lower.includes('iphone') ||
-    lower.includes('android') ||
-    lower.includes('ios')
+    lower.includes("mobile") ||
+    lower.includes("iphone") ||
+    lower.includes("android") ||
+    lower.includes("ios")
   ) {
-    labels.push('mobile');
+    labels.push("mobile");
   }
 
   // UI/UX
   if (
-    lower.includes('button') ||
-    lower.includes('display') ||
-    lower.includes('layout') ||
-    lower.includes('ui') ||
-    lower.includes('visual')
+    lower.includes("button") ||
+    lower.includes("display") ||
+    lower.includes("layout") ||
+    lower.includes("ui") ||
+    lower.includes("visual")
   ) {
-    labels.push('ui');
+    labels.push("ui");
   }
 
   return labels;

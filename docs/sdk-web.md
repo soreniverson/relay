@@ -21,23 +21,23 @@ Or via CDN:
 ## Quick Start
 
 ```javascript
-import Relay from '@relay/sdk-web';
+import Relay from "@relay/sdk-web";
 
 // Initialize
 await Relay.init({
-  apiKey: 'rly_your_api_key',
-  environment: 'production',
-  appVersion: '1.0.0',
+  apiKey: "rly_your_api_key",
+  environment: "production",
+  appVersion: "1.0.0",
 });
 
 // Identify user (optional but recommended)
 await Relay.identify({
-  id: 'user_123',
-  email: 'user@example.com',
-  name: 'Jane Doe',
+  id: "user_123",
+  email: "user@example.com",
+  name: "Jane Doe",
   traits: {
-    plan: 'pro',
-    company: 'Acme Inc',
+    plan: "pro",
+    company: "Acme Inc",
   },
 });
 
@@ -53,8 +53,8 @@ interface RelayConfig {
   apiKey: string;
 
   // Optional
-  endpoint?: string;           // Custom API endpoint
-  regionHint?: 'us-west' | 'eu-west';
+  endpoint?: string; // Custom API endpoint
+  regionHint?: "us-west" | "eu-west";
 
   // User identification
   user?: {
@@ -66,39 +66,39 @@ interface RelayConfig {
 
   // Session
   session?: {
-    id?: string;               // Provide to resume session
+    id?: string; // Provide to resume session
     attributes?: Record<string, unknown>;
   };
 
   // Environment
-  environment?: 'production' | 'staging' | 'development';
+  environment?: "production" | "staging" | "development";
   appVersion?: string;
 
   // Privacy
   privacy?: {
-    maskSelectors?: string[];  // CSS selectors to mask
+    maskSelectors?: string[]; // CSS selectors to mask
     blockSelectors?: string[]; // CSS selectors to block completely
-    maskAllInputs?: boolean;   // Mask all input fields
-    maskAllText?: boolean;     // Mask all text content
+    maskAllInputs?: boolean; // Mask all input fields
+    maskAllText?: boolean; // Mask all text content
   };
 
   // Capture settings
   capture?: {
-    console?: boolean;         // Capture console logs (default: true)
-    network?: boolean;         // Capture network requests (default: true)
-    dom?: boolean;             // Capture DOM errors (default: true)
-    replay?: boolean;          // Auto-start replay (default: false)
+    console?: boolean; // Capture console logs (default: true)
+    network?: boolean; // Capture network requests (default: true)
+    dom?: boolean; // Capture DOM errors (default: true)
+    replay?: boolean; // Auto-start replay (default: false)
   };
 
   // Widget settings
   widget?: {
-    position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
+    position?: "bottom-right" | "bottom-left" | "top-right" | "top-left";
     primaryColor?: string;
     showBugReport?: boolean;
     showFeedback?: boolean;
     showChat?: boolean;
     buttonText?: string;
-    autoShow?: boolean;        // Show widget button on init (default: true)
+    autoShow?: boolean; // Show widget button on init (default: true)
   };
 
   // Debug mode
@@ -112,14 +112,14 @@ interface RelayConfig {
 
 ```javascript
 // Basic
-await Relay.init({ apiKey: 'rly_...' });
+await Relay.init({ apiKey: "rly_..." });
 
 // With user
 await Relay.init({
-  apiKey: 'rly_...',
+  apiKey: "rly_...",
   user: {
-    id: 'user_123',
-    email: 'user@example.com',
+    id: "user_123",
+    email: "user@example.com",
   },
 });
 ```
@@ -129,18 +129,18 @@ await Relay.init({
 ```javascript
 // Identify after init
 await Relay.identify({
-  id: 'user_123',
-  email: 'user@example.com',
-  name: 'Jane Doe',
+  id: "user_123",
+  email: "user@example.com",
+  name: "Jane Doe",
   traits: {
-    plan: 'pro',
-    company: 'Acme Inc',
+    plan: "pro",
+    company: "Acme Inc",
   },
 });
 
 // Update session attributes
 Relay.setSessionAttributes({
-  currentPage: 'checkout',
+  currentPage: "checkout",
   cartValue: 99.99,
 });
 ```
@@ -152,7 +152,7 @@ Relay.setSessionAttributes({
 Relay.open();
 
 // Open specific tab
-Relay.open('bug');     // 'bug' | 'feedback' | 'chat'
+Relay.open("bug"); // 'bug' | 'feedback' | 'chat'
 
 // Close widget
 Relay.close();
@@ -163,13 +163,13 @@ Relay.close();
 ```javascript
 // Programmatic bug report
 const interactionId = await Relay.captureBug({
-  title: 'Payment form crash',
-  description: 'The form crashes when I click submit',
-  severity: 'high',            // 'low' | 'med' | 'high' | 'critical'
-  tags: ['payment', 'urgent'],
-  includeScreenshot: true,     // default: true
-  includeLogs: true,           // default: true
-  includeReplay: false,        // default: false
+  title: "Payment form crash",
+  description: "The form crashes when I click submit",
+  severity: "high", // 'low' | 'med' | 'high' | 'critical'
+  tags: ["payment", "urgent"],
+  includeScreenshot: true, // default: true
+  includeLogs: true, // default: true
+  includeReplay: false, // default: false
   attachments: [file1, file2], // File objects
 });
 ```
@@ -179,10 +179,10 @@ const interactionId = await Relay.captureBug({
 ```javascript
 // Programmatic feedback
 const interactionId = await Relay.captureFeedback({
-  text: 'It would be great to have dark mode',
-  category: 'feature-request',
+  text: "It would be great to have dark mode",
+  category: "feature-request",
   rating: 5,
-  tags: ['ui'],
+  tags: ["ui"],
 });
 ```
 
@@ -204,8 +204,8 @@ const isRecording = Relay.isRecording();
 ```javascript
 // Update privacy settings at runtime
 Relay.setPrivacy({
-  maskSelectors: ['.credit-card', '.ssn'],
-  blockSelectors: ['.sensitive-data'],
+  maskSelectors: [".credit-card", ".ssn"],
+  blockSelectors: [".sensitive-data"],
   maskAllInputs: true,
 });
 ```
@@ -214,14 +214,14 @@ Relay.setPrivacy({
 
 ```javascript
 // Track custom events (for survey targeting)
-Relay.track('checkout_started', {
+Relay.track("checkout_started", {
   cartValue: 99.99,
   itemCount: 3,
 });
 
-Relay.track('feature_used', {
-  feature: 'export',
-  format: 'pdf',
+Relay.track("feature_used", {
+  feature: "export",
+  format: "pdf",
 });
 ```
 
@@ -229,28 +229,28 @@ Relay.track('feature_used', {
 
 ```javascript
 // Listen to SDK events
-Relay.on('ready', () => {
-  console.log('Relay is ready');
+Relay.on("ready", () => {
+  console.log("Relay is ready");
 });
 
-Relay.on('bug:submitted', (data) => {
-  console.log('Bug submitted:', data.interactionId);
+Relay.on("bug:submitted", (data) => {
+  console.log("Bug submitted:", data.interactionId);
 });
 
-Relay.on('feedback:submitted', (data) => {
-  console.log('Feedback submitted:', data.interactionId);
+Relay.on("feedback:submitted", (data) => {
+  console.log("Feedback submitted:", data.interactionId);
 });
 
-Relay.on('replay:started', (data) => {
-  console.log('Replay started:', data.replayId);
+Relay.on("replay:started", (data) => {
+  console.log("Replay started:", data.replayId);
 });
 
-Relay.on('error', (error) => {
-  console.error('Relay error:', error);
+Relay.on("error", (error) => {
+  console.error("Relay error:", error);
 });
 
 // Remove listener
-Relay.off('ready', handler);
+Relay.off("ready", handler);
 ```
 
 ### Cleanup
@@ -265,6 +265,7 @@ Relay.destroy();
 ### Default Masking
 
 By default, Relay masks:
+
 - Password fields
 - Credit card numbers (pattern matching)
 - Email addresses (in replay)
@@ -283,14 +284,8 @@ By default, Relay masks:
 ```javascript
 Relay.init({
   privacy: {
-    maskSelectors: [
-      '[data-sensitive]',
-      '.pii',
-      '.credit-card',
-    ],
-    blockSelectors: [
-      '.secret-data',
-    ],
+    maskSelectors: ["[data-sensitive]", ".pii", ".credit-card"],
+    blockSelectors: [".secret-data"],
   },
 });
 ```
@@ -298,8 +293,8 @@ Relay.init({
 ## React Integration
 
 ```jsx
-import { useEffect } from 'react';
-import Relay from '@relay/sdk-web';
+import { useEffect } from "react";
+import Relay from "@relay/sdk-web";
 
 function App() {
   useEffect(() => {
@@ -320,8 +315,8 @@ function App() {
 ### With Context
 
 ```jsx
-import { createContext, useContext, useEffect, useState } from 'react';
-import Relay from '@relay/sdk-web';
+import { createContext, useContext, useEffect, useState } from "react";
+import Relay from "@relay/sdk-web";
 
 const RelayContext = createContext(null);
 
@@ -349,8 +344,8 @@ export function useRelay() {
 
 ```javascript
 // main.js
-import { createApp } from 'vue';
-import Relay from '@relay/sdk-web';
+import { createApp } from "vue";
+import Relay from "@relay/sdk-web";
 
 const app = createApp(App);
 
@@ -359,7 +354,7 @@ app.config.globalProperties.$relay = Relay;
 Relay.init({
   apiKey: import.meta.env.VITE_RELAY_API_KEY,
 }).then(() => {
-  app.mount('#app');
+  app.mount("#app");
 });
 ```
 
@@ -367,10 +362,10 @@ Relay.init({
 
 ```typescript
 // relay.service.ts
-import { Injectable, OnDestroy } from '@angular/core';
-import Relay from '@relay/sdk-web';
+import { Injectable, OnDestroy } from "@angular/core";
+import Relay from "@relay/sdk-web";
 
-@Injectable({ providedIn: 'root' })
+@Injectable({ providedIn: "root" })
 export class RelayService implements OnDestroy {
   async init() {
     await Relay.init({
@@ -435,8 +430,11 @@ Ensure your API endpoint allows requests from your domain. Check `CORS_ORIGIN` c
 Add Relay domains to your Content Security Policy:
 
 ```html
-<meta http-equiv="Content-Security-Policy" content="
+<meta
+  http-equiv="Content-Security-Policy"
+  content="
   script-src 'self' https://cdn.relay.dev;
   connect-src 'self' https://*.api.relay.dev;
-">
+"
+/>
 ```

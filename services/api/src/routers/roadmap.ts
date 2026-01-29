@@ -1,22 +1,25 @@
-import { z } from 'zod';
-import { TRPCError } from '@trpc/server';
-import { router, projectProcedure, sdkProcedure } from '../lib/trpc';
+import { z } from "zod";
+import { TRPCError } from "@trpc/server";
+import { router, projectProcedure, sdkProcedure } from "../lib/trpc";
 import {
   createRoadmapItemSchema,
   updateRoadmapItemSchema,
   paginationSchema,
   roadmapItemStatusSchema,
   roadmapVisibilitySchema,
-} from '@relay/shared';
+} from "@relay/shared";
 
 export const roadmapRouter = router({
   // List roadmap items (dashboard)
   list: projectProcedure
     .input(
-      z.object({ projectId: z.string().uuid() }).merge(paginationSchema).extend({
-        status: roadmapItemStatusSchema.optional(),
-        visibility: roadmapVisibilitySchema.optional(),
-      })
+      z
+        .object({ projectId: z.string().uuid() })
+        .merge(paginationSchema)
+        .extend({
+          status: roadmapItemStatusSchema.optional(),
+          visibility: roadmapVisibilitySchema.optional(),
+        }),
     )
     .query(async ({ input, ctx }) => {
       const { page, pageSize, status, visibility } = input;
@@ -35,7 +38,7 @@ export const roadmapRouter = router({
       const [items, total] = await Promise.all([
         ctx.prisma.roadmapItem.findMany({
           where,
-          orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
+          orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
           skip: (page - 1) * pageSize,
           take: pageSize,
           include: {
@@ -74,7 +77,12 @@ export const roadmapRouter = router({
 
   // Get single roadmap item
   get: projectProcedure
-    .input(z.object({ projectId: z.string().uuid(), roadmapItemId: z.string().uuid() }))
+    .input(
+      z.object({
+        projectId: z.string().uuid(),
+        roadmapItemId: z.string().uuid(),
+      }),
+    )
     .query(async ({ input, ctx }) => {
       const item = await ctx.prisma.roadmapItem.findUnique({
         where: { id: input.roadmapItemId, projectId: ctx.projectId },
@@ -104,8 +112,8 @@ export const roadmapRouter = router({
 
       if (!item) {
         throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Roadmap item not found',
+          code: "NOT_FOUND",
+          message: "Roadmap item not found",
         });
       }
 
@@ -130,7 +138,9 @@ export const roadmapRouter = router({
 
   // Create roadmap item
   create: projectProcedure
-    .input(z.object({ projectId: z.string().uuid() }).merge(createRoadmapItemSchema))
+    .input(
+      z.object({ projectId: z.string().uuid() }).merge(createRoadmapItemSchema),
+    )
     .mutation(async ({ input, ctx }) => {
       const item = await ctx.prisma.roadmapItem.create({
         data: {
@@ -147,10 +157,10 @@ export const roadmapRouter = router({
       await ctx.prisma.auditLog.create({
         data: {
           projectId: ctx.projectId,
-          actorType: 'admin',
+          actorType: "admin",
           actorId: ctx.adminUser!.id,
-          action: 'roadmap_item.created',
-          targetType: 'roadmap_item',
+          action: "roadmap_item.created",
+          targetType: "roadmap_item",
           targetId: item.id,
         },
       });
@@ -161,7 +171,12 @@ export const roadmapRouter = router({
   // Update roadmap item
   update: projectProcedure
     .input(
-      z.object({ projectId: z.string().uuid(), roadmapItemId: z.string().uuid() }).merge(updateRoadmapItemSchema)
+      z
+        .object({
+          projectId: z.string().uuid(),
+          roadmapItemId: z.string().uuid(),
+        })
+        .merge(updateRoadmapItemSchema),
     )
     .mutation(async ({ input, ctx }) => {
       const item = await ctx.prisma.roadmapItem.update({
@@ -179,10 +194,10 @@ export const roadmapRouter = router({
       await ctx.prisma.auditLog.create({
         data: {
           projectId: ctx.projectId,
-          actorType: 'admin',
+          actorType: "admin",
           actorId: ctx.adminUser!.id,
-          action: 'roadmap_item.updated',
-          targetType: 'roadmap_item',
+          action: "roadmap_item.updated",
+          targetType: "roadmap_item",
           targetId: item.id,
           meta: input,
         },
@@ -193,7 +208,12 @@ export const roadmapRouter = router({
 
   // Delete roadmap item
   delete: projectProcedure
-    .input(z.object({ projectId: z.string().uuid(), roadmapItemId: z.string().uuid() }))
+    .input(
+      z.object({
+        projectId: z.string().uuid(),
+        roadmapItemId: z.string().uuid(),
+      }),
+    )
     .mutation(async ({ input, ctx }) => {
       await ctx.prisma.roadmapItem.delete({
         where: { id: input.roadmapItemId, projectId: ctx.projectId },
@@ -202,10 +222,10 @@ export const roadmapRouter = router({
       await ctx.prisma.auditLog.create({
         data: {
           projectId: ctx.projectId,
-          actorType: 'admin',
+          actorType: "admin",
           actorId: ctx.adminUser!.id,
-          action: 'roadmap_item.deleted',
-          targetType: 'roadmap_item',
+          action: "roadmap_item.deleted",
+          targetType: "roadmap_item",
           targetId: input.roadmapItemId,
         },
       });
@@ -220,7 +240,7 @@ export const roadmapRouter = router({
         projectId: z.string().uuid(),
         roadmapItemId: z.string().uuid(),
         feedbackItemId: z.string().uuid(),
-      })
+      }),
     )
     .mutation(async ({ input, ctx }) => {
       await ctx.prisma.roadmapLink.create({
@@ -247,7 +267,7 @@ export const roadmapRouter = router({
         projectId: z.string().uuid(),
         roadmapItemId: z.string().uuid(),
         feedbackItemId: z.string().uuid(),
-      })
+      }),
     )
     .mutation(async ({ input, ctx }) => {
       const link = await ctx.prisma.roadmapLink.findFirst({
@@ -281,9 +301,9 @@ export const roadmapRouter = router({
           z.object({
             id: z.string().uuid(),
             sortOrder: z.number().int(),
-          })
+          }),
         ),
-      })
+      }),
     )
     .mutation(async ({ input, ctx }) => {
       await ctx.prisma.$transaction(
@@ -291,8 +311,8 @@ export const roadmapRouter = router({
           ctx.prisma.roadmapItem.update({
             where: { id: item.id, projectId: ctx.projectId },
             data: { sortOrder: item.sortOrder },
-          })
-        )
+          }),
+        ),
       );
 
       return { success: true };
@@ -304,7 +324,7 @@ export const roadmapRouter = router({
       z.object({
         page: z.number().int().positive().default(1),
         pageSize: z.number().int().positive().max(50).default(20),
-      })
+      }),
     )
     .query(async ({ input, ctx }) => {
       const { page, pageSize } = input;
@@ -312,9 +332,9 @@ export const roadmapRouter = router({
       const items = await ctx.prisma.roadmapItem.findMany({
         where: {
           projectId: ctx.projectId,
-          visibility: 'public',
+          visibility: "public",
         },
-        orderBy: [{ status: 'asc' }, { sortOrder: 'asc' }],
+        orderBy: [{ status: "asc" }, { sortOrder: "asc" }],
         skip: (page - 1) * pageSize,
         take: pageSize,
         select: {

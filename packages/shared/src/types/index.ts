@@ -7,116 +7,125 @@
 // ----------------------------------------------------------------------------
 
 export const InteractionType = {
-  BUG: 'bug',
-  FEEDBACK: 'feedback',
-  CHAT: 'chat',
-  SURVEY: 'survey',
-  REPLAY: 'replay',
-  SYSTEM: 'system',
+  BUG: "bug",
+  FEEDBACK: "feedback",
+  CHAT: "chat",
+  SURVEY: "survey",
+  REPLAY: "replay",
+  SYSTEM: "system",
 } as const;
-export type InteractionType = (typeof InteractionType)[keyof typeof InteractionType];
+export type InteractionType =
+  (typeof InteractionType)[keyof typeof InteractionType];
 
 export const InteractionSource = {
-  WIDGET: 'widget',
-  SDK: 'sdk',
-  API: 'api',
+  WIDGET: "widget",
+  SDK: "sdk",
+  API: "api",
 } as const;
-export type InteractionSource = (typeof InteractionSource)[keyof typeof InteractionSource];
+export type InteractionSource =
+  (typeof InteractionSource)[keyof typeof InteractionSource];
 
 export const InteractionStatus = {
-  NEW: 'new',
-  TRIAGING: 'triaging',
-  IN_PROGRESS: 'in_progress',
-  RESOLVED: 'resolved',
-  CLOSED: 'closed',
+  NEW: "new",
+  TRIAGING: "triaging",
+  IN_PROGRESS: "in_progress",
+  RESOLVED: "resolved",
+  CLOSED: "closed",
 } as const;
-export type InteractionStatus = (typeof InteractionStatus)[keyof typeof InteractionStatus];
+export type InteractionStatus =
+  (typeof InteractionStatus)[keyof typeof InteractionStatus];
 
 export const Severity = {
-  LOW: 'low',
-  MEDIUM: 'med',
-  HIGH: 'high',
-  CRITICAL: 'critical',
+  LOW: "low",
+  MEDIUM: "med",
+  HIGH: "high",
+  CRITICAL: "critical",
 } as const;
 export type Severity = (typeof Severity)[keyof typeof Severity];
 
 export const MediaKind = {
-  SCREENSHOT: 'screenshot',
-  VIDEO: 'video',
-  ATTACHMENT: 'attachment',
-  REPLAY_BLOB: 'replay_blob',
+  SCREENSHOT: "screenshot",
+  VIDEO: "video",
+  ATTACHMENT: "attachment",
+  REPLAY_BLOB: "replay_blob",
 } as const;
 export type MediaKind = (typeof MediaKind)[keyof typeof MediaKind];
 
 export const FeedbackItemStatus = {
-  UNDER_REVIEW: 'under_review',
-  PLANNED: 'planned',
-  IN_PROGRESS: 'in_progress',
-  SHIPPED: 'shipped',
-  WONT_DO: 'wont_do',
+  UNDER_REVIEW: "under_review",
+  PLANNED: "planned",
+  IN_PROGRESS: "in_progress",
+  SHIPPED: "shipped",
+  WONT_DO: "wont_do",
 } as const;
-export type FeedbackItemStatus = (typeof FeedbackItemStatus)[keyof typeof FeedbackItemStatus];
+export type FeedbackItemStatus =
+  (typeof FeedbackItemStatus)[keyof typeof FeedbackItemStatus];
 
 export const RoadmapItemStatus = {
-  PLANNED: 'planned',
-  IN_PROGRESS: 'in_progress',
-  SHIPPED: 'shipped',
+  PLANNED: "planned",
+  IN_PROGRESS: "in_progress",
+  SHIPPED: "shipped",
 } as const;
-export type RoadmapItemStatus = (typeof RoadmapItemStatus)[keyof typeof RoadmapItemStatus];
+export type RoadmapItemStatus =
+  (typeof RoadmapItemStatus)[keyof typeof RoadmapItemStatus];
 
 export const RoadmapVisibility = {
-  PUBLIC: 'public',
-  PRIVATE: 'private',
+  PUBLIC: "public",
+  PRIVATE: "private",
 } as const;
-export type RoadmapVisibility = (typeof RoadmapVisibility)[keyof typeof RoadmapVisibility];
+export type RoadmapVisibility =
+  (typeof RoadmapVisibility)[keyof typeof RoadmapVisibility];
 
 export const ConversationStatus = {
-  OPEN: 'open',
-  CLOSED: 'closed',
+  OPEN: "open",
+  CLOSED: "closed",
 } as const;
-export type ConversationStatus = (typeof ConversationStatus)[keyof typeof ConversationStatus];
+export type ConversationStatus =
+  (typeof ConversationStatus)[keyof typeof ConversationStatus];
 
 export const MessageDirection = {
-  INBOUND: 'inbound',
-  OUTBOUND: 'outbound',
+  INBOUND: "inbound",
+  OUTBOUND: "outbound",
 } as const;
-export type MessageDirection = (typeof MessageDirection)[keyof typeof MessageDirection];
+export type MessageDirection =
+  (typeof MessageDirection)[keyof typeof MessageDirection];
 
 export const IntegrationProvider = {
-  LINEAR: 'linear',
-  JIRA: 'jira',
-  GITHUB: 'github',
-  SLACK: 'slack',
-  EMAIL: 'email',
+  LINEAR: "linear",
+  JIRA: "jira",
+  GITHUB: "github",
+  SLACK: "slack",
+  EMAIL: "email",
 } as const;
-export type IntegrationProvider = (typeof IntegrationProvider)[keyof typeof IntegrationProvider];
+export type IntegrationProvider =
+  (typeof IntegrationProvider)[keyof typeof IntegrationProvider];
 
 export const Region = {
-  US_WEST: 'us-west',
-  EU_WEST: 'eu-west',
+  US_WEST: "us-west",
+  EU_WEST: "eu-west",
 } as const;
 export type Region = (typeof Region)[keyof typeof Region];
 
 export const Environment = {
-  PRODUCTION: 'production',
-  STAGING: 'staging',
-  DEVELOPMENT: 'development',
+  PRODUCTION: "production",
+  STAGING: "staging",
+  DEVELOPMENT: "development",
 } as const;
 export type Environment = (typeof Environment)[keyof typeof Environment];
 
 export const ActorType = {
-  USER: 'user',
-  ADMIN: 'admin',
-  SYSTEM: 'system',
-  API: 'api',
+  USER: "user",
+  ADMIN: "admin",
+  SYSTEM: "system",
+  API: "api",
 } as const;
 export type ActorType = (typeof ActorType)[keyof typeof ActorType];
 
 export const UserRole = {
-  OWNER: 'owner',
-  ADMIN: 'admin',
-  AGENT: 'agent',
-  VIEWER: 'viewer',
+  OWNER: "owner",
+  ADMIN: "admin",
+  AGENT: "agent",
+  VIEWER: "viewer",
 } as const;
 export type UserRole = (typeof UserRole)[keyof typeof UserRole];
 
@@ -163,7 +172,7 @@ export interface BrandingConfig {
 }
 
 export interface WidgetConfig {
-  position: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
+  position: "bottom-right" | "bottom-left" | "top-right" | "top-left";
   showBugReport: boolean;
   showFeedback: boolean;
   showChat: boolean;
@@ -183,7 +192,7 @@ export interface ApiKey {
   scopes: ApiKeyScope[];
 }
 
-export type ApiKeyScope = 'ingest' | 'read' | 'write' | 'admin';
+export type ApiKeyScope = "ingest" | "read" | "write" | "admin";
 
 export interface EndUser {
   id: string;
@@ -213,7 +222,7 @@ export interface Session {
 }
 
 export interface DeviceInfo {
-  type: 'desktop' | 'mobile' | 'tablet' | 'unknown';
+  type: "desktop" | "mobile" | "tablet" | "unknown";
   os?: string;
   osVersion?: string;
   browser?: string;
@@ -285,7 +294,7 @@ export interface InteractionContent {
 
 export interface Annotation {
   id: string;
-  type: 'arrow' | 'rectangle' | 'circle' | 'text' | 'highlight' | 'blur';
+  type: "arrow" | "rectangle" | "circle" | "text" | "highlight" | "blur";
   x: number;
   y: number;
   width?: number;
@@ -339,7 +348,7 @@ export interface MediaMeta {
   duration?: number; // For video
   chunkIndex?: number; // For replay chunks
   totalChunks?: number;
-  processingStatus?: 'pending' | 'processing' | 'complete' | 'failed';
+  processingStatus?: "pending" | "processing" | "complete" | "failed";
 }
 
 export interface UploadRequest {
@@ -373,7 +382,7 @@ export interface InteractionLogs {
 }
 
 export interface ConsoleEntry {
-  level: 'log' | 'info' | 'warn' | 'error' | 'debug';
+  level: "log" | "info" | "warn" | "error" | "debug";
   message: string;
   args?: unknown[];
   timestamp: number;
@@ -416,7 +425,7 @@ export interface ReplaySession {
   endedAt?: Date;
   duration?: number;
   eventCount: number;
-  status: 'recording' | 'processing' | 'ready' | 'failed';
+  status: "recording" | "processing" | "ready" | "failed";
   chunks: ReplayChunk[];
 }
 
@@ -515,7 +524,7 @@ export interface Survey {
 }
 
 export interface SurveyDefinition {
-  type: 'nps' | 'csat' | 'ces' | 'custom';
+  type: "nps" | "csat" | "ces" | "custom";
   title: string;
   description?: string;
   questions: SurveyQuestion[];
@@ -524,7 +533,7 @@ export interface SurveyDefinition {
 
 export interface SurveyQuestion {
   id: string;
-  type: 'nps' | 'rating' | 'text' | 'single_choice' | 'multi_choice';
+  type: "nps" | "rating" | "text" | "single_choice" | "multi_choice";
   required: boolean;
   text: string;
   placeholder?: string;
@@ -655,11 +664,11 @@ export interface PrivacyRule {
 }
 
 export interface PrivacyRuleDefinition {
-  type: 'mask' | 'block' | 'exclude';
+  type: "mask" | "block" | "exclude";
   selector?: string;
   pattern?: string;
   fields?: string[];
-  scope: 'all' | 'replay' | 'screenshot' | 'logs';
+  scope: "all" | "replay" | "screenshot" | "logs";
 }
 
 // ----------------------------------------------------------------------------
@@ -685,7 +694,7 @@ export type IntegrationConfig =
   | EmailIntegrationConfig;
 
 export interface LinearIntegrationConfig {
-  provider: 'linear';
+  provider: "linear";
   accessToken?: string; // Encrypted
   teamId?: string;
   defaultLabelIds?: string[];
@@ -694,7 +703,7 @@ export interface LinearIntegrationConfig {
 }
 
 export interface SlackIntegrationConfig {
-  provider: 'slack';
+  provider: "slack";
   webhookUrl?: string; // Encrypted
   channelId?: string;
   notifyOn: {
@@ -706,7 +715,7 @@ export interface SlackIntegrationConfig {
 }
 
 export interface JiraIntegrationConfig {
-  provider: 'jira';
+  provider: "jira";
   siteUrl?: string;
   apiToken?: string; // Encrypted
   projectKey?: string;
@@ -715,7 +724,7 @@ export interface JiraIntegrationConfig {
 }
 
 export interface GitHubIntegrationConfig {
-  provider: 'github';
+  provider: "github";
   accessToken?: string; // Encrypted
   owner?: string;
   repo?: string;
@@ -723,7 +732,7 @@ export interface GitHubIntegrationConfig {
 }
 
 export interface EmailIntegrationConfig {
-  provider: 'email';
+  provider: "email";
   notifyAddresses?: string[];
   replyToAddress?: string;
   // TODO: Implement full email integration
@@ -734,7 +743,7 @@ export interface IntegrationLink {
   projectId: string;
   provider: IntegrationProvider;
   externalId: string;
-  internalType: 'interaction' | 'feedback_item' | 'roadmap_item';
+  internalType: "interaction" | "feedback_item" | "roadmap_item";
   internalId: string;
   externalUrl?: string;
   createdAt: Date;
@@ -765,7 +774,7 @@ export interface ProjectRegistry {
   createdAt: Date;
 }
 
-export type BillingPlan = 'free' | 'indie' | 'team' | 'business' | 'enterprise';
+export type BillingPlan = "free" | "indie" | "team" | "business" | "enterprise";
 
 // ----------------------------------------------------------------------------
 // API Request/Response Types
@@ -797,8 +806,8 @@ export interface InboxFilters {
 }
 
 export interface InboxSort {
-  field: 'createdAt' | 'updatedAt' | 'severity';
-  direction: 'asc' | 'desc';
+  field: "createdAt" | "updatedAt" | "severity";
+  direction: "asc" | "desc";
 }
 
 // ----------------------------------------------------------------------------
@@ -871,7 +880,11 @@ export interface AIDuplicateGroup {
 // ----------------------------------------------------------------------------
 
 export interface RealtimeEvent {
-  type: 'interaction.created' | 'interaction.updated' | 'message.created' | 'conversation.updated';
+  type:
+    | "interaction.created"
+    | "interaction.updated"
+    | "message.created"
+    | "conversation.updated";
   projectId: string;
   payload: unknown;
   timestamp: Date;

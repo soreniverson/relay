@@ -1,6 +1,11 @@
-import { z } from 'zod';
-import { router, projectProcedure, publicProcedure, sdkProcedure } from '../lib/trpc';
-import { TRPCError } from '@trpc/server';
+import { z } from "zod";
+import {
+  router,
+  projectProcedure,
+  publicProcedure,
+  sdkProcedure,
+} from "../lib/trpc";
+import { TRPCError } from "@trpc/server";
 
 // Checklist item schema
 const checklistItemSchema = z.object({
@@ -10,11 +15,13 @@ const checklistItemSchema = z.object({
   completionEvent: z.string().optional(),
   completionUrl: z.string().optional(),
   completionSelector: z.string().optional(),
-  action: z.object({
-    type: z.enum(['url', 'tour', 'custom']),
-    url: z.string().optional(),
-    tourId: z.string().optional(),
-  }).optional(),
+  action: z
+    .object({
+      type: z.enum(["url", "tour", "custom"]),
+      url: z.string().optional(),
+      tourId: z.string().optional(),
+    })
+    .optional(),
   icon: z.string().optional(),
   reward: z.string().optional(),
 });
@@ -36,7 +43,7 @@ export const checklistsRouter = router({
       z.object({
         projectId: z.string(),
         enabled: z.boolean().optional(),
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
       const checklists = await ctx.prisma.checklist.findMany({
@@ -44,7 +51,7 @@ export const checklistsRouter = router({
           projectId: input.projectId,
           ...(input.enabled !== undefined && { enabled: input.enabled }),
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
       });
 
       return checklists;
@@ -63,7 +70,10 @@ export const checklistsRouter = router({
       });
 
       if (!checklist) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Checklist not found' });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Checklist not found",
+        });
       }
 
       return checklist;
@@ -77,10 +87,14 @@ export const checklistsRouter = router({
         description: z.string().optional(),
         items: z.array(checklistItemSchema).min(1),
         targeting: targetingSchema.optional(),
-        position: z.enum(['top-left', 'top-right', 'bottom-left', 'bottom-right']).default('bottom-right'),
-        style: z.enum(['default', 'minimal', 'progress-bar']).default('default'),
+        position: z
+          .enum(["top-left", "top-right", "bottom-left", "bottom-right"])
+          .default("bottom-right"),
+        style: z
+          .enum(["default", "minimal", "progress-bar"])
+          .default("default"),
         enabled: z.boolean().default(false),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const checklist = await ctx.prisma.checklist.create({
@@ -107,10 +121,12 @@ export const checklistsRouter = router({
         description: z.string().optional(),
         items: z.array(checklistItemSchema).optional(),
         targeting: targetingSchema.optional(),
-        position: z.enum(['top-left', 'top-right', 'bottom-left', 'bottom-right']).optional(),
-        style: z.enum(['default', 'minimal', 'progress-bar']).optional(),
+        position: z
+          .enum(["top-left", "top-right", "bottom-left", "bottom-right"])
+          .optional(),
+        style: z.enum(["default", "minimal", "progress-bar"]).optional(),
         enabled: z.boolean().optional(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const { id, ...data } = input;
@@ -157,7 +173,10 @@ export const checklistsRouter = router({
       });
 
       if (!checklist) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Checklist not found' });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Checklist not found",
+        });
       }
 
       const allProgress = await ctx.prisma.checklistProgress.findMany({
@@ -166,20 +185,23 @@ export const checklistsRouter = router({
 
       const items = checklist.items as any[];
       const totalUsers = allProgress.length;
-      const completedUsers = allProgress.filter((p) => p.completedAt !== null).length;
+      const completedUsers = allProgress.filter(
+        (p) => p.completedAt !== null,
+      ).length;
       const dismissedUsers = allProgress.filter((p) => p.dismissed).length;
 
       // Per-item completion stats
       const itemStats = items.map((item: any) => {
         const completedCount = allProgress.filter((p) =>
-          p.completedItems.includes(item.id)
+          p.completedItems.includes(item.id),
         ).length;
 
         return {
           itemId: item.id,
           title: item.title,
           completedCount,
-          completionRate: totalUsers > 0 ? (completedCount / totalUsers) * 100 : 0,
+          completionRate:
+            totalUsers > 0 ? (completedCount / totalUsers) * 100 : 0,
         };
       });
 
@@ -187,7 +209,8 @@ export const checklistsRouter = router({
         totalUsers,
         completedUsers,
         dismissedUsers,
-        completionRate: totalUsers > 0 ? (completedUsers / totalUsers) * 100 : 0,
+        completionRate:
+          totalUsers > 0 ? (completedUsers / totalUsers) * 100 : 0,
         dismissRate: totalUsers > 0 ? (dismissedUsers / totalUsers) * 100 : 0,
         itemStats,
       };
@@ -205,7 +228,7 @@ export const checklistsRouter = router({
         sessionId: z.string(),
         userId: z.string().optional(),
         userTraits: z.record(z.any()).optional(),
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
       // Get all enabled checklists
@@ -231,7 +254,10 @@ export const checklistsRouter = router({
         const checklistProgress = progressMap.get(checklist.id);
 
         // If already completed or dismissed, skip
-        if (checklistProgress && (checklistProgress.completedAt || checklistProgress.dismissed)) {
+        if (
+          checklistProgress &&
+          (checklistProgress.completedAt || checklistProgress.dismissed)
+        ) {
           return false;
         }
 
@@ -269,7 +295,7 @@ export const checklistsRouter = router({
         checklistId: z.string(),
         sessionId: z.string(),
         userId: z.string().optional(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const progress = await ctx.prisma.checklistProgress.upsert({
@@ -298,7 +324,7 @@ export const checklistsRouter = router({
         checklistId: z.string(),
         sessionId: z.string(),
         itemId: z.string(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const progress = await ctx.prisma.checklistProgress.findUnique({
@@ -311,7 +337,10 @@ export const checklistsRouter = router({
       });
 
       if (!progress) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Progress not found' });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Progress not found",
+        });
       }
 
       // Add item to completed list if not already there
@@ -324,8 +353,10 @@ export const checklistsRouter = router({
         where: { id: input.checklistId },
       });
 
-      const items = checklist?.items as any[] || [];
-      const allCompleted = items.every((item: any) => completedItems.includes(item.id));
+      const items = (checklist?.items as any[]) || [];
+      const allCompleted = items.every((item: any) =>
+        completedItems.includes(item.id),
+      );
 
       const updated = await ctx.prisma.checklistProgress.update({
         where: {
@@ -352,7 +383,7 @@ export const checklistsRouter = router({
       z.object({
         checklistId: z.string(),
         sessionId: z.string(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const progress = await ctx.prisma.checklistProgress.update({

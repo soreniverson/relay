@@ -3,15 +3,15 @@
 // Reusable button with variants and states
 // ============================================================================
 
-import { createElement, generateId } from '../../utils/dom';
+import { createElement, generateId } from "../../utils/dom";
 
 export interface ButtonProps {
-  variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
-  size?: 'sm' | 'md' | 'lg';
+  variant?: "primary" | "secondary" | "ghost" | "danger";
+  size?: "sm" | "md" | "lg";
   disabled?: boolean;
   loading?: boolean;
   fullWidth?: boolean;
-  type?: 'button' | 'submit' | 'reset';
+  type?: "button" | "submit" | "reset";
   className?: string;
   onClick?: (e: MouseEvent) => void;
 }
@@ -135,47 +135,47 @@ export const buttonStyles = `
 
 export function createButton(
   label: string | HTMLElement,
-  props: ButtonProps = {}
+  props: ButtonProps = {},
 ): HTMLButtonElement {
   const {
-    variant = 'primary',
-    size = 'md',
+    variant = "primary",
+    size = "md",
     disabled = false,
     loading = false,
     fullWidth = false,
-    type = 'button',
-    className = '',
+    type = "button",
+    className = "",
     onClick,
   } = props;
 
   const classes = [
-    'relay-btn',
+    "relay-btn",
     `relay-btn--${variant}`,
     `relay-btn--${size}`,
-    fullWidth ? 'relay-btn--full' : '',
+    fullWidth ? "relay-btn--full" : "",
     className,
   ]
     .filter(Boolean)
-    .join(' ');
+    .join(" ");
 
-  const button = createElement('button', {
+  const button = createElement("button", {
     type,
     class: classes,
     disabled: disabled || loading,
   });
 
   if (loading) {
-    button.appendChild(createElement('span', { class: 'relay-btn__spinner' }));
+    button.appendChild(createElement("span", { class: "relay-btn__spinner" }));
   }
 
-  if (typeof label === 'string') {
+  if (typeof label === "string") {
     button.appendChild(document.createTextNode(label));
   } else {
     button.appendChild(label);
   }
 
   if (onClick) {
-    button.addEventListener('click', onClick);
+    button.addEventListener("click", onClick);
   }
 
   return button;
@@ -184,19 +184,25 @@ export function createButton(
 /**
  * Updates button loading state
  */
-export function setButtonLoading(button: HTMLButtonElement, loading: boolean, loadingText?: string): void {
-  const originalText = button.dataset.originalText || button.textContent || '';
+export function setButtonLoading(
+  button: HTMLButtonElement,
+  loading: boolean,
+  loadingText?: string,
+): void {
+  const originalText = button.dataset.originalText || button.textContent || "";
 
   if (loading) {
     button.dataset.originalText = originalText;
     button.disabled = true;
-    button.innerHTML = '';
-    button.appendChild(createElement('span', { class: 'relay-btn__spinner' }));
-    button.appendChild(document.createTextNode(loadingText || 'Loading...'));
+    button.innerHTML = "";
+    button.appendChild(createElement("span", { class: "relay-btn__spinner" }));
+    button.appendChild(document.createTextNode(loadingText || "Loading..."));
   } else {
     button.disabled = false;
-    button.innerHTML = '';
-    button.appendChild(document.createTextNode(button.dataset.originalText || originalText));
+    button.innerHTML = "";
+    button.appendChild(
+      document.createTextNode(button.dataset.originalText || originalText),
+    );
     delete button.dataset.originalText;
   }
 }
@@ -206,10 +212,14 @@ export function setButtonLoading(button: HTMLButtonElement, loading: boolean, lo
  */
 export function createIconButton(
   icon: string | HTMLElement,
-  props: ButtonProps & { ariaLabel: string }
+  props: ButtonProps & { ariaLabel: string },
 ): HTMLButtonElement {
-  const button = createButton(icon, { ...props, variant: props.variant || 'ghost' });
-  button.setAttribute('aria-label', props.ariaLabel);
-  button.style.padding = props.size === 'sm' ? '6px' : props.size === 'lg' ? '12px' : '8px';
+  const button = createButton(icon, {
+    ...props,
+    variant: props.variant || "ghost",
+  });
+  button.setAttribute("aria-label", props.ariaLabel);
+  button.style.padding =
+    props.size === "sm" ? "6px" : props.size === "lg" ? "12px" : "8px";
   return button;
 }

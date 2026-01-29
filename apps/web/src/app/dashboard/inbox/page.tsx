@@ -1,11 +1,16 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useAuthStore } from '@/stores/auth';
-import { trpc } from '@/lib/trpc';
-import { cn, formatRelativeTime, severityColors, statusColors } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { useState, useEffect } from "react";
+import { useAuthStore } from "@/stores/auth";
+import { trpc } from "@/lib/trpc";
+import {
+  cn,
+  formatRelativeTime,
+  severityColors,
+  statusColors,
+} from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Search,
   RefreshCw,
@@ -28,19 +33,30 @@ import {
   ExternalLink,
   ChevronDown,
   Loader2,
-} from 'lucide-react';
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { ApiError, EmptyState } from '@/components/api-error';
+} from "@/components/ui/dropdown-menu";
+import { ApiError, EmptyState } from "@/components/api-error";
 
-type InteractionType = 'bug' | 'feedback' | 'chat' | 'survey' | 'replay' | 'system';
-type InteractionStatus = 'new' | 'triaging' | 'in_progress' | 'resolved' | 'closed';
-type Severity = 'low' | 'med' | 'high' | 'critical';
+type InteractionType =
+  | "bug"
+  | "feedback"
+  | "chat"
+  | "survey"
+  | "replay"
+  | "system";
+type InteractionStatus =
+  | "new"
+  | "triaging"
+  | "in_progress"
+  | "resolved"
+  | "closed";
+type Severity = "low" | "med" | "high" | "critical";
 
 interface Interaction {
   id: string;
@@ -74,58 +90,71 @@ interface Interaction {
   } | null;
 }
 
-const typeConfig: Record<InteractionType, { icon: typeof Bug; label: string; color: string }> = {
-  bug: { icon: Bug, label: 'Bug', color: 'text-muted-foreground' },
-  feedback: { icon: Lightbulb, label: 'Feedback', color: 'text-muted-foreground' },
-  chat: { icon: MessageSquare, label: 'Chat', color: 'text-muted-foreground' },
-  survey: { icon: ClipboardList, label: 'Survey', color: 'text-muted-foreground' },
-  replay: { icon: Play, label: 'Replay', color: 'text-muted-foreground' },
-  system: { icon: Monitor, label: 'System', color: 'text-muted-foreground' },
+const typeConfig: Record<
+  InteractionType,
+  { icon: typeof Bug; label: string; color: string }
+> = {
+  bug: { icon: Bug, label: "Bug", color: "text-muted-foreground" },
+  feedback: {
+    icon: Lightbulb,
+    label: "Feedback",
+    color: "text-muted-foreground",
+  },
+  chat: { icon: MessageSquare, label: "Chat", color: "text-muted-foreground" },
+  survey: {
+    icon: ClipboardList,
+    label: "Survey",
+    color: "text-muted-foreground",
+  },
+  replay: { icon: Play, label: "Replay", color: "text-muted-foreground" },
+  system: { icon: Monitor, label: "System", color: "text-muted-foreground" },
 };
 
-const typeFilters: { key: InteractionType | 'all'; label: string }[] = [
-  { key: 'all', label: 'Type' },
-  { key: 'bug', label: 'Bugs' },
-  { key: 'feedback', label: 'Feedback' },
-  { key: 'chat', label: 'Chat' },
-  { key: 'survey', label: 'Surveys' },
+const typeFilters: { key: InteractionType | "all"; label: string }[] = [
+  { key: "all", label: "Type" },
+  { key: "bug", label: "Bugs" },
+  { key: "feedback", label: "Feedback" },
+  { key: "chat", label: "Chat" },
+  { key: "survey", label: "Surveys" },
 ];
 
-const statusFilters: { key: InteractionStatus | 'all'; label: string }[] = [
-  { key: 'all', label: 'Status' },
-  { key: 'new', label: 'New' },
-  { key: 'triaging', label: 'Triaging' },
-  { key: 'in_progress', label: 'In Progress' },
-  { key: 'resolved', label: 'Resolved' },
-  { key: 'closed', label: 'Closed' },
+const statusFilters: { key: InteractionStatus | "all"; label: string }[] = [
+  { key: "all", label: "Status" },
+  { key: "new", label: "New" },
+  { key: "triaging", label: "Triaging" },
+  { key: "in_progress", label: "In Progress" },
+  { key: "resolved", label: "Resolved" },
+  { key: "closed", label: "Closed" },
 ];
 
 export default function InboxPage() {
   const { currentProject } = useAuthStore();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
-  const [search, setSearch] = useState('');
-  const [typeFilter, setTypeFilter] = useState<InteractionType | 'all'>('all');
-  const [statusFilter, setStatusFilter] = useState<InteractionStatus | 'all'>('all');
+  const [search, setSearch] = useState("");
+  const [typeFilter, setTypeFilter] = useState<InteractionType | "all">("all");
+  const [statusFilter, setStatusFilter] = useState<InteractionStatus | "all">(
+    "all",
+  );
 
   const utils = trpc.useUtils();
 
   // Fetch interactions from API
   const { data, isLoading, error, refetch } = trpc.interactions.inbox.useQuery(
     {
-      projectId: currentProject?.id || '',
+      projectId: currentProject?.id || "",
       page,
       pageSize: 50,
-      types: typeFilter === 'all' ? undefined : [typeFilter],
-      statuses: statusFilter === 'all' ? undefined : [statusFilter],
+      types: typeFilter === "all" ? undefined : [typeFilter],
+      statuses: statusFilter === "all" ? undefined : [statusFilter],
       search: search || undefined,
-      field: 'createdAt',
-      direction: 'desc',
+      field: "createdAt",
+      direction: "desc",
     },
     {
       enabled: !!currentProject?.id,
       refetchInterval: 30000, // Refresh every 30 seconds
-    }
+    },
   );
 
   // Mutations
@@ -161,11 +190,14 @@ export default function InboxPage() {
 
   const handleDelete = (id: string) => {
     // Mark as closed instead of deleting
-    handleStatusChange(id, 'closed');
+    handleStatusChange(id, "closed");
     if (selectedId === id) setSelectedId(null);
   };
 
-  const handleAssign = (id: string, assignee: { name: string; email: string } | null) => {
+  const handleAssign = (
+    id: string,
+    assignee: { name: string; email: string } | null,
+  ) => {
     if (!currentProject?.id) return;
     // Note: assigneeId would need to be fetched from team members
     // For now, we'll skip this - needs proper team member lookup
@@ -194,27 +226,35 @@ export default function InboxPage() {
     content: i.content as { title?: string; description?: string } | null,
     tags: i.tags,
     createdAt: new Date(i.createdAt).toISOString(),
-    user: i.user ? {
-      id: i.user.id,
-      email: i.user.email,
-      name: i.user.name,
-    } : null,
+    user: i.user
+      ? {
+          id: i.user.id,
+          email: i.user.email,
+          name: i.user.name,
+        }
+      : null,
     hasReplay: i.hasReplay,
     hasLogs: i.hasLogs,
     aiSummary: i.aiSummary,
-    metadata: i.session?.device as Interaction['metadata'],
+    metadata: i.session?.device as Interaction["metadata"],
   }));
 
   // Auto-select first item if nothing selected
   useEffect(() => {
     if (!selectedId && mappedInteractions.length > 0) {
       setSelectedId(mappedInteractions[0].id);
-    } else if (selectedId && !mappedInteractions.find(i => i.id === selectedId) && mappedInteractions.length > 0) {
+    } else if (
+      selectedId &&
+      !mappedInteractions.find((i) => i.id === selectedId) &&
+      mappedInteractions.length > 0
+    ) {
       setSelectedId(mappedInteractions[0].id);
     }
   }, [mappedInteractions, selectedId]);
 
-  const selectedInteraction = mappedInteractions.find(i => i.id === selectedId);
+  const selectedInteraction = mappedInteractions.find(
+    (i) => i.id === selectedId,
+  );
 
   // No project selected state
   if (!currentProject) {
@@ -239,13 +279,22 @@ export default function InboxPage() {
 
   // Error state
   if (error) {
-    return <ApiError error={error} onRetry={() => refetch()} title="Failed to load inbox" />;
+    return (
+      <ApiError
+        error={error}
+        onRetry={() => refetch()}
+        title="Failed to load inbox"
+      />
+    );
   }
 
   return (
     <div className="flex h-full">
       {/* List Panel */}
-      <div className="w-1/2 border-r border-border flex flex-col" style={{ borderRightWidth: '0.5px' }}>
+      <div
+        className="w-1/2 border-r border-border flex flex-col"
+        style={{ borderRightWidth: "0.5px" }}
+      >
         {/* Header */}
         <div className="page-header">
           <h1 className="page-title">Inbox</h1>
@@ -253,12 +302,17 @@ export default function InboxPage() {
             className="p-1.5 text-muted-foreground hover:text-foreground transition-colors"
             onClick={() => refetch()}
           >
-            <RefreshCw className={cn("h-3.5 w-3.5", isLoading && "animate-spin")} />
+            <RefreshCw
+              className={cn("h-3.5 w-3.5", isLoading && "animate-spin")}
+            />
           </button>
         </div>
 
         {/* Search and Filters */}
-        <div className="flex items-center gap-3 px-4 py-2 border-b border-border" style={{ borderBottomWidth: '0.5px' }}>
+        <div
+          className="flex items-center gap-3 px-4 py-2 border-b border-border"
+          style={{ borderBottomWidth: "0.5px" }}
+        >
           <div className="relative flex-1">
             <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/50" />
             <Input
@@ -272,7 +326,7 @@ export default function InboxPage() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
-                  {typeFilters.find(t => t.key === typeFilter)?.label}
+                  {typeFilters.find((t) => t.key === typeFilter)?.label}
                   <ChevronDown className="h-3 w-3" />
                 </button>
               </DropdownMenuTrigger>
@@ -283,7 +337,9 @@ export default function InboxPage() {
                     onClick={() => setTypeFilter(filter.key)}
                   >
                     {filter.label}
-                    {filter.key === typeFilter && <span className="ml-auto text-foreground">✓</span>}
+                    {filter.key === typeFilter && (
+                      <span className="ml-auto text-foreground">✓</span>
+                    )}
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
@@ -291,7 +347,7 @@ export default function InboxPage() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
-                  {statusFilters.find(s => s.key === statusFilter)?.label}
+                  {statusFilters.find((s) => s.key === statusFilter)?.label}
                   <ChevronDown className="h-3 w-3" />
                 </button>
               </DropdownMenuTrigger>
@@ -302,7 +358,9 @@ export default function InboxPage() {
                     onClick={() => setStatusFilter(filter.key)}
                   >
                     {filter.label}
-                    {filter.key === statusFilter && <span className="ml-auto text-foreground">✓</span>}
+                    {filter.key === statusFilter && (
+                      <span className="ml-auto text-foreground">✓</span>
+                    )}
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
@@ -321,17 +379,17 @@ export default function InboxPage() {
           ) : (
             mappedInteractions.map((interaction) => {
               const TypeIcon = typeConfig[interaction.type].icon;
-              const isUnread = interaction.status === 'new';
-              const showSeverity = interaction.severity === 'critical';
+              const isUnread = interaction.status === "new";
+              const showSeverity = interaction.severity === "critical";
 
               return (
                 <div
                   key={interaction.id}
                   className={cn(
-                    'border-b border-border px-4 py-3 cursor-pointer transition-colors hover:bg-accent/30',
-                    selectedId === interaction.id && 'bg-accent/40'
+                    "border-b border-border px-4 py-3 cursor-pointer transition-colors hover:bg-accent/30",
+                    selectedId === interaction.id && "bg-accent/40",
                   )}
-                  style={{ borderBottomWidth: '0.5px' }}
+                  style={{ borderBottomWidth: "0.5px" }}
                   onClick={() => setSelectedId(interaction.id)}
                 >
                   <div className="flex gap-3">
@@ -340,20 +398,31 @@ export default function InboxPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       {/* Row 1: Title */}
-                      <p className={cn(
-                        'text-sm truncate',
-                        isUnread ? 'text-foreground' : 'text-muted-foreground'
-                      )}>
-                        {interaction.content?.title || interaction.contentText?.slice(0, 50)}
+                      <p
+                        className={cn(
+                          "text-sm truncate",
+                          isUnread
+                            ? "text-foreground"
+                            : "text-muted-foreground",
+                        )}
+                      >
+                        {interaction.content?.title ||
+                          interaction.contentText?.slice(0, 50)}
                       </p>
                       {/* Row 2: User + Timestamp + Severity (if critical) */}
                       <div className="flex items-center justify-between mt-0.5">
                         <div className="flex items-center gap-1.5">
-                          <span className={cn(
-                            'text-xs',
-                            isUnread ? 'text-muted-foreground' : 'text-muted-foreground/70'
-                          )}>
-                            {interaction.user?.name || interaction.user?.email || 'Anonymous'}
+                          <span
+                            className={cn(
+                              "text-xs",
+                              isUnread
+                                ? "text-muted-foreground"
+                                : "text-muted-foreground/70",
+                            )}
+                          >
+                            {interaction.user?.name ||
+                              interaction.user?.email ||
+                              "Anonymous"}
                           </span>
                           <span className="text-muted-foreground/40">·</span>
                           <span className="text-xs text-muted-foreground/50">
@@ -361,7 +430,12 @@ export default function InboxPage() {
                           </span>
                         </div>
                         {showSeverity && (
-                          <span className={cn('text-[11px] leading-none px-1.5 py-1 rounded', severityColors[interaction.severity!])}>
+                          <span
+                            className={cn(
+                              "text-[11px] leading-none px-1.5 py-1 rounded",
+                              severityColors[interaction.severity!],
+                            )}
+                          >
                             {interaction.severity}
                           </span>
                         )}
@@ -426,15 +500,24 @@ export default function InboxPage() {
 }
 
 const teamMembers = [
-  { id: '1', name: 'Alice Support', email: 'alice@relay.dev' },
-  { id: '2', name: 'Bob Wilson', email: 'bob@relay.dev' },
-  { id: '3', name: 'Carol Davis', email: 'carol@relay.dev' },
-  { id: '4', name: 'David Chen', email: 'david@relay.dev' },
+  { id: "1", name: "Alice Support", email: "alice@relay.dev" },
+  { id: "2", name: "Bob Wilson", email: "bob@relay.dev" },
+  { id: "3", name: "Carol Davis", email: "carol@relay.dev" },
+  { id: "4", name: "David Chen", email: "david@relay.dev" },
 ];
 
 const availableTags = [
-  'urgent', 'bug', 'feature-request', 'support', 'billing',
-  'mobile', 'desktop', 'api', 'ui', 'performance', 'security',
+  "urgent",
+  "bug",
+  "feature-request",
+  "support",
+  "billing",
+  "mobile",
+  "desktop",
+  "api",
+  "ui",
+  "performance",
+  "security",
 ];
 
 function InteractionDetail({
@@ -448,7 +531,10 @@ function InteractionDetail({
   interaction: Interaction;
   onStatusChange: (id: string, status: InteractionStatus) => void;
   onDelete: (id: string) => void;
-  onAssign: (id: string, assignee: { name: string; email: string } | null) => void;
+  onAssign: (
+    id: string,
+    assignee: { name: string; email: string } | null,
+  ) => void;
   onAddTags: (id: string, tags: string[]) => void;
   onSendMessage: (id: string, message: string) => void;
 }) {
@@ -458,15 +544,24 @@ function InteractionDetail({
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [showTagsModal, setShowTagsModal] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>(interaction.tags);
-  const [chatMessage, setChatMessage] = useState('');
+  const [chatMessage, setChatMessage] = useState("");
   const [showTechnical, setShowTechnical] = useState(false);
 
-  const statuses: InteractionStatus[] = ['new', 'triaging', 'in_progress', 'resolved', 'closed'];
+  const statuses: InteractionStatus[] = [
+    "new",
+    "triaging",
+    "in_progress",
+    "resolved",
+    "closed",
+  ];
 
   return (
     <>
       {/* Header - Compact with title as anchor */}
-      <div className="border-b border-border px-4 py-3" style={{ borderBottomWidth: '0.5px' }}>
+      <div
+        className="border-b border-border px-4 py-3"
+        style={{ borderBottomWidth: "0.5px" }}
+      >
         {/* Row 1: Title + Actions */}
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-2.5 min-w-0 flex-1">
@@ -475,12 +570,14 @@ function InteractionDetail({
             </div>
             <div className="min-w-0 flex-1">
               <h2 className="text-sm font-medium text-foreground leading-snug">
-                {interaction.content?.title || 'Untitled'}
+                {interaction.content?.title || "Untitled"}
               </h2>
               {/* Row 2: User + Timestamp */}
               <div className="flex items-center gap-1.5 mt-0.5">
                 <span className="text-xs text-muted-foreground">
-                  {interaction.user?.name || interaction.user?.email || 'Anonymous'}
+                  {interaction.user?.name ||
+                    interaction.user?.email ||
+                    "Anonymous"}
                 </span>
                 <span className="text-muted-foreground/40">·</span>
                 <span className="text-xs text-muted-foreground/70">
@@ -517,7 +614,10 @@ function InteractionDetail({
                   Create Linear Issue
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => onDelete(interaction.id)} className="text-destructive">
+                <DropdownMenuItem
+                  onClick={() => onDelete(interaction.id)}
+                  className="text-destructive"
+                >
                   Delete
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -533,20 +633,25 @@ function InteractionDetail({
                 key={status}
                 onClick={() => onStatusChange(interaction.id, status)}
                 className={cn(
-                  'text-[11px] leading-none px-2 py-1 rounded transition-colors',
+                  "text-[11px] leading-none px-2 py-1 rounded transition-colors",
                   interaction.status === status
                     ? statusColors[status]
-                    : 'text-muted-foreground/50 hover:text-muted-foreground hover:bg-muted'
+                    : "text-muted-foreground/50 hover:text-muted-foreground hover:bg-muted",
                 )}
               >
-                {status.replace('_', ' ')}
+                {status.replace("_", " ")}
               </button>
             ))}
           </div>
           {interaction.severity && (
             <>
               <span className="text-muted-foreground/30">|</span>
-              <span className={cn('text-[11px] leading-none px-1.5 py-1 rounded', severityColors[interaction.severity])}>
+              <span
+                className={cn(
+                  "text-[11px] leading-none px-1.5 py-1 rounded",
+                  severityColors[interaction.severity],
+                )}
+              >
                 {interaction.severity}
               </span>
             </>
@@ -573,21 +678,29 @@ function InteractionDetail({
               {interaction.assignee.name.charAt(0)}
             </div>
             <span className="text-xs text-muted-foreground">
-              Assigned to <span className="text-foreground">{interaction.assignee.name}</span>
+              Assigned to{" "}
+              <span className="text-foreground">
+                {interaction.assignee.name}
+              </span>
             </span>
           </div>
         )}
 
         {/* Description - No header needed */}
         <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
-          {interaction.content?.description || interaction.contentText || 'No description provided'}
+          {interaction.content?.description ||
+            interaction.contentText ||
+            "No description provided"}
         </p>
 
         {/* Tags - Inline after description */}
         {interaction.tags.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mt-4">
             {interaction.tags.map((tag) => (
-              <span key={tag} className="text-[11px] text-muted-foreground px-1.5 py-0.5 rounded bg-muted">
+              <span
+                key={tag}
+                className="text-[11px] text-muted-foreground px-1.5 py-0.5 rounded bg-muted"
+              >
                 {tag}
               </span>
             ))}
@@ -601,30 +714,40 @@ function InteractionDetail({
               onClick={() => setShowTechnical(!showTechnical)}
               className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
             >
-              <ChevronDown className={cn('h-3 w-3 transition-transform', showTechnical && 'rotate-180')} />
+              <ChevronDown
+                className={cn(
+                  "h-3 w-3 transition-transform",
+                  showTechnical && "rotate-180",
+                )}
+              />
               Technical details
             </button>
             {showTechnical && (
               <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs">
                 {interaction.metadata.browser && (
                   <span className="text-muted-foreground">
-                    <span className="text-muted-foreground/70">Browser:</span> {interaction.metadata.browser}
+                    <span className="text-muted-foreground/70">Browser:</span>{" "}
+                    {interaction.metadata.browser}
                   </span>
                 )}
                 {interaction.metadata.os && (
                   <span className="text-muted-foreground">
-                    <span className="text-muted-foreground/70">OS:</span> {interaction.metadata.os}
+                    <span className="text-muted-foreground/70">OS:</span>{" "}
+                    {interaction.metadata.os}
                   </span>
                 )}
                 {interaction.metadata.screenSize && (
                   <span className="text-muted-foreground">
-                    <span className="text-muted-foreground/70">Screen:</span> {interaction.metadata.screenSize}
+                    <span className="text-muted-foreground/70">Screen:</span>{" "}
+                    {interaction.metadata.screenSize}
                   </span>
                 )}
                 {interaction.metadata.url && (
                   <span className="text-muted-foreground truncate max-w-full">
-                    <span className="text-muted-foreground/70">URL:</span>{' '}
-                    <span className="font-mono">{interaction.metadata.url}</span>
+                    <span className="text-muted-foreground/70">URL:</span>{" "}
+                    <span className="font-mono">
+                      {interaction.metadata.url}
+                    </span>
                   </span>
                 )}
               </div>
@@ -658,8 +781,11 @@ function InteractionDetail({
       </div>
 
       {/* Reply Box (for chat type) */}
-      {interaction.type === 'chat' && (
-        <div className="border-t border-border px-4 py-3" style={{ borderTopWidth: '0.5px' }}>
+      {interaction.type === "chat" && (
+        <div
+          className="border-t border-border px-4 py-3"
+          style={{ borderTopWidth: "0.5px" }}
+        >
           <div className="flex gap-2">
             <Input
               placeholder="Type your reply..."
@@ -667,9 +793,9 @@ function InteractionDetail({
               value={chatMessage}
               onChange={(e) => setChatMessage(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && chatMessage.trim()) {
+                if (e.key === "Enter" && chatMessage.trim()) {
                   onSendMessage(interaction.id, chatMessage);
-                  setChatMessage('');
+                  setChatMessage("");
                 }
               }}
             />
@@ -678,7 +804,7 @@ function InteractionDetail({
               onClick={() => {
                 if (chatMessage.trim()) {
                   onSendMessage(interaction.id, chatMessage);
-                  setChatMessage('');
+                  setChatMessage("");
                 }
               }}
               disabled={!chatMessage.trim()}
@@ -691,18 +817,31 @@ function InteractionDetail({
 
       {/* Replay Modal */}
       {showReplayModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowReplayModal(false)}>
-          <div className="bg-card border border-border rounded-lg overflow-hidden max-w-2xl w-full mx-4" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+          onClick={() => setShowReplayModal(false)}
+        >
+          <div
+            className="bg-card border border-border rounded-lg overflow-hidden max-w-2xl w-full mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-              <h3 className="text-sm font-medium text-foreground">Session Replay</h3>
-              <button onClick={() => setShowReplayModal(false)} className="text-muted-foreground hover:text-foreground">
+              <h3 className="text-sm font-medium text-foreground">
+                Session Replay
+              </h3>
+              <button
+                onClick={() => setShowReplayModal(false)}
+                className="text-muted-foreground hover:text-foreground"
+              >
                 <span className="text-lg leading-none">×</span>
               </button>
             </div>
             <div className="bg-muted aspect-video flex items-center justify-center">
               <div className="text-center text-muted-foreground">
                 <Play className="h-10 w-10 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">Recording from {interaction.metadata?.url || 'unknown page'}</p>
+                <p className="text-sm">
+                  Recording from {interaction.metadata?.url || "unknown page"}
+                </p>
               </div>
             </div>
           </div>
@@ -711,22 +850,49 @@ function InteractionDetail({
 
       {/* Console Logs Modal */}
       {showLogsModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowLogsModal(false)}>
-          <div className="bg-card border border-border rounded-lg overflow-hidden max-w-2xl w-full mx-4" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+          onClick={() => setShowLogsModal(false)}
+        >
+          <div
+            className="bg-card border border-border rounded-lg overflow-hidden max-w-2xl w-full mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-              <h3 className="text-sm font-medium text-foreground">Console Logs</h3>
-              <button onClick={() => setShowLogsModal(false)} className="text-muted-foreground hover:text-foreground">
+              <h3 className="text-sm font-medium text-foreground">
+                Console Logs
+              </h3>
+              <button
+                onClick={() => setShowLogsModal(false)}
+                className="text-muted-foreground hover:text-foreground"
+              >
                 <span className="text-lg leading-none">×</span>
               </button>
             </div>
             <div className="bg-zinc-900 p-3 font-mono text-xs text-green-400 max-h-80 overflow-auto">
-              <p className="text-zinc-500">[{new Date(interaction.createdAt).toISOString()}]</p>
-              <p className="text-red-400">[ERROR] Uncaught TypeError: Cannot read property 'value' of null</p>
-              <p className="text-zinc-400">    at handleSubmit (checkout.js:142)</p>
-              <p className="text-zinc-400">    at HTMLFormElement.onsubmit (checkout.js:89)</p>
-              <p className="text-yellow-400">[WARN] Payment validation failed</p>
-              <p className="text-zinc-400">[INFO] User agent: {interaction.metadata?.browser || 'Unknown'}</p>
-              <p className="text-zinc-400">[INFO] Page URL: {interaction.metadata?.url || 'Unknown'}</p>
+              <p className="text-zinc-500">
+                [{new Date(interaction.createdAt).toISOString()}]
+              </p>
+              <p className="text-red-400">
+                [ERROR] Uncaught TypeError: Cannot read property 'value' of null
+              </p>
+              <p className="text-zinc-400">
+                {" "}
+                at handleSubmit (checkout.js:142)
+              </p>
+              <p className="text-zinc-400">
+                {" "}
+                at HTMLFormElement.onsubmit (checkout.js:89)
+              </p>
+              <p className="text-yellow-400">
+                [WARN] Payment validation failed
+              </p>
+              <p className="text-zinc-400">
+                [INFO] User agent: {interaction.metadata?.browser || "Unknown"}
+              </p>
+              <p className="text-zinc-400">
+                [INFO] Page URL: {interaction.metadata?.url || "Unknown"}
+              </p>
             </div>
           </div>
         </div>
@@ -734,11 +900,20 @@ function InteractionDetail({
 
       {/* Assign Modal */}
       {showAssignModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowAssignModal(false)}>
-          <div className="bg-card border border-border rounded-lg p-4 max-w-sm w-full mx-4" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+          onClick={() => setShowAssignModal(false)}
+        >
+          <div
+            className="bg-card border border-border rounded-lg p-4 max-w-sm w-full mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-medium text-foreground">Assign to</h3>
-              <button onClick={() => setShowAssignModal(false)} className="text-muted-foreground hover:text-foreground">
+              <button
+                onClick={() => setShowAssignModal(false)}
+                className="text-muted-foreground hover:text-foreground"
+              >
                 <span className="text-lg leading-none">×</span>
               </button>
             </div>
@@ -754,19 +929,24 @@ function InteractionDetail({
                   <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
                     <User className="h-3 w-3" />
                   </div>
-                  <span className="text-sm text-muted-foreground">Unassign</span>
+                  <span className="text-sm text-muted-foreground">
+                    Unassign
+                  </span>
                 </button>
               )}
               {teamMembers.map((member) => (
                 <button
                   key={member.id}
                   onClick={() => {
-                    onAssign(interaction.id, { name: member.name, email: member.email });
+                    onAssign(interaction.id, {
+                      name: member.name,
+                      email: member.email,
+                    });
                     setShowAssignModal(false);
                   }}
                   className={cn(
-                    'w-full flex items-center gap-2.5 px-2 py-2 rounded-md hover:bg-accent transition-colors text-left',
-                    interaction.assignee?.email === member.email && 'bg-accent'
+                    "w-full flex items-center gap-2.5 px-2 py-2 rounded-md hover:bg-accent transition-colors text-left",
+                    interaction.assignee?.email === member.email && "bg-accent",
                   )}
                 >
                   <div className="h-6 w-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-medium">
@@ -785,11 +965,20 @@ function InteractionDetail({
 
       {/* Tags Modal */}
       {showTagsModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowTagsModal(false)}>
-          <div className="bg-card border border-border rounded-lg p-4 max-w-sm w-full mx-4" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+          onClick={() => setShowTagsModal(false)}
+        >
+          <div
+            className="bg-card border border-border rounded-lg p-4 max-w-sm w-full mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-medium text-foreground">Tags</h3>
-              <button onClick={() => setShowTagsModal(false)} className="text-muted-foreground hover:text-foreground">
+              <button
+                onClick={() => setShowTagsModal(false)}
+                className="text-muted-foreground hover:text-foreground"
+              >
                 <span className="text-lg leading-none">×</span>
               </button>
             </div>
@@ -801,14 +990,14 @@ function InteractionDetail({
                     setSelectedTags((prev) =>
                       prev.includes(tag)
                         ? prev.filter((t) => t !== tag)
-                        : [...prev, tag]
+                        : [...prev, tag],
                     );
                   }}
                   className={cn(
-                    'px-2 py-1 rounded text-xs transition-colors',
+                    "px-2 py-1 rounded text-xs transition-colors",
                     selectedTags.includes(tag)
-                      ? 'bg-foreground text-background'
-                      : 'bg-muted text-muted-foreground hover:bg-accent'
+                      ? "bg-foreground text-background"
+                      : "bg-muted text-muted-foreground hover:bg-accent",
                   )}
                 >
                   {tag}
@@ -816,11 +1005,20 @@ function InteractionDetail({
               ))}
             </div>
             <div className="flex justify-end gap-2">
-              <Button variant="ghost" size="sm" onClick={() => setShowTagsModal(false)}>Cancel</Button>
-              <Button size="sm" onClick={() => {
-                onAddTags(interaction.id, selectedTags);
-                setShowTagsModal(false);
-              }}>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowTagsModal(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => {
+                  onAddTags(interaction.id, selectedTags);
+                  setShowTagsModal(false);
+                }}
+              >
                 Save
               </Button>
             </div>

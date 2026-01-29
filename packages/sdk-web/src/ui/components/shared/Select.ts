@@ -3,7 +3,7 @@
 // Dropdown select with options
 // ============================================================================
 
-import { createElement, generateId } from '../../utils/dom';
+import { createElement, generateId } from "../../utils/dom";
 
 export interface SelectOption {
   value: string;
@@ -117,55 +117,69 @@ export function createSelect(label: string, props: SelectProps): SelectResult {
   const {
     name,
     placeholder,
-    value = '',
+    value = "",
     options,
     required = false,
     disabled = false,
-    className = '',
+    className = "",
     onChange,
   } = props;
 
-  const id = generateId('select');
+  const id = generateId("select");
 
   // Create container
-  const container = createElement('div', { class: `relay-select-group ${className}`.trim() });
+  const container = createElement("div", {
+    class: `relay-select-group ${className}`.trim(),
+  });
 
   // Create label
-  const labelEl = createElement('label', {
-    class: `relay-select-label ${required ? 'relay-select-label--required' : ''}`,
-    htmlFor: id,
-  }, [label]);
+  const labelEl = createElement(
+    "label",
+    {
+      class: `relay-select-label ${required ? "relay-select-label--required" : ""}`,
+      htmlFor: id,
+    },
+    [label],
+  );
 
   // Create wrapper for icon positioning
-  const wrapper = createElement('div', { class: 'relay-select-wrapper' });
+  const wrapper = createElement("div", { class: "relay-select-wrapper" });
 
   // Create select
-  const select = createElement('select', {
+  const select = createElement("select", {
     id,
     name: name || id,
-    class: 'relay-select',
+    class: "relay-select",
     required,
     disabled,
   }) as HTMLSelectElement;
 
   // Add placeholder option
   if (placeholder) {
-    const placeholderOption = createElement('option', {
-      value: '',
-      disabled: true,
-      selected: !value,
-    }, [placeholder]);
+    const placeholderOption = createElement(
+      "option",
+      {
+        value: "",
+        disabled: true,
+        selected: !value,
+      },
+      [placeholder],
+    );
     select.appendChild(placeholderOption);
   }
 
   // Add options
   const addOptions = (opts: SelectOption[]) => {
     opts.forEach((opt) => {
-      const option = createElement('option', {
-        value: opt.value,
-        disabled: opt.disabled,
-        selected: opt.value === value,
-      }, [opt.label]);
+      const option = createElement(
+        "option",
+        {
+          value: opt.value,
+          disabled: opt.disabled,
+          selected: opt.value === value,
+        },
+        [opt.label],
+      );
       select.appendChild(option);
     });
   };
@@ -173,12 +187,12 @@ export function createSelect(label: string, props: SelectProps): SelectResult {
   addOptions(options);
 
   // Create dropdown icon
-  const icon = createElement('span', { class: 'relay-select-icon' });
+  const icon = createElement("span", { class: "relay-select-icon" });
   icon.innerHTML = `<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 4.5L6 7.5L9 4.5"/></svg>`;
 
   // Create error container
-  const errorEl = createElement('span', { class: 'relay-select-error' });
-  errorEl.style.display = 'none';
+  const errorEl = createElement("span", { class: "relay-select-error" });
+  errorEl.style.display = "none";
 
   // Assemble
   wrapper.appendChild(select);
@@ -189,7 +203,7 @@ export function createSelect(label: string, props: SelectProps): SelectResult {
 
   // Event handlers
   if (onChange) {
-    select.addEventListener('change', () => onChange(select.value));
+    select.addEventListener("change", () => onChange(select.value));
   }
 
   return {
@@ -198,12 +212,12 @@ export function createSelect(label: string, props: SelectProps): SelectResult {
     setError: (error: string | null) => {
       if (error) {
         errorEl.textContent = error;
-        errorEl.style.display = 'block';
-        select.classList.add('relay-select--error');
+        errorEl.style.display = "block";
+        select.classList.add("relay-select--error");
       } else {
-        errorEl.textContent = '';
-        errorEl.style.display = 'none';
-        select.classList.remove('relay-select--error');
+        errorEl.textContent = "";
+        errorEl.style.display = "none";
+        select.classList.remove("relay-select--error");
       }
     },
     setValue: (newValue: string) => {
@@ -213,17 +227,21 @@ export function createSelect(label: string, props: SelectProps): SelectResult {
     setOptions: (newOptions: SelectOption[]) => {
       // Remove all options except placeholder
       const existingValue = select.value;
-      select.innerHTML = '';
+      select.innerHTML = "";
       if (placeholder) {
-        const placeholderOption = createElement('option', {
-          value: '',
-          disabled: true,
-        }, [placeholder]);
+        const placeholderOption = createElement(
+          "option",
+          {
+            value: "",
+            disabled: true,
+          },
+          [placeholder],
+        );
         select.appendChild(placeholderOption);
       }
       addOptions(newOptions);
       // Try to restore previous value
-      if (newOptions.some(o => o.value === existingValue)) {
+      if (newOptions.some((o) => o.value === existingValue)) {
         select.value = existingValue;
       }
     },

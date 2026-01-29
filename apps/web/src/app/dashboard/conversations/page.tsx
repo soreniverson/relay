@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useRef } from 'react';
-import { useAuthStore } from '@/stores/auth';
-import { trpc } from '@/lib/trpc';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Loader2, MessageSquare } from 'lucide-react';
-import { ApiError, EmptyState } from '@/components/api-error';
+import { useState, useEffect, useRef } from "react";
+import { useAuthStore } from "@/stores/auth";
+import { trpc } from "@/lib/trpc";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Loader2, MessageSquare } from "lucide-react";
+import { ApiError, EmptyState } from "@/components/api-error";
 
-type ConversationStatus = 'open' | 'closed';
+type ConversationStatus = "open" | "closed";
 
 interface ConversationListItem {
   id: string;
@@ -26,7 +26,7 @@ interface ConversationListItem {
   } | null;
   lastMessage: {
     id: string;
-    direction: 'inbound' | 'outbound';
+    direction: "inbound" | "outbound";
     body: string;
     createdAt: Date | string;
   } | null;
@@ -34,7 +34,7 @@ interface ConversationListItem {
 
 interface ConversationMessage {
   id: string;
-  direction: 'inbound' | 'outbound';
+  direction: "inbound" | "outbound";
   body: string;
   createdAt: Date | string;
 }
@@ -42,34 +42,40 @@ interface ConversationMessage {
 export default function ConversationsPage() {
   const { currentProject } = useAuthStore();
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [replyText, setReplyText] = useState('');
-  const [filter, setFilter] = useState<'all' | ConversationStatus>('all');
+  const [replyText, setReplyText] = useState("");
+  const [filter, setFilter] = useState<"all" | ConversationStatus>("all");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const utils = trpc.useUtils();
 
   // Fetch conversations list
-  const { data: conversationsData, isLoading: listLoading, error: listError, refetch: refetchList } = trpc.conversations.list.useQuery(
+  const {
+    data: conversationsData,
+    isLoading: listLoading,
+    error: listError,
+    refetch: refetchList,
+  } = trpc.conversations.list.useQuery(
     {
-      projectId: currentProject?.id || '',
-      status: filter === 'all' ? undefined : filter,
+      projectId: currentProject?.id || "",
+      status: filter === "all" ? undefined : filter,
     },
-    { enabled: !!currentProject?.id }
+    { enabled: !!currentProject?.id },
   );
 
   // Fetch selected conversation with messages
-  const { data: selectedConversation, isLoading: detailLoading } = trpc.conversations.get.useQuery(
-    {
-      projectId: currentProject?.id || '',
-      conversationId: selectedId || '',
-    },
-    { enabled: !!currentProject?.id && !!selectedId }
-  );
+  const { data: selectedConversation, isLoading: detailLoading } =
+    trpc.conversations.get.useQuery(
+      {
+        projectId: currentProject?.id || "",
+        conversationId: selectedId || "",
+      },
+      { enabled: !!currentProject?.id && !!selectedId },
+    );
 
   // Send message mutation
   const sendMutation = trpc.conversations.sendMessage.useMutation({
     onSuccess: () => {
-      setReplyText('');
+      setReplyText("");
       utils.conversations.get.invalidate();
       utils.conversations.list.invalidate();
     },
@@ -94,7 +100,7 @@ export default function ConversationsPage() {
 
   // Scroll to bottom on new messages
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [selectedConversation?.messages]);
 
   const handleSendReply = () => {
@@ -108,7 +114,8 @@ export default function ConversationsPage() {
 
   const handleToggleStatus = () => {
     if (!selectedConversation || !currentProject?.id) return;
-    const newStatus = selectedConversation.status === 'open' ? 'closed' : 'open';
+    const newStatus =
+      selectedConversation.status === "open" ? "closed" : "open";
     updateStatusMutation.mutate({
       projectId: currentProject.id,
       conversationId: selectedConversation.id,
@@ -119,16 +126,18 @@ export default function ConversationsPage() {
   const formatTime = (date: string | Date) => {
     const d = new Date(date);
     const now = new Date();
-    const diffDays = Math.floor((now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24));
+    const diffDays = Math.floor(
+      (now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24),
+    );
 
     if (diffDays === 0) {
-      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
     } else if (diffDays === 1) {
-      return 'Yesterday';
+      return "Yesterday";
     } else if (diffDays < 7) {
-      return d.toLocaleDateString([], { weekday: 'short' });
+      return d.toLocaleDateString([], { weekday: "short" });
     }
-    return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    return d.toLocaleDateString([], { month: "short", day: "numeric" });
   };
 
   if (!currentProject) {
@@ -148,7 +157,13 @@ export default function ConversationsPage() {
   }
 
   if (listError) {
-    return <ApiError error={listError} onRetry={() => refetchList()} title="Failed to load conversations" />;
+    return (
+      <ApiError
+        error={listError}
+        onRetry={() => refetchList()}
+        title="Failed to load conversations"
+      />
+    );
   }
 
   return (
@@ -157,7 +172,9 @@ export default function ConversationsPage() {
       <div className="w-80 border-r border-border bg-card/50 flex flex-col">
         <div className="h-14 px-4 border-b border-border flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <h2 className="text-sm font-medium text-foreground">Conversations</h2>
+            <h2 className="text-sm font-medium text-foreground">
+              Conversations
+            </h2>
             <span className="text-xs bg-muted text-muted-foreground px-1.5 py-0.5 rounded">
               {conversations.length}
             </span>
@@ -165,11 +182,11 @@ export default function ConversationsPage() {
         </div>
         <div className="px-4 py-2 border-b border-border">
           <div className="filter-tabs">
-            {(['all', 'open', 'closed'] as const).map((f) => (
+            {(["all", "open", "closed"] as const).map((f) => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
-                className={`filter-tab ${filter === f ? 'filter-tab-active' : ''}`}
+                className={`filter-tab ${filter === f ? "filter-tab-active" : ""}`}
               >
                 {f.charAt(0).toUpperCase() + f.slice(1)}
               </button>
@@ -181,7 +198,9 @@ export default function ConversationsPage() {
           {conversations.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full p-4 text-center">
               <MessageSquare className="h-8 w-8 text-muted-foreground/50 mb-2" />
-              <p className="text-sm text-muted-foreground">No conversations yet</p>
+              <p className="text-sm text-muted-foreground">
+                No conversations yet
+              </p>
             </div>
           ) : (
             conversations.map((conversation: ConversationListItem) => (
@@ -189,40 +208,49 @@ export default function ConversationsPage() {
                 key={conversation.id}
                 onClick={() => setSelectedId(conversation.id)}
                 className={`w-full p-3 text-left border-b border-border hover:bg-accent/50 transition-colors ${
-                  selectedId === conversation.id ? 'bg-accent' : ''
+                  selectedId === conversation.id ? "bg-accent" : ""
                 }`}
               >
                 <div className="flex items-start justify-between mb-1">
                   <div className="flex items-center gap-2">
                     <div className="w-7 h-7 rounded-full bg-muted text-muted-foreground flex items-center justify-center text-xs font-medium">
-                      {(conversation.user?.name || conversation.user?.email || 'U').charAt(0).toUpperCase()}
+                      {(
+                        conversation.user?.name ||
+                        conversation.user?.email ||
+                        "U"
+                      )
+                        .charAt(0)
+                        .toUpperCase()}
                     </div>
                     <div>
                       <div className="font-medium text-sm text-foreground">
-                        {conversation.user?.name || 'Anonymous'}
+                        {conversation.user?.name || "Anonymous"}
                       </div>
                       <div className="text-xs text-muted-foreground">
-                        {conversation.user?.email || 'No email'}
+                        {conversation.user?.email || "No email"}
                       </div>
                     </div>
                   </div>
                   <span className="text-xs text-muted-foreground">
-                    {conversation.lastMessageAt ? formatTime(conversation.lastMessageAt) : ''}
+                    {conversation.lastMessageAt
+                      ? formatTime(conversation.lastMessageAt)
+                      : ""}
                   </span>
                 </div>
 
                 <div className="text-sm font-medium text-foreground mb-1 truncate">
-                  {conversation.subject || 'No subject'}
+                  {conversation.subject || "No subject"}
                 </div>
                 {conversation.lastMessage && (
                   <div className="text-sm text-muted-foreground truncate">
-                    {conversation.lastMessage.direction === 'outbound' && 'You: '}
+                    {conversation.lastMessage.direction === "outbound" &&
+                      "You: "}
                     {conversation.lastMessage.body}
                   </div>
                 )}
 
                 <div className="flex items-center gap-2 mt-2">
-                  {conversation.status === 'closed' && (
+                  {conversation.status === "closed" && (
                     <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded">
                       Closed
                     </span>
@@ -240,19 +268,24 @@ export default function ConversationsPage() {
           {/* Header */}
           <div className="h-14 px-4 border-b border-border flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-medium text-foreground">{selectedConversation.subject || 'Conversation'}</h3>
+              <h3 className="text-sm font-medium text-foreground">
+                {selectedConversation.subject || "Conversation"}
+              </h3>
               <p className="text-xs text-muted-foreground">
-                {selectedConversation.user?.email || 'Anonymous'} · {selectedConversation.messageCount} messages
+                {selectedConversation.user?.email || "Anonymous"} ·{" "}
+                {selectedConversation.messageCount} messages
               </p>
             </div>
             <div className="flex items-center gap-2">
               <Button
-                variant={selectedConversation.status === 'open' ? 'default' : 'outline'}
+                variant={
+                  selectedConversation.status === "open" ? "default" : "outline"
+                }
                 size="sm"
                 onClick={handleToggleStatus}
                 disabled={updateStatusMutation.isPending}
               >
-                {selectedConversation.status === 'open' ? 'Close' : 'Reopen'}
+                {selectedConversation.status === "open" ? "Close" : "Reopen"}
               </Button>
             </div>
           </div>
@@ -264,40 +297,44 @@ export default function ConversationsPage() {
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               </div>
             ) : (
-              selectedConversation.messages.map((message: ConversationMessage) => (
-                <div
-                  key={message.id}
-                  className={`flex ${message.direction === 'outbound' ? 'justify-end' : ''}`}
-                >
+              selectedConversation.messages.map(
+                (message: ConversationMessage) => (
                   <div
-                    className={`max-w-lg rounded-lg p-3 ${
-                      message.direction === 'outbound'
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted text-foreground'
-                    }`}
+                    key={message.id}
+                    className={`flex ${message.direction === "outbound" ? "justify-end" : ""}`}
                   >
-                    <p className="text-sm whitespace-pre-wrap">{message.body}</p>
                     <div
-                      className={`text-xs mt-1 ${
-                        message.direction === 'outbound'
-                          ? 'text-primary-foreground/70'
-                          : 'text-muted-foreground'
+                      className={`max-w-lg rounded-lg p-3 ${
+                        message.direction === "outbound"
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted text-foreground"
                       }`}
                     >
-                      {new Date(message.createdAt).toLocaleTimeString([], {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
+                      <p className="text-sm whitespace-pre-wrap">
+                        {message.body}
+                      </p>
+                      <div
+                        className={`text-xs mt-1 ${
+                          message.direction === "outbound"
+                            ? "text-primary-foreground/70"
+                            : "text-muted-foreground"
+                        }`}
+                      >
+                        {new Date(message.createdAt).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))
+                ),
+              )
             )}
             <div ref={messagesEndRef} />
           </div>
 
           {/* Reply Box */}
-          {selectedConversation.status === 'open' && (
+          {selectedConversation.status === "open" && (
             <div className="p-4 border-t border-border bg-card">
               <div className="flex gap-2">
                 <Input
@@ -306,14 +343,17 @@ export default function ConversationsPage() {
                   placeholder="Type your reply..."
                   className="flex-1"
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
+                    if (e.key === "Enter" && !e.shiftKey) {
                       e.preventDefault();
                       handleSendReply();
                     }
                   }}
                 />
-                <Button onClick={handleSendReply} disabled={!replyText.trim() || sendMutation.isPending}>
-                  {sendMutation.isPending ? 'Sending...' : 'Send'}
+                <Button
+                  onClick={handleSendReply}
+                  disabled={!replyText.trim() || sendMutation.isPending}
+                >
+                  {sendMutation.isPending ? "Sending..." : "Send"}
                 </Button>
               </div>
             </div>

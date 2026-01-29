@@ -3,11 +3,16 @@
 // List of roadmap items grouped by status
 // ============================================================================
 
-import { createElement } from '../../utils/dom';
-import { createRoadmapItem, type RoadmapItemData, type RoadmapStatus, type RoadmapItemResult } from './RoadmapItem';
+import { createElement } from "../../utils/dom";
+import {
+  createRoadmapItem,
+  type RoadmapItemData,
+  type RoadmapStatus,
+  type RoadmapItemResult,
+} from "./RoadmapItem";
 
 // Re-export types for convenience
-export type { RoadmapItemData, RoadmapStatus } from './RoadmapItem';
+export type { RoadmapItemData, RoadmapStatus } from "./RoadmapItem";
 
 export interface RoadmapListConfig {
   items: RoadmapItemData[];
@@ -118,12 +123,12 @@ export const roadmapListStyles = `
 
 const EMPTY_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>`;
 
-const STATUS_ORDER: RoadmapStatus[] = ['in_progress', 'planned', 'shipped'];
+const STATUS_ORDER: RoadmapStatus[] = ["in_progress", "planned", "shipped"];
 
 const STATUS_LABELS: Record<RoadmapStatus, string> = {
-  planned: 'Planned',
-  in_progress: 'In Progress',
-  shipped: 'Shipped',
+  planned: "Planned",
+  in_progress: "In Progress",
+  shipped: "Shipped",
 };
 
 export interface RoadmapListResult {
@@ -133,7 +138,9 @@ export interface RoadmapListResult {
   setLoading: (loading: boolean) => void;
 }
 
-export function createRoadmapList(config: RoadmapListConfig): RoadmapListResult {
+export function createRoadmapList(
+  config: RoadmapListConfig,
+): RoadmapListResult {
   const {
     items: initialItems,
     onVote,
@@ -145,17 +152,19 @@ export function createRoadmapList(config: RoadmapListConfig): RoadmapListResult 
   let isLoading = loading;
   const itemComponents = new Map<string, RoadmapItemResult>();
 
-  const container = createElement('div', { class: 'relay-roadmap-list' });
+  const container = createElement("div", { class: "relay-roadmap-list" });
 
   // Group items by status
-  const groupItems = (itemList: RoadmapItemData[]): Map<RoadmapStatus, RoadmapItemData[]> => {
+  const groupItems = (
+    itemList: RoadmapItemData[],
+  ): Map<RoadmapStatus, RoadmapItemData[]> => {
     const groups = new Map<RoadmapStatus, RoadmapItemData[]>();
 
-    STATUS_ORDER.forEach(status => {
+    STATUS_ORDER.forEach((status) => {
       groups.set(status, []);
     });
 
-    itemList.forEach(item => {
+    itemList.forEach((item) => {
       const group = groups.get(item.status);
       if (group) {
         group.push(item);
@@ -163,7 +172,7 @@ export function createRoadmapList(config: RoadmapListConfig): RoadmapListResult 
     });
 
     // Sort by vote count within each group
-    groups.forEach(group => {
+    groups.forEach((group) => {
       group.sort((a, b) => b.voteCount - a.voteCount);
     });
 
@@ -172,13 +181,17 @@ export function createRoadmapList(config: RoadmapListConfig): RoadmapListResult 
 
   // Render list
   const render = () => {
-    container.innerHTML = '';
+    container.innerHTML = "";
     itemComponents.clear();
 
     // Loading state
     if (isLoading) {
-      const loadingEl = createElement('div', { class: 'relay-roadmap-list__loading' });
-      const spinner = createElement('div', { class: 'relay-roadmap-list__spinner' });
+      const loadingEl = createElement("div", {
+        class: "relay-roadmap-list__loading",
+      });
+      const spinner = createElement("div", {
+        class: "relay-roadmap-list__spinner",
+      });
       loadingEl.appendChild(spinner);
       container.appendChild(loadingEl);
       return;
@@ -186,13 +199,25 @@ export function createRoadmapList(config: RoadmapListConfig): RoadmapListResult 
 
     // Empty state
     if (items.length === 0) {
-      const emptyEl = createElement('div', { class: 'relay-roadmap-list__empty' });
+      const emptyEl = createElement("div", {
+        class: "relay-roadmap-list__empty",
+      });
 
-      const icon = createElement('div', { class: 'relay-roadmap-list__empty-icon' });
+      const icon = createElement("div", {
+        class: "relay-roadmap-list__empty-icon",
+      });
       icon.innerHTML = EMPTY_ICON;
 
-      const title = createElement('h3', { class: 'relay-roadmap-list__empty-title' }, ['No roadmap items']);
-      const text = createElement('p', { class: 'relay-roadmap-list__empty-text' }, ['Check back later for updates!']);
+      const title = createElement(
+        "h3",
+        { class: "relay-roadmap-list__empty-title" },
+        ["No roadmap items"],
+      );
+      const text = createElement(
+        "p",
+        { class: "relay-roadmap-list__empty-text" },
+        ["Check back later for updates!"],
+      );
 
       emptyEl.appendChild(icon);
       emptyEl.appendChild(title);
@@ -205,27 +230,37 @@ export function createRoadmapList(config: RoadmapListConfig): RoadmapListResult 
       // Grouped view
       const groups = groupItems(items);
 
-      STATUS_ORDER.forEach(status => {
+      STATUS_ORDER.forEach((status) => {
         const groupItems = groups.get(status);
         if (!groupItems || groupItems.length === 0) return;
 
-        const group = createElement('div', { class: 'relay-roadmap-list__group' });
+        const group = createElement("div", {
+          class: "relay-roadmap-list__group",
+        });
 
         // Group header
-        const header = createElement('div', { class: 'relay-roadmap-list__group-header' });
-        const title = createElement('h3', { class: 'relay-roadmap-list__group-title' }, [
-          STATUS_LABELS[status],
-        ]);
-        const count = createElement('span', { class: 'relay-roadmap-list__group-count' }, [
-          String(groupItems.length),
-        ]);
+        const header = createElement("div", {
+          class: "relay-roadmap-list__group-header",
+        });
+        const title = createElement(
+          "h3",
+          { class: "relay-roadmap-list__group-title" },
+          [STATUS_LABELS[status]],
+        );
+        const count = createElement(
+          "span",
+          { class: "relay-roadmap-list__group-count" },
+          [String(groupItems.length)],
+        );
         header.appendChild(title);
         header.appendChild(count);
 
         // Group items
-        const itemsContainer = createElement('div', { class: 'relay-roadmap-list__group-items' });
+        const itemsContainer = createElement("div", {
+          class: "relay-roadmap-list__group-items",
+        });
 
-        groupItems.forEach(item => {
+        groupItems.forEach((item) => {
           const itemComponent = createRoadmapItem({
             item,
             onVote,
@@ -242,7 +277,7 @@ export function createRoadmapList(config: RoadmapListConfig): RoadmapListResult 
       // Flat list (sorted by votes)
       const sortedItems = [...items].sort((a, b) => b.voteCount - a.voteCount);
 
-      sortedItems.forEach(item => {
+      sortedItems.forEach((item) => {
         const itemComponent = createRoadmapItem({
           item,
           onVote,
@@ -263,7 +298,7 @@ export function createRoadmapList(config: RoadmapListConfig): RoadmapListResult 
     },
     updateItem: (updatedItem: RoadmapItemData) => {
       // Update in items array
-      const index = items.findIndex(i => i.id === updatedItem.id);
+      const index = items.findIndex((i) => i.id === updatedItem.id);
       if (index !== -1) {
         items[index] = updatedItem;
       }

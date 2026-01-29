@@ -1,8 +1,8 @@
-import { Job } from 'bullmq';
-import { prisma } from '../index.js';
+import { Job } from "bullmq";
+import { prisma } from "../index.js";
 
 interface SlackNotifyJob {
-  type: 'new_bug' | 'new_feedback' | 'new_chat' | 'status_change';
+  type: "new_bug" | "new_feedback" | "new_chat" | "status_change";
   interactionId: string;
   projectId: string;
   metadata?: Record<string, unknown>;
@@ -18,13 +18,13 @@ export async function slackNotifyProcessor(job: Job<SlackNotifyJob>) {
     where: {
       projectId_provider: {
         projectId,
-        provider: 'slack',
+        provider: "slack",
       },
     },
   });
 
   if (!integration || !integration.enabled) {
-    return { skipped: true, reason: 'integration_disabled' };
+    return { skipped: true, reason: "integration_disabled" };
   }
 
   const config = integration.config as Record<string, unknown>;
@@ -32,7 +32,7 @@ export async function slackNotifyProcessor(job: Job<SlackNotifyJob>) {
   const channel = config.channel as string;
 
   if (!webhookUrl) {
-    throw new Error('Slack webhook URL not configured');
+    throw new Error("Slack webhook URL not configured");
   }
 
   // Fetch interaction
@@ -40,7 +40,7 @@ export async function slackNotifyProcessor(job: Job<SlackNotifyJob>) {
     where: { id: interactionId },
     include: {
       user: true,
-      media: { where: { kind: 'screenshot' }, take: 1 },
+      media: { where: { kind: "screenshot" }, take: 1 },
     },
   });
 
@@ -53,8 +53,8 @@ export async function slackNotifyProcessor(job: Job<SlackNotifyJob>) {
 
   // Send to Slack
   const response = await fetch(webhookUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(message),
   });
 
@@ -69,66 +69,67 @@ export async function slackNotifyProcessor(job: Job<SlackNotifyJob>) {
 function buildSlackMessage(
   type: string,
   interaction: any,
-  metadata?: Record<string, unknown>
+  metadata?: Record<string, unknown>,
 ) {
-  const relayUrl = process.env.DASHBOARD_URL || 'http://localhost:3000';
+  const relayUrl = process.env.DASHBOARD_URL || "http://localhost:3000";
   const interactionUrl = `${relayUrl}/dashboard/inbox/${interaction.id}`;
 
   const contentJson = interaction.contentJson as Record<string, unknown> | null;
-  const title = contentJson?.title || interaction.contentText?.slice(0, 100) || 'Untitled';
+  const title =
+    contentJson?.title || interaction.contentText?.slice(0, 100) || "Untitled";
 
   const severityEmoji: Record<string, string> = {
-    critical: '🔴',
-    high: '🟠',
-    med: '🟡',
-    low: '🟢',
+    critical: "🔴",
+    high: "🟠",
+    med: "🟡",
+    low: "🟢",
   };
 
   const typeEmoji: Record<string, string> = {
-    bug: '🐛',
-    feedback: '💬',
-    chat: '💭',
+    bug: "🐛",
+    feedback: "💬",
+    chat: "💭",
   };
 
   const blocks: any[] = [];
 
   // Header
   switch (type) {
-    case 'new_bug':
+    case "new_bug":
       blocks.push({
-        type: 'header',
+        type: "header",
         text: {
-          type: 'plain_text',
+          type: "plain_text",
           text: `${typeEmoji.bug} New Bug Report`,
           emoji: true,
         },
       });
       break;
-    case 'new_feedback':
+    case "new_feedback":
       blocks.push({
-        type: 'header',
+        type: "header",
         text: {
-          type: 'plain_text',
+          type: "plain_text",
           text: `${typeEmoji.feedback} New Feedback`,
           emoji: true,
         },
       });
       break;
-    case 'new_chat':
+    case "new_chat":
       blocks.push({
-        type: 'header',
+        type: "header",
         text: {
-          type: 'plain_text',
+          type: "plain_text",
           text: `${typeEmoji.chat} New Chat Message`,
           emoji: true,
         },
       });
       break;
-    case 'status_change':
+    case "status_change":
       blocks.push({
-        type: 'header',
+        type: "header",
         text: {
-          type: 'plain_text',
+          type: "plain_text",
           text: `📋 Status Updated`,
           emoji: true,
         },
@@ -141,36 +142,36 @@ function buildSlackMessage(
 
   if (interaction.severity) {
     fields.push({
-      type: 'mrkdwn',
-      text: `*Severity:* ${severityEmoji[interaction.severity] || ''} ${interaction.severity}`,
+      type: "mrkdwn",
+      text: `*Severity:* ${severityEmoji[interaction.severity] || ""} ${interaction.severity}`,
     });
   }
 
   if (interaction.user) {
     fields.push({
-      type: 'mrkdwn',
-      text: `*User:* ${interaction.user.name || interaction.user.email || 'Anonymous'}`,
+      type: "mrkdwn",
+      text: `*User:* ${interaction.user.name || interaction.user.email || "Anonymous"}`,
     });
   }
 
   if (interaction.status) {
     fields.push({
-      type: 'mrkdwn',
+      type: "mrkdwn",
       text: `*Status:* ${interaction.status}`,
     });
   }
 
   if (metadata?.oldStatus && metadata?.newStatus) {
     fields.push({
-      type: 'mrkdwn',
+      type: "mrkdwn",
       text: `*Changed:* ${metadata.oldStatus} → ${metadata.newStatus}`,
     });
   }
 
   blocks.push({
-    type: 'section',
+    type: "section",
     text: {
-      type: 'mrkdwn',
+      type: "mrkdwn",
       text: `*${title}*`,
     },
     ...(fields.length > 0 && { fields }),
@@ -180,10 +181,11 @@ function buildSlackMessage(
   const description = contentJson?.description || interaction.contentText;
   if (description && description.length > 0) {
     blocks.push({
-      type: 'section',
+      type: "section",
       text: {
-        type: 'mrkdwn',
-        text: description.slice(0, 500) + (description.length > 500 ? '...' : ''),
+        type: "mrkdwn",
+        text:
+          description.slice(0, 500) + (description.length > 500 ? "..." : ""),
       },
     });
   }
@@ -191,10 +193,10 @@ function buildSlackMessage(
   // AI Summary if available
   if (interaction.aiSummary) {
     blocks.push({
-      type: 'context',
+      type: "context",
       elements: [
         {
-          type: 'mrkdwn',
+          type: "mrkdwn",
           text: `🤖 *AI Summary:* ${interaction.aiSummary}`,
         },
       ],
@@ -204,31 +206,31 @@ function buildSlackMessage(
   // Screenshot if available
   if (interaction.media?.[0]?.url) {
     blocks.push({
-      type: 'image',
+      type: "image",
       image_url: interaction.media[0].url,
-      alt_text: 'Screenshot',
+      alt_text: "Screenshot",
     });
   }
 
   // Action button
   blocks.push({
-    type: 'actions',
+    type: "actions",
     elements: [
       {
-        type: 'button',
+        type: "button",
         text: {
-          type: 'plain_text',
-          text: 'View in Relay',
+          type: "plain_text",
+          text: "View in Relay",
           emoji: true,
         },
         url: interactionUrl,
-        action_id: 'view_in_relay',
+        action_id: "view_in_relay",
       },
     ],
   });
 
   // Divider
-  blocks.push({ type: 'divider' });
+  blocks.push({ type: "divider" });
 
   return { blocks };
 }

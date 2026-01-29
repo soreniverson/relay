@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useEffect } from "react";
+import { AlertTriangle, RefreshCw, Home } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function DashboardError({
   error,
@@ -13,7 +13,7 @@ export default function DashboardError({
 }) {
   useEffect(() => {
     // Log error to console
-    console.error('Dashboard error:', error);
+    console.error("Dashboard error:", error);
   }, [error]);
 
   return (
@@ -26,7 +26,7 @@ export default function DashboardError({
         <p className="text-muted-foreground mb-6">
           We encountered an unexpected error loading this page.
         </p>
-        {process.env.NODE_ENV === 'development' && (
+        {process.env.NODE_ENV === "development" && (
           <div className="mb-6 p-3 bg-muted rounded-md text-left">
             <p className="text-xs font-mono text-destructive break-all">
               {error.message}
@@ -43,7 +43,7 @@ export default function DashboardError({
             <RefreshCw className="mr-2 h-4 w-4" />
             Try Again
           </Button>
-          <Button onClick={() => (window.location.href = '/dashboard')}>
+          <Button onClick={() => (window.location.href = "/dashboard")}>
             <Home className="mr-2 h-4 w-4" />
             Go Home
           </Button>

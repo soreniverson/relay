@@ -3,7 +3,7 @@
 // Tab navigation for Bug/Feedback/Chat
 // ============================================================================
 
-import { createElement } from '../utils/dom';
+import { createElement } from "../utils/dom";
 
 export interface Tab {
   id: string;
@@ -119,36 +119,40 @@ export interface TabsResult {
 export function createTabs(config: TabsConfig): TabsResult {
   const { tabs, activeTab, onChange } = config;
   let currentTabs = [...tabs];
-  let currentActiveTab = activeTab || tabs.find(t => !t.hidden && !t.disabled)?.id || '';
+  let currentActiveTab =
+    activeTab || tabs.find((t) => !t.hidden && !t.disabled)?.id || "";
 
   // Create container
-  const container = createElement('div', { class: 'relay-tabs', role: 'tablist' });
+  const container = createElement("div", {
+    class: "relay-tabs",
+    role: "tablist",
+  });
 
   // Create tab buttons
   const tabButtons = new Map<string, HTMLButtonElement>();
 
   const renderTabs = () => {
-    container.innerHTML = '';
+    container.innerHTML = "";
     tabButtons.clear();
 
     currentTabs.forEach((tab) => {
       if (tab.hidden) return;
 
-      const button = createElement('button', {
-        type: 'button',
-        class: `relay-tabs__tab ${tab.id === currentActiveTab ? 'relay-tabs__tab--active' : ''}`,
+      const button = createElement("button", {
+        type: "button",
+        class: `relay-tabs__tab ${tab.id === currentActiveTab ? "relay-tabs__tab--active" : ""}`,
         disabled: tab.disabled,
       }) as HTMLButtonElement;
 
-      button.setAttribute('role', 'tab');
-      button.setAttribute('aria-selected', String(tab.id === currentActiveTab));
-      button.setAttribute('aria-controls', `relay-tabpanel-${tab.id}`);
+      button.setAttribute("role", "tab");
+      button.setAttribute("aria-selected", String(tab.id === currentActiveTab));
+      button.setAttribute("aria-controls", `relay-tabpanel-${tab.id}`);
       button.id = `relay-tab-${tab.id}`;
 
       // Add icon if provided or use default
       const iconSvg = tab.icon || TAB_ICONS[tab.id];
       if (iconSvg) {
-        const iconEl = createElement('span', { class: 'relay-tabs__tab-icon' });
+        const iconEl = createElement("span", { class: "relay-tabs__tab-icon" });
         iconEl.innerHTML = iconSvg;
         button.appendChild(iconEl);
       }
@@ -157,21 +161,23 @@ export function createTabs(config: TabsConfig): TabsResult {
       button.appendChild(document.createTextNode(tab.label));
 
       // Click handler
-      button.addEventListener('click', () => {
+      button.addEventListener("click", () => {
         if (tab.disabled || tab.id === currentActiveTab) return;
         setActiveTab(tab.id);
         onChange?.(tab.id);
       });
 
       // Keyboard navigation
-      button.addEventListener('keydown', (e) => {
-        const visibleTabs = currentTabs.filter(t => !t.hidden && !t.disabled);
-        const currentIndex = visibleTabs.findIndex(t => t.id === tab.id);
+      button.addEventListener("keydown", (e) => {
+        const visibleTabs = currentTabs.filter((t) => !t.hidden && !t.disabled);
+        const currentIndex = visibleTabs.findIndex((t) => t.id === tab.id);
 
-        if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
           e.preventDefault();
-          const direction = e.key === 'ArrowLeft' ? -1 : 1;
-          const nextIndex = (currentIndex + direction + visibleTabs.length) % visibleTabs.length;
+          const direction = e.key === "ArrowLeft" ? -1 : 1;
+          const nextIndex =
+            (currentIndex + direction + visibleTabs.length) %
+            visibleTabs.length;
           const nextTab = visibleTabs[nextIndex];
           tabButtons.get(nextTab.id)?.focus();
         }
@@ -187,13 +193,13 @@ export function createTabs(config: TabsConfig): TabsResult {
     const nextButton = tabButtons.get(tabId);
 
     if (prevButton) {
-      prevButton.classList.remove('relay-tabs__tab--active');
-      prevButton.setAttribute('aria-selected', 'false');
+      prevButton.classList.remove("relay-tabs__tab--active");
+      prevButton.setAttribute("aria-selected", "false");
     }
 
     if (nextButton) {
-      nextButton.classList.add('relay-tabs__tab--active');
-      nextButton.setAttribute('aria-selected', 'true');
+      nextButton.classList.add("relay-tabs__tab--active");
+      nextButton.setAttribute("aria-selected", "true");
     }
 
     currentActiveTab = tabId;
@@ -208,13 +214,18 @@ export function createTabs(config: TabsConfig): TabsResult {
     setTabs: (newTabs: Tab[]) => {
       currentTabs = [...newTabs];
       // Ensure active tab is still valid
-      if (!currentTabs.find(t => t.id === currentActiveTab && !t.hidden && !t.disabled)) {
-        currentActiveTab = currentTabs.find(t => !t.hidden && !t.disabled)?.id || '';
+      if (
+        !currentTabs.find(
+          (t) => t.id === currentActiveTab && !t.hidden && !t.disabled,
+        )
+      ) {
+        currentActiveTab =
+          currentTabs.find((t) => !t.hidden && !t.disabled)?.id || "";
       }
       renderTabs();
     },
     setTabDisabled: (tabId: string, disabled: boolean) => {
-      const tab = currentTabs.find(t => t.id === tabId);
+      const tab = currentTabs.find((t) => t.id === tabId);
       if (tab) {
         tab.disabled = disabled;
         const button = tabButtons.get(tabId);
@@ -224,7 +235,7 @@ export function createTabs(config: TabsConfig): TabsResult {
       }
     },
     setTabHidden: (tabId: string, hidden: boolean) => {
-      const tab = currentTabs.find(t => t.id === tabId);
+      const tab = currentTabs.find((t) => t.id === tabId);
       if (tab) {
         tab.hidden = hidden;
         renderTabs();

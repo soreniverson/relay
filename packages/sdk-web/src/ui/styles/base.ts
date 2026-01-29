@@ -3,12 +3,15 @@
 // Reset and typography for the widget
 // ============================================================================
 
-import { generateThemeCSS, getTheme, type ThemeMode } from './theme';
+import { generateThemeCSS, getTheme, type ThemeMode } from "./theme";
 
 /**
  * Generates the base CSS for the widget
  */
-export function generateBaseCSS(themeMode: ThemeMode = 'auto', primaryColor?: string): string {
+export function generateBaseCSS(
+  themeMode: ThemeMode = "auto",
+  primaryColor?: string,
+): string {
   const theme = getTheme(themeMode);
   const themeVars = generateThemeCSS(theme, primaryColor);
 

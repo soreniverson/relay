@@ -3,10 +3,10 @@
 // Simple feedback form with optional rating
 // ============================================================================
 
-import { createElement, clearChildren } from '../../utils/dom';
-import { createTextarea, type TextareaResult } from '../shared/Textarea';
-import { createSelect, type SelectResult } from '../shared/Select';
-import { createButton, setButtonLoading } from '../shared/Button';
+import { createElement, clearChildren } from "../../utils/dom";
+import { createTextarea, type TextareaResult } from "../shared/Textarea";
+import { createSelect, type SelectResult } from "../shared/Select";
+import { createButton, setButtonLoading } from "../shared/Button";
 
 export interface FeedbackFormData {
   text: string;
@@ -121,10 +121,10 @@ export const feedbackFormStyles = `
 `;
 
 const DEFAULT_CATEGORIES = [
-  { value: 'general', label: 'General feedback' },
-  { value: 'feature', label: 'Feature request' },
-  { value: 'improvement', label: 'Improvement suggestion' },
-  { value: 'other', label: 'Other' },
+  { value: "general", label: "General feedback" },
+  { value: "feature", label: "Feature request" },
+  { value: "improvement", label: "Improvement suggestion" },
+  { value: "other", label: "Other" },
 ];
 
 const STAR_EMPTY = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`;
@@ -136,7 +136,9 @@ export interface FeedbackFormResult {
   showSuccess: () => void;
 }
 
-export function createFeedbackForm(config: FeedbackFormConfig): FeedbackFormResult {
+export function createFeedbackForm(
+  config: FeedbackFormConfig,
+): FeedbackFormResult {
   const {
     showCategory = false,
     showRating = true,
@@ -148,55 +150,63 @@ export function createFeedbackForm(config: FeedbackFormConfig): FeedbackFormResu
   const starButtons: HTMLButtonElement[] = [];
 
   // Create form element
-  const form = createElement('form', { class: 'relay-feedback-form' }) as HTMLFormElement;
+  const form = createElement("form", {
+    class: "relay-feedback-form",
+  }) as HTMLFormElement;
 
   // Category select
   let categorySelect: SelectResult | null = null;
   if (showCategory) {
-    categorySelect = createSelect('Category', {
-      name: 'category',
+    categorySelect = createSelect("Category", {
+      name: "category",
       options: categories,
-      placeholder: 'Select a category',
+      placeholder: "Select a category",
     });
   }
 
   // Rating stars
   let ratingContainer: HTMLDivElement | null = null;
   if (showRating) {
-    ratingContainer = createElement('div', { class: 'relay-feedback-form__rating' });
+    ratingContainer = createElement("div", {
+      class: "relay-feedback-form__rating",
+    });
 
-    const ratingLabel = createElement('span', { class: 'relay-feedback-form__rating-label' }, [
-      'How would you rate your experience?',
-    ]);
+    const ratingLabel = createElement(
+      "span",
+      { class: "relay-feedback-form__rating-label" },
+      ["How would you rate your experience?"],
+    );
 
-    const starsContainer = createElement('div', { class: 'relay-feedback-form__rating-stars' });
+    const starsContainer = createElement("div", {
+      class: "relay-feedback-form__rating-stars",
+    });
 
     const updateStars = (rating: number, isHover = false) => {
       starButtons.forEach((btn, i) => {
         const isActive = i < rating;
-        btn.classList.toggle('relay-feedback-form__star--active', isActive);
+        btn.classList.toggle("relay-feedback-form__star--active", isActive);
         btn.innerHTML = isActive ? STAR_FILLED : STAR_EMPTY;
       });
     };
 
     for (let i = 1; i <= 5; i++) {
-      const starBtn = createElement('button', {
-        type: 'button',
-        class: 'relay-feedback-form__star',
+      const starBtn = createElement("button", {
+        type: "button",
+        class: "relay-feedback-form__star",
       }) as HTMLButtonElement;
       starBtn.innerHTML = STAR_EMPTY;
-      starBtn.setAttribute('aria-label', `Rate ${i} star${i > 1 ? 's' : ''}`);
+      starBtn.setAttribute("aria-label", `Rate ${i} star${i > 1 ? "s" : ""}`);
 
-      starBtn.addEventListener('click', () => {
+      starBtn.addEventListener("click", () => {
         currentRating = i;
         updateStars(currentRating);
       });
 
-      starBtn.addEventListener('mouseenter', () => {
+      starBtn.addEventListener("mouseenter", () => {
         updateStars(i, true);
       });
 
-      starBtn.addEventListener('mouseleave', () => {
+      starBtn.addEventListener("mouseleave", () => {
         updateStars(currentRating);
       });
 
@@ -209,9 +219,9 @@ export function createFeedbackForm(config: FeedbackFormConfig): FeedbackFormResu
   }
 
   // Feedback textarea
-  const feedbackTextarea = createTextarea('Your Feedback', {
-    name: 'feedback',
-    placeholder: 'Share your thoughts, ideas, or suggestions...',
+  const feedbackTextarea = createTextarea("Your Feedback", {
+    name: "feedback",
+    placeholder: "Share your thoughts, ideas, or suggestions...",
     required: true,
     rows: 5,
     maxLength: 2000,
@@ -219,13 +229,13 @@ export function createFeedbackForm(config: FeedbackFormConfig): FeedbackFormResu
   });
 
   // Submit button
-  const submitBtn = createButton('Send Feedback', {
-    type: 'submit',
-    variant: 'primary',
+  const submitBtn = createButton("Send Feedback", {
+    type: "submit",
+    variant: "primary",
     fullWidth: true,
   });
 
-  const footer = createElement('div', { class: 'relay-feedback-form__footer' });
+  const footer = createElement("div", { class: "relay-feedback-form__footer" });
   footer.appendChild(submitBtn);
 
   // Assemble form
@@ -239,12 +249,12 @@ export function createFeedbackForm(config: FeedbackFormConfig): FeedbackFormResu
   form.appendChild(footer);
 
   // Form submission handler
-  form.addEventListener('submit', async (e) => {
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     // Validate
     if (!feedbackTextarea.getValue().trim()) {
-      feedbackTextarea.setError('Please enter your feedback');
+      feedbackTextarea.setError("Please enter your feedback");
       return;
     }
 
@@ -259,25 +269,25 @@ export function createFeedbackForm(config: FeedbackFormConfig): FeedbackFormResu
     };
 
     // Show loading state
-    setButtonLoading(submitBtn, true, 'Sending...');
+    setButtonLoading(submitBtn, true, "Sending...");
 
     try {
       await onSubmit(formData);
     } catch (error) {
       setButtonLoading(submitBtn, false);
-      console.error('[Relay] Feedback submission failed:', error);
+      console.error("[Relay] Feedback submission failed:", error);
     }
   });
 
   // Reset form
   const reset = () => {
     form.reset();
-    feedbackTextarea.setValue('');
+    feedbackTextarea.setValue("");
     feedbackTextarea.setError(null);
-    if (categorySelect) categorySelect.setValue('');
+    if (categorySelect) categorySelect.setValue("");
     currentRating = 0;
     starButtons.forEach((btn) => {
-      btn.classList.remove('relay-feedback-form__star--active');
+      btn.classList.remove("relay-feedback-form__star--active");
       btn.innerHTML = STAR_EMPTY;
     });
     setButtonLoading(submitBtn, false);
@@ -286,15 +296,21 @@ export function createFeedbackForm(config: FeedbackFormConfig): FeedbackFormResu
   // Show success state
   const showSuccess = () => {
     clearChildren(form);
-    form.className = '';
+    form.className = "";
 
-    const successEl = createElement('div', { class: 'relay-feedback-form__success' });
+    const successEl = createElement("div", {
+      class: "relay-feedback-form__success",
+    });
 
-    const icon = createElement('div', { class: 'relay-feedback-form__success-icon' });
+    const icon = createElement("div", {
+      class: "relay-feedback-form__success-icon",
+    });
     icon.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>`;
 
-    const title = createElement('h4', {}, ['Thank you!']);
-    const message = createElement('p', {}, ['Your feedback has been received.']);
+    const title = createElement("h4", {}, ["Thank you!"]);
+    const message = createElement("p", {}, [
+      "Your feedback has been received.",
+    ]);
 
     successEl.appendChild(icon);
     successEl.appendChild(title);

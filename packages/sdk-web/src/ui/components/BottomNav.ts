@@ -3,9 +3,9 @@
 // Persistent navigation bar at bottom of widget
 // ============================================================================
 
-import { createElement } from '../utils/dom';
+import { createElement } from "../utils/dom";
 
-export type NavTab = 'home' | 'messages' | 'roadmap';
+export type NavTab = "home" | "messages" | "roadmap";
 
 export interface BottomNavConfig {
   activeTab: NavTab;
@@ -114,18 +114,18 @@ export function createBottomNav(config: BottomNavConfig): BottomNavResult {
     onTabChange,
     showMessages = true,
     showRoadmap = true,
-    unreadCount = 0
+    unreadCount = 0,
   } = config;
 
   let currentTab = activeTab;
   let currentUnread = unreadCount;
 
-  const nav = createElement('nav', { class: 'relay-bottom-nav' });
+  const nav = createElement("nav", { class: "relay-bottom-nav" });
 
   const tabs: { id: NavTab; label: string; show: boolean }[] = [
-    { id: 'home', label: 'Home', show: true },
-    { id: 'messages', label: 'Messages', show: showMessages },
-    { id: 'roadmap', label: 'Roadmap', show: showRoadmap },
+    { id: "home", label: "Home", show: true },
+    { id: "messages", label: "Messages", show: showMessages },
+    { id: "roadmap", label: "Roadmap", show: showRoadmap },
   ];
 
   const buttons = new Map<NavTab, HTMLButtonElement>();
@@ -134,21 +134,26 @@ export function createBottomNav(config: BottomNavConfig): BottomNavResult {
   tabs.forEach(({ id, label, show }) => {
     if (!show) return;
 
-    const btn = createElement('button', {
-      type: 'button',
-      class: `relay-bottom-nav__item ${id === currentTab ? 'relay-bottom-nav__item--active' : ''}`,
+    const btn = createElement("button", {
+      type: "button",
+      class: `relay-bottom-nav__item ${id === currentTab ? "relay-bottom-nav__item--active" : ""}`,
     }) as HTMLButtonElement;
 
-    const icon = createElement('span', { class: 'relay-bottom-nav__icon' });
-    icon.innerHTML = id === currentTab ? ICONS[`${id}Active`] || ICONS[id] : ICONS[id];
+    const icon = createElement("span", { class: "relay-bottom-nav__icon" });
+    icon.innerHTML =
+      id === currentTab ? ICONS[`${id}Active`] || ICONS[id] : ICONS[id];
 
-    const labelEl = createElement('span', { class: 'relay-bottom-nav__label' }, [label]);
+    const labelEl = createElement(
+      "span",
+      { class: "relay-bottom-nav__label" },
+      [label],
+    );
 
     // Badge for messages
-    if (id === 'messages') {
-      const badge = createElement('span', { class: 'relay-bottom-nav__badge' });
-      badge.style.display = currentUnread > 0 ? 'flex' : 'none';
-      badge.textContent = currentUnread > 99 ? '99+' : String(currentUnread);
+    if (id === "messages") {
+      const badge = createElement("span", { class: "relay-bottom-nav__badge" });
+      badge.style.display = currentUnread > 0 ? "flex" : "none";
+      badge.textContent = currentUnread > 99 ? "99+" : String(currentUnread);
       btn.appendChild(badge);
       badges.set(id, badge);
     }
@@ -156,7 +161,7 @@ export function createBottomNav(config: BottomNavConfig): BottomNavResult {
     btn.appendChild(icon);
     btn.appendChild(labelEl);
 
-    btn.addEventListener('click', () => {
+    btn.addEventListener("click", () => {
       if (id === currentTab) return;
       setActiveTab(id);
       onTabChange(id);
@@ -171,14 +176,14 @@ export function createBottomNav(config: BottomNavConfig): BottomNavResult {
     const nextBtn = buttons.get(tab);
 
     if (prevBtn) {
-      prevBtn.classList.remove('relay-bottom-nav__item--active');
-      const icon = prevBtn.querySelector('.relay-bottom-nav__icon');
+      prevBtn.classList.remove("relay-bottom-nav__item--active");
+      const icon = prevBtn.querySelector(".relay-bottom-nav__icon");
       if (icon) icon.innerHTML = ICONS[currentTab];
     }
 
     if (nextBtn) {
-      nextBtn.classList.add('relay-bottom-nav__item--active');
-      const icon = nextBtn.querySelector('.relay-bottom-nav__icon');
+      nextBtn.classList.add("relay-bottom-nav__item--active");
+      const icon = nextBtn.querySelector(".relay-bottom-nav__icon");
       if (icon) icon.innerHTML = ICONS[`${tab}Active`] || ICONS[tab];
     }
 
@@ -190,10 +195,10 @@ export function createBottomNav(config: BottomNavConfig): BottomNavResult {
     setActiveTab,
     setUnreadCount: (count: number) => {
       currentUnread = count;
-      const badge = badges.get('messages');
+      const badge = badges.get("messages");
       if (badge) {
-        badge.style.display = count > 0 ? 'flex' : 'none';
-        badge.textContent = count > 99 ? '99+' : String(count);
+        badge.style.display = count > 0 ? "flex" : "none";
+        badge.textContent = count > 99 ? "99+" : String(count);
       }
     },
   };

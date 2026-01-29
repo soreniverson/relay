@@ -3,14 +3,14 @@
 // List of past conversations with preview
 // ============================================================================
 
-import { createElement, formatRelativeTime, escapeHtml } from '../../utils/dom';
+import { createElement, formatRelativeTime, escapeHtml } from "../../utils/dom";
 
 export interface Conversation {
   id: string;
   subject: string;
   lastMessage: {
     body: string;
-    direction: 'inbound' | 'outbound';
+    direction: "inbound" | "outbound";
     createdAt: string;
   };
   unreadCount: number;
@@ -199,7 +199,9 @@ export interface ConversationListResult {
   setLoading: (loading: boolean) => void;
 }
 
-export function createConversationList(config: ConversationListConfig): ConversationListResult {
+export function createConversationList(
+  config: ConversationListConfig,
+): ConversationListResult {
   const {
     conversations: initialConversations,
     onSelect,
@@ -209,16 +211,20 @@ export function createConversationList(config: ConversationListConfig): Conversa
   let conversations = [...initialConversations];
   let isLoading = loading;
 
-  const container = createElement('div', { class: 'relay-conversation-list' });
+  const container = createElement("div", { class: "relay-conversation-list" });
 
   // Render list
   const render = () => {
-    container.innerHTML = '';
+    container.innerHTML = "";
 
     // Loading state
     if (isLoading) {
-      const loadingEl = createElement('div', { class: 'relay-conversation-list__loading' });
-      const spinner = createElement('div', { class: 'relay-conversation-list__spinner' });
+      const loadingEl = createElement("div", {
+        class: "relay-conversation-list__loading",
+      });
+      const spinner = createElement("div", {
+        class: "relay-conversation-list__spinner",
+      });
       loadingEl.appendChild(spinner);
       container.appendChild(loadingEl);
       return;
@@ -226,13 +232,25 @@ export function createConversationList(config: ConversationListConfig): Conversa
 
     // Empty state
     if (conversations.length === 0) {
-      const emptyEl = createElement('div', { class: 'relay-conversation-list__empty' });
+      const emptyEl = createElement("div", {
+        class: "relay-conversation-list__empty",
+      });
 
-      const icon = createElement('div', { class: 'relay-conversation-list__empty-icon' });
+      const icon = createElement("div", {
+        class: "relay-conversation-list__empty-icon",
+      });
       icon.innerHTML = EMPTY_ICON;
 
-      const title = createElement('h3', { class: 'relay-conversation-list__empty-title' }, ['No messages yet']);
-      const text = createElement('p', { class: 'relay-conversation-list__empty-text' }, ['Start a conversation with us!']);
+      const title = createElement(
+        "h3",
+        { class: "relay-conversation-list__empty-title" },
+        ["No messages yet"],
+      );
+      const text = createElement(
+        "p",
+        { class: "relay-conversation-list__empty-text" },
+        ["Start a conversation with us!"],
+      );
 
       emptyEl.appendChild(icon);
       emptyEl.appendChild(title);
@@ -242,43 +260,59 @@ export function createConversationList(config: ConversationListConfig): Conversa
     }
 
     // Conversation items
-    conversations.forEach(conv => {
+    conversations.forEach((conv) => {
       const hasUnread = conv.unreadCount > 0;
 
-      const item = createElement('button', {
-        type: 'button',
-        class: `relay-conversation-item ${hasUnread ? 'relay-conversation-item--unread' : ''}`,
+      const item = createElement("button", {
+        type: "button",
+        class: `relay-conversation-item ${hasUnread ? "relay-conversation-item--unread" : ""}`,
       }) as HTMLButtonElement;
 
       // Avatar
-      const avatar = createElement('div', { class: 'relay-conversation-item__avatar' });
+      const avatar = createElement("div", {
+        class: "relay-conversation-item__avatar",
+      });
       avatar.innerHTML = CHAT_ICON;
 
       // Content
-      const content = createElement('div', { class: 'relay-conversation-item__content' });
+      const content = createElement("div", {
+        class: "relay-conversation-item__content",
+      });
 
       // Header (subject + time)
-      const header = createElement('div', { class: 'relay-conversation-item__header' });
-      const subject = createElement('h4', { class: 'relay-conversation-item__subject' }, [
-        escapeHtml(conv.subject || 'New conversation'),
-      ]);
-      const time = createElement('span', { class: 'relay-conversation-item__time' }, [
-        formatRelativeTime(new Date(conv.lastMessage.createdAt)),
-      ]);
+      const header = createElement("div", {
+        class: "relay-conversation-item__header",
+      });
+      const subject = createElement(
+        "h4",
+        { class: "relay-conversation-item__subject" },
+        [escapeHtml(conv.subject || "New conversation")],
+      );
+      const time = createElement(
+        "span",
+        { class: "relay-conversation-item__time" },
+        [formatRelativeTime(new Date(conv.lastMessage.createdAt))],
+      );
       header.appendChild(subject);
       header.appendChild(time);
 
       // Preview (message + badge)
-      const preview = createElement('div', { class: 'relay-conversation-item__preview' });
-      const message = createElement('p', { class: 'relay-conversation-item__message' }, [
-        escapeHtml(conv.lastMessage.body),
-      ]);
+      const preview = createElement("div", {
+        class: "relay-conversation-item__preview",
+      });
+      const message = createElement(
+        "p",
+        { class: "relay-conversation-item__message" },
+        [escapeHtml(conv.lastMessage.body)],
+      );
       preview.appendChild(message);
 
       if (hasUnread) {
-        const badge = createElement('span', { class: 'relay-conversation-item__badge' }, [
-          conv.unreadCount > 99 ? '99+' : String(conv.unreadCount),
-        ]);
+        const badge = createElement(
+          "span",
+          { class: "relay-conversation-item__badge" },
+          [conv.unreadCount > 99 ? "99+" : String(conv.unreadCount)],
+        );
         preview.appendChild(badge);
       }
 
@@ -288,7 +322,7 @@ export function createConversationList(config: ConversationListConfig): Conversa
       item.appendChild(avatar);
       item.appendChild(content);
 
-      item.addEventListener('click', () => onSelect(conv));
+      item.addEventListener("click", () => onSelect(conv));
 
       container.appendChild(item);
     });

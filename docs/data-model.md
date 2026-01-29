@@ -9,6 +9,7 @@ Relay uses a unified data model centered around the `Interaction` entity. All us
 ### Project
 
 The top-level container. Each project:
+
 - Belongs to a single region (data residency)
 - Has its own API keys
 - Contains all related data

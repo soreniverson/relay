@@ -1,17 +1,24 @@
-import { z } from 'zod';
-import { TRPCError } from '@trpc/server';
-import { router, projectProcedure, sdkProcedure } from '../lib/trpc';
-import { pubsub } from '../lib/redis';
-import { paginationSchema, conversationStatusSchema, messageDirectionSchema } from '@relay/shared';
+import { z } from "zod";
+import { TRPCError } from "@trpc/server";
+import { router, projectProcedure, sdkProcedure } from "../lib/trpc";
+import { pubsub } from "../lib/redis";
+import {
+  paginationSchema,
+  conversationStatusSchema,
+  messageDirectionSchema,
+} from "@relay/shared";
 
 export const conversationsRouter = router({
   // List conversations (dashboard)
   list: projectProcedure
     .input(
-      z.object({ projectId: z.string().uuid() }).merge(paginationSchema).extend({
-        status: conversationStatusSchema.optional(),
-        assigneeId: z.string().uuid().optional(),
-      })
+      z
+        .object({ projectId: z.string().uuid() })
+        .merge(paginationSchema)
+        .extend({
+          status: conversationStatusSchema.optional(),
+          assigneeId: z.string().uuid().optional(),
+        }),
     )
     .query(async ({ input, ctx }) => {
       const { page, pageSize, status, assigneeId } = input;
@@ -30,7 +37,7 @@ export const conversationsRouter = router({
       const [conversations, total] = await Promise.all([
         ctx.prisma.conversation.findMany({
           where,
-          orderBy: { lastMessageAt: 'desc' },
+          orderBy: { lastMessageAt: "desc" },
           skip: (page - 1) * pageSize,
           take: pageSize,
           include: {
@@ -44,7 +51,7 @@ export const conversationsRouter = router({
             },
             messages: {
               take: 1,
-              orderBy: { createdAt: 'desc' },
+              orderBy: { createdAt: "desc" },
               select: {
                 id: true,
                 direction: true,
@@ -81,7 +88,12 @@ export const conversationsRouter = router({
 
   // Get single conversation with messages
   get: projectProcedure
-    .input(z.object({ projectId: z.string().uuid(), conversationId: z.string().uuid() }))
+    .input(
+      z.object({
+        projectId: z.string().uuid(),
+        conversationId: z.string().uuid(),
+      }),
+    )
     .query(async ({ input, ctx }) => {
       const conversation = await ctx.prisma.conversation.findUnique({
         where: { id: input.conversationId, projectId: ctx.projectId },
@@ -96,15 +108,15 @@ export const conversationsRouter = router({
             },
           },
           messages: {
-            orderBy: { createdAt: 'asc' },
+            orderBy: { createdAt: "asc" },
           },
         },
       });
 
       if (!conversation) {
         throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Conversation not found',
+          code: "NOT_FOUND",
+          message: "Conversation not found",
         });
       }
 
@@ -118,7 +130,7 @@ export const conversationsRouter = router({
         projectId: z.string().uuid(),
         conversationId: z.string().uuid(),
         body: z.string().min(1).max(10000),
-      })
+      }),
     )
     .mutation(async ({ input, ctx }) => {
       const conversation = await ctx.prisma.conversation.findUnique({
@@ -127,8 +139,8 @@ export const conversationsRouter = router({
 
       if (!conversation) {
         throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Conversation not found',
+          code: "NOT_FOUND",
+          message: "Conversation not found",
         });
       }
 
@@ -136,7 +148,7 @@ export const conversationsRouter = router({
         data: {
           projectId: ctx.projectId,
           conversationId: input.conversationId,
-          direction: 'outbound',
+          direction: "outbound",
           body: input.body,
           authorId: ctx.adminUser!.id,
         },
@@ -153,7 +165,7 @@ export const conversationsRouter = router({
 
       // Publish realtime event
       await pubsub.publish(`project:${ctx.projectId}`, {
-        type: 'message.created',
+        type: "message.created",
         projectId: ctx.projectId,
         payload: {
           conversationId: input.conversationId,
@@ -168,7 +180,7 @@ export const conversationsRouter = router({
 
       // Also publish to conversation channel for widget
       await pubsub.publish(`conversation:${input.conversationId}`, {
-        type: 'message.created',
+        type: "message.created",
         payload: {
           id: message.id,
           direction: message.direction,
@@ -187,7 +199,7 @@ export const conversationsRouter = router({
         projectId: z.string().uuid(),
         conversationId: z.string().uuid(),
         status: conversationStatusSchema,
-      })
+      }),
     )
     .mutation(async ({ input, ctx }) => {
       await ctx.prisma.conversation.update({
@@ -198,10 +210,10 @@ export const conversationsRouter = router({
       await ctx.prisma.auditLog.create({
         data: {
           projectId: ctx.projectId,
-          actorType: 'admin',
+          actorType: "admin",
           actorId: ctx.adminUser!.id,
-          action: 'conversation.status_changed',
-          targetType: 'conversation',
+          action: "conversation.status_changed",
+          targetType: "conversation",
           targetId: input.conversationId,
           meta: { newStatus: input.status },
         },
@@ -209,7 +221,7 @@ export const conversationsRouter = router({
 
       // Publish realtime event
       await pubsub.publish(`project:${ctx.projectId}`, {
-        type: 'conversation.updated',
+        type: "conversation.updated",
         projectId: ctx.projectId,
         payload: {
           id: input.conversationId,
@@ -227,7 +239,7 @@ export const conversationsRouter = router({
         projectId: z.string().uuid(),
         conversationId: z.string().uuid(),
         assigneeId: z.string().uuid().nullable(),
-      })
+      }),
     )
     .mutation(async ({ input, ctx }) => {
       await ctx.prisma.conversation.update({
@@ -246,7 +258,7 @@ export const conversationsRouter = router({
         userId: z.string().optional(),
         subject: z.string().max(500).optional(),
         message: z.string().min(1).max(10000),
-      })
+      }),
     )
     .mutation(async ({ input, ctx }) => {
       // Resolve user ID
@@ -268,7 +280,7 @@ export const conversationsRouter = router({
         where: {
           projectId: ctx.projectId,
           sessionId: input.sessionId,
-          status: 'open',
+          status: "open",
         },
       });
 
@@ -296,7 +308,7 @@ export const conversationsRouter = router({
         data: {
           projectId: ctx.projectId,
           conversationId,
-          direction: 'inbound',
+          direction: "inbound",
           body: input.message,
         },
       });
@@ -314,7 +326,7 @@ export const conversationsRouter = router({
 
       // Publish realtime event
       await pubsub.publish(`project:${ctx.projectId}`, {
-        type: 'message.created',
+        type: "message.created",
         projectId: ctx.projectId,
         payload: {
           conversationId,
@@ -327,7 +339,7 @@ export const conversationsRouter = router({
         },
       });
 
-      ctx.logger.info({ conversationId }, 'Conversation started');
+      ctx.logger.info({ conversationId }, "Conversation started");
 
       return { conversationId, messageId: message.id };
     }),
@@ -338,7 +350,7 @@ export const conversationsRouter = router({
       z.object({
         conversationId: z.string().uuid(),
         body: z.string().min(1).max(10000),
-      })
+      }),
     )
     .mutation(async ({ input, ctx }) => {
       const conversation = await ctx.prisma.conversation.findUnique({
@@ -347,15 +359,15 @@ export const conversationsRouter = router({
 
       if (!conversation) {
         throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Conversation not found',
+          code: "NOT_FOUND",
+          message: "Conversation not found",
         });
       }
 
-      if (conversation.status === 'closed') {
+      if (conversation.status === "closed") {
         throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'Conversation is closed',
+          code: "BAD_REQUEST",
+          message: "Conversation is closed",
         });
       }
 
@@ -363,7 +375,7 @@ export const conversationsRouter = router({
         data: {
           projectId: ctx.projectId,
           conversationId: input.conversationId,
-          direction: 'inbound',
+          direction: "inbound",
           body: input.body,
         },
       });
@@ -378,7 +390,7 @@ export const conversationsRouter = router({
 
       // Publish realtime events
       await pubsub.publish(`project:${ctx.projectId}`, {
-        type: 'message.created',
+        type: "message.created",
         projectId: ctx.projectId,
         payload: {
           conversationId: input.conversationId,
@@ -399,7 +411,7 @@ export const conversationsRouter = router({
     .input(
       z.object({
         sessionId: z.string().uuid(),
-      })
+      }),
     )
     .query(async ({ input, ctx }) => {
       const conversations = await ctx.prisma.conversation.findMany({
@@ -407,11 +419,11 @@ export const conversationsRouter = router({
           projectId: ctx.projectId,
           sessionId: input.sessionId,
         },
-        orderBy: { lastMessageAt: 'desc' },
+        orderBy: { lastMessageAt: "desc" },
         include: {
           messages: {
             take: 1,
-            orderBy: { createdAt: 'desc' },
+            orderBy: { createdAt: "desc" },
           },
         },
       });
@@ -432,7 +444,7 @@ export const conversationsRouter = router({
         conversationId: z.string().uuid(),
         cursor: z.string().uuid().optional(),
         limit: z.number().int().positive().max(50).default(50),
-      })
+      }),
     )
     .query(async ({ input, ctx }) => {
       const conversation = await ctx.prisma.conversation.findUnique({
@@ -441,17 +453,19 @@ export const conversationsRouter = router({
 
       if (!conversation) {
         throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Conversation not found',
+          code: "NOT_FOUND",
+          message: "Conversation not found",
         });
       }
 
       const messages = await ctx.prisma.message.findMany({
         where: {
           conversationId: input.conversationId,
-          ...(input.cursor ? { createdAt: { lt: new Date(input.cursor) } } : {}),
+          ...(input.cursor
+            ? { createdAt: { lt: new Date(input.cursor) } }
+            : {}),
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         take: input.limit,
       });
 
@@ -466,13 +480,13 @@ export const conversationsRouter = router({
     .input(
       z.object({
         conversationId: z.string().uuid(),
-      })
+      }),
     )
     .mutation(async ({ input, ctx }) => {
       await ctx.prisma.message.updateMany({
         where: {
           conversationId: input.conversationId,
-          direction: 'outbound',
+          direction: "outbound",
           readAt: null,
         },
         data: { readAt: new Date() },

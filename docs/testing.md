@@ -34,20 +34,20 @@ Unit tests are located alongside the code they test in `__tests__` directories.
 ### Example Test
 
 ```typescript
-import { describe, it, expect } from 'vitest';
-import { generateId, maskEmail } from '../utils';
+import { describe, it, expect } from "vitest";
+import { generateId, maskEmail } from "../utils";
 
-describe('generateId', () => {
-  it('should generate unique IDs', () => {
+describe("generateId", () => {
+  it("should generate unique IDs", () => {
     const id1 = generateId();
     const id2 = generateId();
     expect(id1).not.toBe(id2);
   });
 });
 
-describe('maskEmail', () => {
-  it('should mask email addresses', () => {
-    expect(maskEmail('user@example.com')).toBe('u***@e***.com');
+describe("maskEmail", () => {
+  it("should mask email addresses", () => {
+    expect(maskEmail("user@example.com")).toBe("u***@e***.com");
   });
 });
 ```
@@ -57,10 +57,10 @@ describe('maskEmail', () => {
 We use Vitest's built-in mocking capabilities:
 
 ```typescript
-import { vi, beforeEach } from 'vitest';
+import { vi, beforeEach } from "vitest";
 
 // Mock a module
-vi.mock('../lib/prisma', () => ({
+vi.mock("../lib/prisma", () => ({
   prisma: {
     user: {
       findUnique: vi.fn(),
@@ -70,7 +70,7 @@ vi.mock('../lib/prisma', () => ({
 }));
 
 // Mock a function
-const mockFn = vi.fn().mockResolvedValue({ id: '123' });
+const mockFn = vi.fn().mockResolvedValue({ id: "123" });
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -80,13 +80,13 @@ beforeEach(() => {
 ### Testing Async Code
 
 ```typescript
-it('should handle async operations', async () => {
+it("should handle async operations", async () => {
   const result = await someAsyncFunction();
-  expect(result).toBe('expected');
+  expect(result).toBe("expected");
 });
 
-it('should reject with error', async () => {
-  await expect(failingAsyncFunction()).rejects.toThrow('error message');
+it("should reject with error", async () => {
+  await expect(failingAsyncFunction()).rejects.toThrow("error message");
 });
 ```
 
@@ -97,9 +97,9 @@ Integration tests test API endpoints with real or mocked databases.
 ### Database Testing
 
 ```typescript
-import { prisma } from '../lib/prisma';
+import { prisma } from "../lib/prisma";
 
-describe('API Integration', () => {
+describe("API Integration", () => {
   beforeAll(async () => {
     // Setup test database
     await prisma.$executeRaw`TRUNCATE TABLE interactions CASCADE`;
@@ -109,17 +109,17 @@ describe('API Integration', () => {
     await prisma.$disconnect();
   });
 
-  it('should create interaction via API', async () => {
-    const response = await fetch('/api/trpc/ingest.createInteraction', {
-      method: 'POST',
+  it("should create interaction via API", async () => {
+    const response = await fetch("/api/trpc/ingest.createInteraction", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': 'test-api-key',
+        "Content-Type": "application/json",
+        "X-API-Key": "test-api-key",
       },
       body: JSON.stringify({
-        type: 'bug',
-        source: 'widget',
-        contentText: 'Test bug report',
+        type: "bug",
+        source: "widget",
+        contentText: "Test bug report",
       }),
     });
 
@@ -141,30 +141,30 @@ See `playwright.config.ts` for configuration options.
 ### Writing E2E Tests
 
 ```typescript
-import { test, expect } from '@playwright/test';
+import { test, expect } from "@playwright/test";
 
-test.describe('Dashboard', () => {
+test.describe("Dashboard", () => {
   test.beforeEach(async ({ page, context }) => {
     // Set up authentication
     await context.addCookies([
       {
-        name: 'relay_session',
-        value: 'test-token',
-        domain: 'localhost',
-        path: '/',
+        name: "relay_session",
+        value: "test-token",
+        domain: "localhost",
+        path: "/",
       },
     ]);
   });
 
-  test('should display inbox', async ({ page }) => {
-    await page.goto('/dashboard/inbox');
-    await expect(page.getByRole('heading', { name: /inbox/i })).toBeVisible();
+  test("should display inbox", async ({ page }) => {
+    await page.goto("/dashboard/inbox");
+    await expect(page.getByRole("heading", { name: /inbox/i })).toBeVisible();
   });
 
-  test('should filter by status', async ({ page }) => {
-    await page.goto('/dashboard/inbox');
-    await page.getByRole('button', { name: /status/i }).click();
-    await page.getByRole('menuitem', { name: /new/i }).click();
+  test("should filter by status", async ({ page }) => {
+    await page.goto("/dashboard/inbox");
+    await page.getByRole("button", { name: /status/i }).click();
+    await page.getByRole("menuitem", { name: /new/i }).click();
     // Assert filtered results
   });
 });
@@ -176,22 +176,25 @@ For complex pages, use the Page Object pattern:
 
 ```typescript
 // e2e/pages/inbox.page.ts
-import { Page } from '@playwright/test';
+import { Page } from "@playwright/test";
 
 export class InboxPage {
   constructor(private page: Page) {}
 
   async goto() {
-    await this.page.goto('/dashboard/inbox');
+    await this.page.goto("/dashboard/inbox");
   }
 
   async filterByStatus(status: string) {
-    await this.page.getByRole('button', { name: /status/i }).click();
-    await this.page.getByRole('menuitem', { name: status }).click();
+    await this.page.getByRole("button", { name: /status/i }).click();
+    await this.page.getByRole("menuitem", { name: status }).click();
   }
 
   async selectInteraction(index: number) {
-    await this.page.locator('[data-testid="interaction-item"]').nth(index).click();
+    await this.page
+      .locator('[data-testid="interaction-item"]')
+      .nth(index)
+      .click();
   }
 
   get interactionList() {
@@ -200,10 +203,10 @@ export class InboxPage {
 }
 
 // In test file
-test('should work with page object', async ({ page }) => {
+test("should work with page object", async ({ page }) => {
   const inbox = new InboxPage(page);
   await inbox.goto();
-  await inbox.filterByStatus('new');
+  await inbox.filterByStatus("new");
   await expect(inbox.interactionList).toBeVisible();
 });
 ```
@@ -211,9 +214,9 @@ test('should work with page object', async ({ page }) => {
 ### Visual Regression Testing
 
 ```typescript
-test('should match visual snapshot', async ({ page }) => {
-  await page.goto('/dashboard/inbox');
-  await expect(page).toHaveScreenshot('inbox.png');
+test("should match visual snapshot", async ({ page }) => {
+  await page.goto("/dashboard/inbox");
+  await expect(page).toHaveScreenshot("inbox.png");
 });
 ```
 
@@ -266,20 +269,20 @@ Use fixtures for consistent test data:
 ```typescript
 // __tests__/fixtures/interactions.ts
 export const mockBugReport = {
-  id: 'int_test_123',
-  type: 'bug',
-  source: 'widget',
-  contentText: 'Test bug report',
-  status: 'new',
-  severity: 'high',
+  id: "int_test_123",
+  type: "bug",
+  source: "widget",
+  contentText: "Test bug report",
+  status: "new",
+  severity: "high",
 };
 
 export const mockFeedback = {
-  id: 'int_test_456',
-  type: 'feedback',
-  source: 'sdk',
-  contentText: 'Great product!',
-  status: 'new',
+  id: "int_test_456",
+  type: "feedback",
+  source: "sdk",
+  contentText: "Great product!",
+  status: "new",
 };
 ```
 

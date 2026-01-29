@@ -3,11 +3,18 @@
 // Full-screen annotation editor
 // ============================================================================
 
-import { createElement, waitForAnimation } from '../../utils/dom';
-import { createAnnotationToolbar, type AnnotationToolbarResult, type AnnotationTool } from './AnnotationToolbar';
-import { createAnnotationLayer, type AnnotationLayerResult } from './AnnotationLayer';
-import { createButton } from '../shared/Button';
-import type { Annotation } from '../../../types';
+import { createElement, waitForAnimation } from "../../utils/dom";
+import {
+  createAnnotationToolbar,
+  type AnnotationToolbarResult,
+  type AnnotationTool,
+} from "./AnnotationToolbar";
+import {
+  createAnnotationLayer,
+  type AnnotationLayerResult,
+} from "./AnnotationLayer";
+import { createButton } from "../shared/Button";
+import type { Annotation } from "../../../types";
 
 export interface ScreenshotEditorConfig {
   screenshot: Blob;
@@ -109,7 +116,9 @@ export interface ScreenshotEditorResult {
   close: () => Promise<void>;
 }
 
-export function createScreenshotEditor(config: ScreenshotEditorConfig): ScreenshotEditorResult {
+export function createScreenshotEditor(
+  config: ScreenshotEditorConfig,
+): ScreenshotEditorResult {
   const { screenshot, existingAnnotations = [], onSave, onCancel } = config;
 
   let toolbar: AnnotationToolbarResult | null = null;
@@ -118,23 +127,31 @@ export function createScreenshotEditor(config: ScreenshotEditorConfig): Screensh
   let imageHeight = 0;
 
   // Create main container
-  const editor = createElement('div', {
-    class: 'relay-screenshot-editor relay-screenshot-editor--enter',
+  const editor = createElement("div", {
+    class: "relay-screenshot-editor relay-screenshot-editor--enter",
   }) as HTMLDivElement;
 
   // Create header
-  const header = createElement('div', { class: 'relay-screenshot-editor__header' });
-  const title = createElement('h3', { class: 'relay-screenshot-editor__title' }, ['Edit Screenshot']);
+  const header = createElement("div", {
+    class: "relay-screenshot-editor__header",
+  });
+  const title = createElement(
+    "h3",
+    { class: "relay-screenshot-editor__title" },
+    ["Edit Screenshot"],
+  );
 
-  const actions = createElement('div', { class: 'relay-screenshot-editor__actions' });
-  const cancelBtn = createButton('Cancel', {
-    variant: 'secondary',
-    size: 'sm',
+  const actions = createElement("div", {
+    class: "relay-screenshot-editor__actions",
+  });
+  const cancelBtn = createButton("Cancel", {
+    variant: "secondary",
+    size: "sm",
     onClick: () => close(),
   });
-  const saveBtn = createButton('Save', {
-    variant: 'primary',
-    size: 'sm',
+  const saveBtn = createButton("Save", {
+    variant: "primary",
+    size: "sm",
     onClick: () => handleSave(),
   });
 
@@ -144,12 +161,16 @@ export function createScreenshotEditor(config: ScreenshotEditorConfig): Screensh
   header.appendChild(actions);
 
   // Create canvas container
-  const canvasContainer = createElement('div', { class: 'relay-screenshot-editor__canvas-container' });
-  const canvasWrapper = createElement('div', { class: 'relay-screenshot-editor__canvas-wrapper' });
+  const canvasContainer = createElement("div", {
+    class: "relay-screenshot-editor__canvas-container",
+  });
+  const canvasWrapper = createElement("div", {
+    class: "relay-screenshot-editor__canvas-wrapper",
+  });
 
   // Load screenshot and create annotation layer
-  const img = createElement('img', {
-    class: 'relay-screenshot-editor__image',
+  const img = createElement("img", {
+    class: "relay-screenshot-editor__image",
   }) as HTMLImageElement;
 
   const screenshotUrl = URL.createObjectURL(screenshot);
@@ -161,8 +182,8 @@ export function createScreenshotEditor(config: ScreenshotEditorConfig): Screensh
 
     // Create toolbar
     toolbar = createAnnotationToolbar({
-      activeTool: 'arrow',
-      activeColor: '#ef4444',
+      activeTool: "arrow",
+      activeColor: "#ef4444",
       onToolChange: (tool) => {
         annotationLayer?.setTool(tool);
       },
@@ -200,11 +221,11 @@ export function createScreenshotEditor(config: ScreenshotEditorConfig): Screensh
 
     // Position annotation layer over image
     const layerEl = annotationLayer.element;
-    layerEl.style.position = 'absolute';
-    layerEl.style.top = '0';
-    layerEl.style.left = '0';
-    layerEl.style.width = '100%';
-    layerEl.style.height = '100%';
+    layerEl.style.position = "absolute";
+    layerEl.style.top = "0";
+    layerEl.style.left = "0";
+    layerEl.style.width = "100%";
+    layerEl.style.height = "100%";
 
     canvasWrapper.appendChild(layerEl);
     annotationLayer.redraw();
@@ -232,10 +253,10 @@ export function createScreenshotEditor(config: ScreenshotEditorConfig): Screensh
     const annotations = annotationLayer.getAnnotations();
 
     // Create canvas to combine image and annotations
-    const canvas = document.createElement('canvas');
+    const canvas = document.createElement("canvas");
     canvas.width = imageWidth;
     canvas.height = imageHeight;
-    const ctx = canvas.getContext('2d')!;
+    const ctx = canvas.getContext("2d")!;
 
     // Draw original image
     ctx.drawImage(img, 0, 0);
@@ -244,21 +265,18 @@ export function createScreenshotEditor(config: ScreenshotEditorConfig): Screensh
     ctx.drawImage(annotationLayer.canvas, 0, 0);
 
     // Convert to blob
-    canvas.toBlob(
-      (blob) => {
-        if (blob) {
-          onSave(blob, annotations);
-        }
-        close();
-      },
-      'image/png'
-    );
+    canvas.toBlob((blob) => {
+      if (blob) {
+        onSave(blob, annotations);
+      }
+      close();
+    }, "image/png");
   };
 
   // Close editor
   const close = async () => {
-    editor.classList.remove('relay-screenshot-editor--enter');
-    editor.classList.add('relay-screenshot-editor--exit');
+    editor.classList.remove("relay-screenshot-editor--enter");
+    editor.classList.add("relay-screenshot-editor--exit");
     await waitForAnimation(editor);
     editor.remove();
     URL.revokeObjectURL(screenshotUrl);
@@ -267,26 +285,26 @@ export function createScreenshotEditor(config: ScreenshotEditorConfig): Screensh
 
   // Keyboard shortcuts
   const handleKeydown = (e: KeyboardEvent) => {
-    if (e.key === 'Escape') {
+    if (e.key === "Escape") {
       close();
-    } else if (e.key === 'z' && (e.ctrlKey || e.metaKey)) {
+    } else if (e.key === "z" && (e.ctrlKey || e.metaKey)) {
       if (e.shiftKey) {
         annotationLayer?.redo();
       } else {
         annotationLayer?.undo();
       }
       updateUndoRedoState();
-    } else if (e.key === 's' && (e.ctrlKey || e.metaKey)) {
+    } else if (e.key === "s" && (e.ctrlKey || e.metaKey)) {
       e.preventDefault();
       handleSave();
     }
   };
 
-  document.addEventListener('keydown', handleKeydown);
+  document.addEventListener("keydown", handleKeydown);
 
   // Cleanup on remove
   const cleanup = () => {
-    document.removeEventListener('keydown', handleKeydown);
+    document.removeEventListener("keydown", handleKeydown);
     URL.revokeObjectURL(screenshotUrl);
   };
 

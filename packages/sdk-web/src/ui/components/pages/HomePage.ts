@@ -3,7 +3,7 @@
 // Welcome screen with chat input and quick actions
 // ============================================================================
 
-import { createElement } from '../../utils/dom';
+import { createElement } from "../../utils/dom";
 
 export interface HomePageConfig {
   greeting?: string;
@@ -153,43 +153,47 @@ export interface HomePageResult {
 
 export function createHomePage(config: HomePageConfig): HomePageResult {
   const {
-    greeting = 'Hi there!',
-    subtitle = 'How can we help you today?',
+    greeting = "Hi there!",
+    subtitle = "How can we help you today?",
     onChatSubmit,
     onReportBug,
     onRequestFeature,
   } = config;
 
-  const container = createElement('div', { class: 'relay-home' });
+  const container = createElement("div", { class: "relay-home" });
 
   // Greeting section
-  const greetingSection = createElement('div', { class: 'relay-home__greeting' });
-  const greetingTitle = createElement('h2', {}, [greeting]);
-  const greetingSubtitle = createElement('p', {}, [subtitle]);
+  const greetingSection = createElement("div", {
+    class: "relay-home__greeting",
+  });
+  const greetingTitle = createElement("h2", {}, [greeting]);
+  const greetingSubtitle = createElement("p", {}, [subtitle]);
   greetingSection.appendChild(greetingTitle);
   greetingSection.appendChild(greetingSubtitle);
 
   // Chat input
-  const chatInputWrapper = createElement('div', { class: 'relay-home__chat-input' });
-  const chatInput = createElement('input', {
-    type: 'text',
-    placeholder: 'Ask us anything...',
+  const chatInputWrapper = createElement("div", {
+    class: "relay-home__chat-input",
+  });
+  const chatInput = createElement("input", {
+    type: "text",
+    placeholder: "Ask us anything...",
   }) as HTMLInputElement;
 
-  const chatSubmitBtn = createElement('button', {
-    type: 'button',
-    class: 'relay-home__chat-submit',
+  const chatSubmitBtn = createElement("button", {
+    type: "button",
+    class: "relay-home__chat-submit",
   }) as HTMLButtonElement;
   chatSubmitBtn.innerHTML = SEND_ICON;
-  chatSubmitBtn.setAttribute('aria-label', 'Send message');
+  chatSubmitBtn.setAttribute("aria-label", "Send message");
 
   chatInputWrapper.appendChild(chatInput);
   chatInputWrapper.appendChild(chatSubmitBtn);
 
   // Update button state based on input
-  chatInput.addEventListener('input', () => {
+  chatInput.addEventListener("input", () => {
     const hasValue = chatInput.value.trim().length > 0;
-    chatSubmitBtn.classList.toggle('relay-home__chat-submit--active', hasValue);
+    chatSubmitBtn.classList.toggle("relay-home__chat-submit--active", hasValue);
   });
 
   // Handle submit
@@ -197,36 +201,36 @@ export function createHomePage(config: HomePageConfig): HomePageResult {
     const message = chatInput.value.trim();
     if (message) {
       onChatSubmit(message);
-      chatInput.value = '';
-      chatSubmitBtn.classList.remove('relay-home__chat-submit--active');
+      chatInput.value = "";
+      chatSubmitBtn.classList.remove("relay-home__chat-submit--active");
     }
   };
 
-  chatInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+  chatInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSubmit();
     }
   });
 
-  chatSubmitBtn.addEventListener('click', handleSubmit);
+  chatSubmitBtn.addEventListener("click", handleSubmit);
 
   // Quick action buttons
-  const actionsSection = createElement('div', { class: 'relay-home__actions' });
+  const actionsSection = createElement("div", { class: "relay-home__actions" });
 
-  const bugBtn = createElement('button', {
-    type: 'button',
-    class: 'relay-home__action-btn',
+  const bugBtn = createElement("button", {
+    type: "button",
+    class: "relay-home__action-btn",
   });
-  bugBtn.innerHTML = '<span>🐛</span> Report a bug';
-  bugBtn.addEventListener('click', onReportBug);
+  bugBtn.innerHTML = "<span>🐛</span> Report a bug";
+  bugBtn.addEventListener("click", onReportBug);
 
-  const featureBtn = createElement('button', {
-    type: 'button',
-    class: 'relay-home__action-btn',
+  const featureBtn = createElement("button", {
+    type: "button",
+    class: "relay-home__action-btn",
   });
-  featureBtn.innerHTML = '<span>💡</span> Request a feature';
-  featureBtn.addEventListener('click', onRequestFeature);
+  featureBtn.innerHTML = "<span>💡</span> Request a feature";
+  featureBtn.addEventListener("click", onRequestFeature);
 
   actionsSection.appendChild(bugBtn);
   actionsSection.appendChild(featureBtn);

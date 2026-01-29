@@ -1,20 +1,20 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { trpc } from '@/lib/trpc';
-import { useAuthStore } from '@/stores/auth';
+import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { trpc } from "@/lib/trpc";
+import { useAuthStore } from "@/stores/auth";
 
 export default function SignupPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { login: setAuth } = useAuthStore();
 
@@ -22,11 +22,11 @@ export default function SignupPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
 
     // Basic validation
     if (password.length < 8) {
-      setError('Password must be at least 8 characters');
+      setError("Password must be at least 8 characters");
       return;
     }
 
@@ -48,12 +48,12 @@ export default function SignupPage() {
 
       // Store auth in zustand and localStorage
       setAuth(user, result.token);
-      localStorage.setItem('relay_token', result.token);
+      localStorage.setItem("relay_token", result.token);
 
       // Redirect to onboarding (new users have no projects)
-      router.push('/onboarding');
+      router.push("/onboarding");
     } catch (err: any) {
-      setError(err.message || 'Failed to create account');
+      setError(err.message || "Failed to create account");
     } finally {
       setLoading(false);
     }
@@ -67,9 +67,7 @@ export default function SignupPage() {
             R
           </div>
           <h2 className="mt-6 text-2xl font-bold">Create your account</h2>
-          <p className="mt-2 text-muted-foreground">
-            Get started with Relay
-          </p>
+          <p className="mt-2 text-muted-foreground">Get started with Relay</p>
         </div>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-6">
@@ -126,13 +124,16 @@ export default function SignupPage() {
           </div>
 
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? 'Creating account...' : 'Create account'}
+            {loading ? "Creating account..." : "Create account"}
           </Button>
         </form>
 
         <p className="text-center text-sm text-muted-foreground">
-          Already have an account?{' '}
-          <Link href="/auth/login" className="font-medium text-primary hover:underline">
+          Already have an account?{" "}
+          <Link
+            href="/auth/login"
+            className="font-medium text-primary hover:underline"
+          >
             Sign in
           </Link>
         </p>

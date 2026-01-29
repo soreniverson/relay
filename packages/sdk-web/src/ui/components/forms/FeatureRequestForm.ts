@@ -3,12 +3,12 @@
 // Dedicated form for feature requests
 // ============================================================================
 
-import { createElement, clearChildren } from '../../utils/dom';
-import { createInput, type InputResult } from '../shared/Input';
-import { createTextarea, type TextareaResult } from '../shared/Textarea';
-import { createSelect, type SelectResult } from '../shared/Select';
-import { createButton, setButtonLoading } from '../shared/Button';
-import { createFileUpload, type FileUploadResult } from '../shared/FileUpload';
+import { createElement, clearChildren } from "../../utils/dom";
+import { createInput, type InputResult } from "../shared/Input";
+import { createTextarea, type TextareaResult } from "../shared/Textarea";
+import { createSelect, type SelectResult } from "../shared/Select";
+import { createButton, setButtonLoading } from "../shared/Button";
+import { createFileUpload, type FileUploadResult } from "../shared/FileUpload";
 
 export interface FeatureRequestFormData {
   title: string;
@@ -77,9 +77,9 @@ export const featureRequestFormStyles = `
 `;
 
 const CATEGORY_OPTIONS = [
-  { value: 'feature', label: 'New Feature' },
-  { value: 'enhancement', label: 'Enhancement' },
-  { value: 'integration', label: 'Integration' },
+  { value: "feature", label: "New Feature" },
+  { value: "enhancement", label: "Enhancement" },
+  { value: "integration", label: "Integration" },
 ];
 
 export interface FeatureRequestFormResult {
@@ -88,7 +88,9 @@ export interface FeatureRequestFormResult {
   showSuccess: () => void;
 }
 
-export function createFeatureRequestForm(config: FeatureRequestFormConfig): FeatureRequestFormResult {
+export function createFeatureRequestForm(
+  config: FeatureRequestFormConfig,
+): FeatureRequestFormResult {
   const {
     showAttachments = true,
     maxAttachments = 5,
@@ -98,21 +100,23 @@ export function createFeatureRequestForm(config: FeatureRequestFormConfig): Feat
   } = config;
 
   // Create form element
-  const form = createElement('form', { class: 'relay-feature-form' }) as HTMLFormElement;
+  const form = createElement("form", {
+    class: "relay-feature-form",
+  }) as HTMLFormElement;
 
   // Title input
-  const titleInput = createInput('Title', {
-    name: 'title',
-    placeholder: 'What feature would you like?',
+  const titleInput = createInput("Title", {
+    name: "title",
+    placeholder: "What feature would you like?",
     required: true,
     autoFocus: true,
     onChange: onFormChange,
   });
 
   // Description textarea
-  const descriptionTextarea = createTextarea('Description', {
-    name: 'description',
-    placeholder: 'Describe your idea in detail. What problem does it solve?',
+  const descriptionTextarea = createTextarea("Description", {
+    name: "description",
+    placeholder: "Describe your idea in detail. What problem does it solve?",
     required: true,
     rows: 5,
     maxLength: 2000,
@@ -120,31 +124,31 @@ export function createFeatureRequestForm(config: FeatureRequestFormConfig): Feat
   });
 
   // Category select
-  const categorySelect = createSelect('Category', {
-    name: 'category',
+  const categorySelect = createSelect("Category", {
+    name: "category",
     options: CATEGORY_OPTIONS,
-    value: 'feature',
+    value: "feature",
   });
 
   // File upload
   let fileUpload: FileUploadResult | null = null;
   if (showAttachments) {
-    fileUpload = createFileUpload('Attachments (optional)', {
+    fileUpload = createFileUpload("Attachments (optional)", {
       multiple: true,
       maxFiles: maxAttachments,
       maxSize: maxAttachmentSize,
-      accept: 'image/*,.pdf,.doc,.docx',
+      accept: "image/*,.pdf,.doc,.docx",
     });
   }
 
   // Submit button
-  const submitBtn = createButton('Submit Request', {
-    type: 'submit',
-    variant: 'primary',
+  const submitBtn = createButton("Submit Request", {
+    type: "submit",
+    variant: "primary",
     fullWidth: true,
   });
 
-  const footer = createElement('div', { class: 'relay-feature-form__footer' });
+  const footer = createElement("div", { class: "relay-feature-form__footer" });
   footer.appendChild(submitBtn);
 
   // Assemble form
@@ -157,16 +161,16 @@ export function createFeatureRequestForm(config: FeatureRequestFormConfig): Feat
   form.appendChild(footer);
 
   // Form submission handler
-  form.addEventListener('submit', async (e) => {
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     // Validate
     if (!titleInput.getValue().trim()) {
-      titleInput.setError('Title is required');
+      titleInput.setError("Title is required");
       return;
     }
     if (!descriptionTextarea.getValue().trim()) {
-      descriptionTextarea.setError('Description is required');
+      descriptionTextarea.setError("Description is required");
       return;
     }
 
@@ -178,29 +182,29 @@ export function createFeatureRequestForm(config: FeatureRequestFormConfig): Feat
     const formData: FeatureRequestFormData = {
       title: titleInput.getValue().trim(),
       description: descriptionTextarea.getValue().trim(),
-      category: categorySelect.getValue() || 'feature',
+      category: categorySelect.getValue() || "feature",
       attachments: fileUpload?.getFiles() || [],
     };
 
     // Show loading state
-    setButtonLoading(submitBtn, true, 'Submitting...');
+    setButtonLoading(submitBtn, true, "Submitting...");
 
     try {
       await onSubmit(formData);
     } catch (error) {
       setButtonLoading(submitBtn, false);
-      console.error('[Relay] Feature request submission failed:', error);
+      console.error("[Relay] Feature request submission failed:", error);
     }
   });
 
   // Reset form
   const reset = () => {
     form.reset();
-    titleInput.setValue('');
+    titleInput.setValue("");
     titleInput.setError(null);
-    descriptionTextarea.setValue('');
+    descriptionTextarea.setValue("");
     descriptionTextarea.setError(null);
-    categorySelect.setValue('feature');
+    categorySelect.setValue("feature");
     if (fileUpload) fileUpload.clearFiles();
     setButtonLoading(submitBtn, false);
   };
@@ -208,15 +212,21 @@ export function createFeatureRequestForm(config: FeatureRequestFormConfig): Feat
   // Show success state
   const showSuccess = () => {
     clearChildren(form);
-    form.className = '';
+    form.className = "";
 
-    const successEl = createElement('div', { class: 'relay-feature-form__success' });
+    const successEl = createElement("div", {
+      class: "relay-feature-form__success",
+    });
 
-    const icon = createElement('div', { class: 'relay-feature-form__success-icon' });
+    const icon = createElement("div", {
+      class: "relay-feature-form__success-icon",
+    });
     icon.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>`;
 
-    const title = createElement('h4', {}, ['Thank you!']);
-    const message = createElement('p', {}, ['Your feature request has been submitted.']);
+    const title = createElement("h4", {}, ["Thank you!"]);
+    const message = createElement("p", {}, [
+      "Your feature request has been submitted.",
+    ]);
 
     successEl.appendChild(icon);
     successEl.appendChild(title);

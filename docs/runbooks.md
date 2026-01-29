@@ -7,10 +7,12 @@ Operational procedures for common scenarios.
 ### High CPU on API Server
 
 **Symptoms:**
+
 - API latency > 500ms
 - CPU utilization > 80%
 
 **Investigation:**
+
 ```bash
 # Check current connections
 redis-cli INFO clients
@@ -23,6 +25,7 @@ kubectl logs -l app=relay-api --tail=100
 ```
 
 **Resolution:**
+
 1. Scale API replicas: `kubectl scale deployment relay-api --replicas=5`
 2. If DB-related, add read replica or optimize query
 3. If Redis-related, check for hot keys
@@ -30,10 +33,12 @@ kubectl logs -l app=relay-api --tail=100
 ### Database Connection Pool Exhausted
 
 **Symptoms:**
+
 - "Connection pool exhausted" errors
 - Requests timing out
 
 **Investigation:**
+
 ```bash
 # Check active connections
 psql -c "SELECT count(*) FROM pg_stat_activity WHERE datname='relay';"
@@ -43,6 +48,7 @@ psql -c "SELECT state, count(*) FROM pg_stat_activity GROUP BY state;"
 ```
 
 **Resolution:**
+
 1. Kill idle connections: `SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE state = 'idle';`
 2. Increase pool size in Prisma config
 3. Check for connection leaks in application code
@@ -50,10 +56,12 @@ psql -c "SELECT state, count(*) FROM pg_stat_activity GROUP BY state;"
 ### Redis Memory Full
 
 **Symptoms:**
+
 - "OOM" errors in Redis
 - Cache misses increasing
 
 **Investigation:**
+
 ```bash
 # Check memory usage
 redis-cli INFO memory
@@ -66,6 +74,7 @@ redis-cli MEMORY DOCTOR
 ```
 
 **Resolution:**
+
 1. Flush expired keys: `redis-cli --scan --pattern 'cache:*' | xargs redis-cli DEL`
 2. Reduce TTL on session cache
 3. Scale Redis cluster or increase memory
@@ -73,10 +82,12 @@ redis-cli MEMORY DOCTOR
 ### Replay Processing Backlog
 
 **Symptoms:**
+
 - Replays stuck in "processing" status
 - Worker queue depth increasing
 
 **Investigation:**
+
 ```bash
 # Check queue depth
 redis-cli LLEN bull:replay-process:wait
@@ -89,6 +100,7 @@ kubectl logs -l app=relay-worker --tail=100
 ```
 
 **Resolution:**
+
 1. Scale workers: `kubectl scale deployment relay-worker --replicas=5`
 2. Check for failed jobs and retry: Worker UI at `/admin/queues`
 3. Check S3 access (upload/download errors)
@@ -189,14 +201,14 @@ aws s3 cp /var/log/relay/ s3://relay-logs-archive/ --recursive
 
 ### Key Metrics to Watch
 
-| Metric | Warning | Critical |
-|--------|---------|----------|
+| Metric          | Warning | Critical |
+| --------------- | ------- | -------- |
 | API Latency p99 | > 500ms | > 2000ms |
-| Error Rate | > 1% | > 5% |
-| CPU Usage | > 70% | > 90% |
-| Memory Usage | > 80% | > 95% |
-| DB Connections | > 80% | > 95% |
-| Queue Depth | > 1000 | > 10000 |
+| Error Rate      | > 1%    | > 5%     |
+| CPU Usage       | > 70%   | > 90%    |
+| Memory Usage    | > 80%   | > 95%    |
+| DB Connections  | > 80%   | > 95%    |
+| Queue Depth     | > 1000  | > 10000  |
 
 ### Alerting Rules
 
@@ -223,16 +235,19 @@ groups:
 ### Dashboard Queries
 
 **Request Rate:**
+
 ```promql
 sum(rate(http_requests_total[5m])) by (endpoint)
 ```
 
 **Error Rate:**
+
 ```promql
 sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total[5m]))
 ```
 
 **P99 Latency:**
+
 ```promql
 histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, endpoint))
 ```
@@ -242,12 +257,14 @@ histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by 
 ### Suspected API Key Compromise
 
 1. **Immediately revoke the key:**
+
    ```bash
    curl -X DELETE https://api.relay.dev/admin/api-keys/key_id \
      -H "Authorization: Bearer $ADMIN_TOKEN"
    ```
 
 2. **Audit recent activity:**
+
    ```sql
    SELECT * FROM audit_logs
    WHERE api_key_id = 'key_id'

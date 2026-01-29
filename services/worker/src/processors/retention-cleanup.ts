@@ -1,6 +1,10 @@
-import { Job } from 'bullmq';
-import { prisma } from '../index.js';
-import { S3Client, DeleteObjectsCommand, ListObjectsV2Command } from '@aws-sdk/client-s3';
+import { Job } from "bullmq";
+import { prisma } from "../index.js";
+import {
+  S3Client,
+  DeleteObjectsCommand,
+  ListObjectsV2Command,
+} from "@aws-sdk/client-s3";
 
 interface RetentionCleanupJob {
   projectId?: string;
@@ -8,21 +12,21 @@ interface RetentionCleanupJob {
 }
 
 const s3 = new S3Client({
-  region: process.env.AWS_REGION || 'us-east-1',
+  region: process.env.AWS_REGION || "us-east-1",
   endpoint: process.env.S3_ENDPOINT,
   forcePathStyle: true,
   credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID || "",
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "",
   },
 });
 
-const bucket = process.env.AWS_BUCKET || 'relay-media';
+const bucket = process.env.AWS_BUCKET || "relay-media";
 
 export async function retentionCleanupProcessor(job: Job<RetentionCleanupJob>) {
   const { projectId, force } = job.data;
 
-  console.log('Running retention cleanup...');
+  console.log("Running retention cleanup...");
 
   let totalDeleted = {
     interactions: 0,
@@ -53,11 +57,13 @@ export async function retentionCleanupProcessor(job: Job<RetentionCleanupJob>) {
 
     // Clean up interactions
     const interactionCutoff = new Date();
-    interactionCutoff.setDate(interactionCutoff.getDate() - retention.interactions);
+    interactionCutoff.setDate(
+      interactionCutoff.getDate() - retention.interactions,
+    );
 
     const deletedInteractions = await cleanupInteractions(
       project.id,
-      interactionCutoff
+      interactionCutoff,
     );
     totalDeleted.interactions += deletedInteractions;
 
@@ -87,14 +93,14 @@ export async function retentionCleanupProcessor(job: Job<RetentionCleanupJob>) {
   const orphanedMedia = await cleanupOrphanedMedia();
   totalDeleted.media = orphanedMedia;
 
-  console.log('Retention cleanup complete:', totalDeleted);
+  console.log("Retention cleanup complete:", totalDeleted);
 
   return { success: true, deleted: totalDeleted };
 }
 
 async function cleanupInteractions(
   projectId: string,
-  cutoffDate: Date
+  cutoffDate: Date,
 ): Promise<number> {
   // Find interactions to delete
   const toDelete = await prisma.interaction.findMany({
@@ -135,7 +141,7 @@ async function cleanupInteractions(
 
 async function cleanupSessions(
   projectId: string,
-  cutoffDate: Date
+  cutoffDate: Date,
 ): Promise<number> {
   // First, get sessions without recent interactions
   const sessionsWithInteractions = await prisma.interaction.findMany({
@@ -144,11 +150,11 @@ async function cleanupSessions(
       createdAt: { gte: cutoffDate },
     },
     select: { sessionId: true },
-    distinct: ['sessionId'],
+    distinct: ["sessionId"],
   });
 
   const activeSessionIds = new Set(
-    sessionsWithInteractions.map((i) => i.sessionId).filter(Boolean)
+    sessionsWithInteractions.map((i) => i.sessionId).filter(Boolean),
   );
 
   // Find old sessions that have no recent interactions
@@ -181,7 +187,7 @@ async function cleanupSessions(
 
 async function cleanupReplays(
   projectId: string,
-  cutoffDate: Date
+  cutoffDate: Date,
 ): Promise<number> {
   // Find old replays
   const toDelete = await prisma.replay.findMany({
@@ -204,7 +210,7 @@ async function cleanupReplays(
       for (const chunk of chunks) {
         keysToDelete.push(chunk.storageKey);
         // Also add sanitized version
-        keysToDelete.push(chunk.storageKey.replace('.json', '.sanitized.json'));
+        keysToDelete.push(chunk.storageKey.replace(".json", ".sanitized.json"));
       }
     }
   }
@@ -222,7 +228,7 @@ async function cleanupReplays(
 
 async function cleanupAuditLogs(
   projectId: string,
-  cutoffDate: Date
+  cutoffDate: Date,
 ): Promise<number> {
   const result = await prisma.auditLog.deleteMany({
     where: {
@@ -262,7 +268,7 @@ async function deleteFromS3(keys: string[]): Promise<void> {
 
       await s3.send(command);
     } catch (error) {
-      console.error('S3 delete error:', error);
+      console.error("S3 delete error:", error);
       // Continue with other batches
     }
   }

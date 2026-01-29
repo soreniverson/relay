@@ -13,17 +13,17 @@ import type {
   RelayEventType,
   RelayEventHandler,
   Annotation,
-} from './types';
-import { ApiClient } from './utils/api';
-import { createConsoleCapture } from './capture/console';
-import { createNetworkCapture } from './capture/network';
-import { createErrorCapture } from './capture/errors';
-import { createReplayCapture } from './capture/replay';
-import { captureScreenshot, applyAnnotations } from './capture/screenshot';
-import { Widget, type WidgetView } from './ui';
+} from "./types";
+import { ApiClient } from "./utils/api";
+import { createConsoleCapture } from "./capture/console";
+import { createNetworkCapture } from "./capture/network";
+import { createErrorCapture } from "./capture/errors";
+import { createReplayCapture } from "./capture/replay";
+import { captureScreenshot, applyAnnotations } from "./capture/screenshot";
+import { Widget, type WidgetView } from "./ui";
 
 // Re-export types
-export * from './types';
+export * from "./types";
 
 class RelaySDK implements RelayInstance {
   private config: RelayConfig | null = null;
@@ -40,7 +40,8 @@ class RelaySDK implements RelayInstance {
   private replayId: string | null = null;
 
   // Event handlers
-  private eventHandlers: Map<RelayEventType, Set<RelayEventHandler>> = new Map();
+  private eventHandlers: Map<RelayEventType, Set<RelayEventHandler>> =
+    new Map();
 
   // Session heartbeat
   private heartbeatInterval: ReturnType<typeof setInterval> | null = null;
@@ -52,7 +53,7 @@ class RelaySDK implements RelayInstance {
 
   async init(config: RelayConfig): Promise<void> {
     if (this.initialized) {
-      console.warn('[Relay] Already initialized');
+      console.warn("[Relay] Already initialized");
       return;
     }
 
@@ -64,7 +65,12 @@ class RelaySDK implements RelayInstance {
     }
 
     // Start captures based on config (these don't need API)
-    const captureConfig = config.capture || { console: true, network: true, dom: true, replay: false };
+    const captureConfig = config.capture || {
+      console: true,
+      network: true,
+      dom: true,
+      replay: false,
+    };
 
     if (captureConfig.console) {
       this.consoleCapture.start();
@@ -90,7 +96,7 @@ class RelaySDK implements RelayInstance {
       userId: config.user?.id,
       device,
       appVersion: config.appVersion,
-      environment: config.environment || 'production',
+      environment: config.environment || "production",
       userAgent: navigator.userAgent,
     });
 
@@ -108,16 +114,16 @@ class RelaySDK implements RelayInstance {
     }, 60000); // Every minute
 
     this.initialized = true;
-    this.emit('ready');
+    this.emit("ready");
 
     if (config.debug) {
-      console.log('[Relay] Initialized', { sessionId: this.sessionId });
+      console.log("[Relay] Initialized", { sessionId: this.sessionId });
     }
   }
 
   async identify(user: RelayUser): Promise<void> {
     if (!this.api || !this.sessionId) {
-      throw new Error('Relay not initialized');
+      throw new Error("Relay not initialized");
     }
 
     const result = await this.api.identify({
@@ -141,30 +147,30 @@ class RelaySDK implements RelayInstance {
     }
   }
 
-  open(view?: 'bug' | 'feedback' | 'chat' | WidgetView): void {
+  open(view?: "bug" | "feedback" | "chat" | WidgetView): void {
     // Map legacy view names to new structure
     let mappedView: WidgetView | undefined;
-    if (view === 'bug') {
-      mappedView = 'bug-report';
-    } else if (view === 'feedback') {
-      mappedView = 'feature-request';
-    } else if (view === 'chat') {
-      mappedView = 'messages';
+    if (view === "bug") {
+      mappedView = "bug-report";
+    } else if (view === "feedback") {
+      mappedView = "feature-request";
+    } else if (view === "chat") {
+      mappedView = "messages";
     } else {
       mappedView = view;
     }
     this.openWidget(mappedView);
-    this.emit('open');
+    this.emit("open");
   }
 
   close(): void {
     this.closeWidget();
-    this.emit('close');
+    this.emit("close");
   }
 
   async captureBug(data: BugReportData): Promise<string> {
     if (!this.api || !this.sessionId) {
-      throw new Error('Relay not initialized');
+      throw new Error("Relay not initialized");
     }
 
     const context = this.getTechnicalContext();
@@ -179,14 +185,14 @@ class RelaySDK implements RelayInstance {
         });
         screenshotBlob = result.blob;
       } catch (error) {
-        console.warn('[Relay] Screenshot capture failed:', error);
+        console.warn("[Relay] Screenshot capture failed:", error);
       }
     }
 
     // Create interaction
     const { interactionId } = await this.api.createInteraction({
-      type: 'bug',
-      source: 'sdk',
+      type: "bug",
+      source: "sdk",
       sessionId: this.sessionId,
       userId: this.userId || undefined,
       contentText: data.description,
@@ -206,7 +212,11 @@ class RelaySDK implements RelayInstance {
       const networkLogs = this.networkCapture.getEntries();
       const errors = this.errorCapture.getEntries();
 
-      if (consoleLogs.length > 0 || networkLogs.length > 0 || errors.length > 0) {
+      if (
+        consoleLogs.length > 0 ||
+        networkLogs.length > 0 ||
+        errors.length > 0
+      ) {
         await this.api.storeLogs({
           interactionId,
           console: consoleLogs,
@@ -218,31 +228,31 @@ class RelaySDK implements RelayInstance {
 
     // Upload screenshot
     if (screenshotBlob) {
-      await this.uploadMedia(interactionId, 'screenshot', screenshotBlob);
+      await this.uploadMedia(interactionId, "screenshot", screenshotBlob);
     }
 
     // Upload attachments
     if (data.attachments) {
       for (const file of data.attachments) {
-        await this.uploadMedia(interactionId, 'attachment', file);
+        await this.uploadMedia(interactionId, "attachment", file);
       }
     }
 
-    this.emit('bug:submitted', { interactionId });
+    this.emit("bug:submitted", { interactionId });
 
     return interactionId;
   }
 
   async captureFeedback(data: FeedbackData): Promise<string> {
     if (!this.api || !this.sessionId) {
-      throw new Error('Relay not initialized');
+      throw new Error("Relay not initialized");
     }
 
     const context = this.getTechnicalContext();
 
     const { interactionId } = await this.api.createInteraction({
-      type: 'feedback',
-      source: 'sdk',
+      type: "feedback",
+      source: "sdk",
       sessionId: this.sessionId,
       userId: this.userId || undefined,
       contentText: data.text,
@@ -255,18 +265,18 @@ class RelaySDK implements RelayInstance {
       technicalContext: context,
     });
 
-    this.emit('feedback:submitted', { interactionId });
+    this.emit("feedback:submitted", { interactionId });
 
     return interactionId;
   }
 
   startRecording(): void {
     if (!this.api || !this.sessionId) {
-      throw new Error('Relay not initialized');
+      throw new Error("Relay not initialized");
     }
 
     if (this.replayCapture?.isRecording()) {
-      console.warn('[Relay] Already recording');
+      console.warn("[Relay] Already recording");
       return;
     }
 
@@ -286,12 +296,12 @@ class RelaySDK implements RelayInstance {
 
         // Upload chunk data
         await fetch(uploadUrl, {
-          method: 'PUT',
+          method: "PUT",
           body: JSON.stringify(events),
-          headers: { 'Content-Type': 'application/json' },
+          headers: { "Content-Type": "application/json" },
         });
       } catch (error) {
-        console.error('[Relay] Failed to upload replay chunk:', error);
+        console.error("[Relay] Failed to upload replay chunk:", error);
       }
     });
 
@@ -299,10 +309,10 @@ class RelaySDK implements RelayInstance {
     this.api.startReplay(this.sessionId).then(({ replayId }) => {
       this.replayId = replayId;
       this.replayCapture?.start({
-        maskTextSelector: this.config?.privacy?.maskSelectors?.join(', '),
-        blockSelector: this.config?.privacy?.blockSelectors?.join(', '),
+        maskTextSelector: this.config?.privacy?.maskSelectors?.join(", "),
+        blockSelector: this.config?.privacy?.blockSelectors?.join(", "),
       });
-      this.emit('replay:started', { replayId });
+      this.emit("replay:started", { replayId });
     });
   }
 
@@ -316,7 +326,7 @@ class RelaySDK implements RelayInstance {
     // End replay on server
     await this.api.endReplay(this.replayId, events.length);
 
-    this.emit('replay:stopped', { replayId: this.replayId });
+    this.emit("replay:stopped", { replayId: this.replayId });
     this.replayId = null;
   }
 
@@ -328,7 +338,7 @@ class RelaySDK implements RelayInstance {
 
   track(event: string, properties?: Record<string, unknown>): void {
     if (!this.api || !this.sessionId) {
-      console.warn('[Relay] Not initialized, cannot track event');
+      console.warn("[Relay] Not initialized, cannot track event");
       return;
     }
 
@@ -380,7 +390,7 @@ class RelaySDK implements RelayInstance {
       try {
         handler(data);
       } catch (error) {
-        console.error('[Relay] Event handler error:', error);
+        console.error("[Relay] Event handler error:", error);
       }
     });
   }
@@ -420,7 +430,11 @@ class RelaySDK implements RelayInstance {
     const ua = navigator.userAgent;
 
     return {
-      type: /mobile/i.test(ua) ? 'mobile' : /tablet/i.test(ua) ? 'tablet' : 'desktop',
+      type: /mobile/i.test(ua)
+        ? "mobile"
+        : /tablet/i.test(ua)
+          ? "tablet"
+          : "desktop",
       os: this.detectOS(ua),
       browser: this.detectBrowser(ua),
       screenWidth: window.screen.width,
@@ -432,26 +446,30 @@ class RelaySDK implements RelayInstance {
   }
 
   private detectOS(ua: string): string {
-    if (/windows/i.test(ua)) return 'Windows';
-    if (/macintosh|mac os x/i.test(ua)) return 'macOS';
-    if (/linux/i.test(ua)) return 'Linux';
-    if (/android/i.test(ua)) return 'Android';
-    if (/iphone|ipad|ipod/i.test(ua)) return 'iOS';
-    return 'Unknown';
+    if (/windows/i.test(ua)) return "Windows";
+    if (/macintosh|mac os x/i.test(ua)) return "macOS";
+    if (/linux/i.test(ua)) return "Linux";
+    if (/android/i.test(ua)) return "Android";
+    if (/iphone|ipad|ipod/i.test(ua)) return "iOS";
+    return "Unknown";
   }
 
   private detectBrowser(ua: string): string {
-    if (/chrome/i.test(ua) && !/edge/i.test(ua)) return 'Chrome';
-    if (/firefox/i.test(ua)) return 'Firefox';
-    if (/safari/i.test(ua) && !/chrome/i.test(ua)) return 'Safari';
-    if (/edge/i.test(ua)) return 'Edge';
-    return 'Unknown';
+    if (/chrome/i.test(ua) && !/edge/i.test(ua)) return "Chrome";
+    if (/firefox/i.test(ua)) return "Firefox";
+    if (/safari/i.test(ua) && !/chrome/i.test(ua)) return "Safari";
+    if (/edge/i.test(ua)) return "Edge";
+    return "Unknown";
   }
 
-  private async uploadMedia(interactionId: string, kind: string, data: Blob | File): Promise<void> {
+  private async uploadMedia(
+    interactionId: string,
+    kind: string,
+    data: Blob | File,
+  ): Promise<void> {
     if (!this.api) return;
 
-    const contentType = data.type || 'application/octet-stream';
+    const contentType = data.type || "application/octet-stream";
     const filename = data instanceof File ? data.name : undefined;
 
     const { mediaId, uploadUrl } = await this.api.initiateUpload({
@@ -464,9 +482,9 @@ class RelaySDK implements RelayInstance {
 
     // Upload to presigned URL
     await fetch(uploadUrl, {
-      method: 'PUT',
+      method: "PUT",
       body: data,
-      headers: { 'Content-Type': contentType },
+      headers: { "Content-Type": contentType },
     });
 
     await this.api.completeUpload(mediaId);
@@ -481,15 +499,22 @@ class RelaySDK implements RelayInstance {
 
     this.widget = new Widget({
       config: this.config?.widget || {},
-      themeMode: 'auto',
+      themeMode: "auto",
       useMockData: this.config?.widget?.useMockData ?? false,
       callbacks: {
         // Form submissions
         onBugSubmit: async (data) => {
           // Apply annotations to screenshot if any
           let finalScreenshot = data.screenshotBlob;
-          if (finalScreenshot && data.annotations && data.annotations.length > 0) {
-            finalScreenshot = await applyAnnotations(finalScreenshot, data.annotations);
+          if (
+            finalScreenshot &&
+            data.annotations &&
+            data.annotations.length > 0
+          ) {
+            finalScreenshot = await applyAnnotations(
+              finalScreenshot,
+              data.annotations,
+            );
           }
 
           await this.captureBugFromWidget({
@@ -525,7 +550,7 @@ class RelaySDK implements RelayInstance {
             });
             return result.blob;
           } catch (error) {
-            console.warn('[Relay] Screenshot capture failed:', error);
+            console.warn("[Relay] Screenshot capture failed:", error);
             return null;
           }
         },
@@ -545,17 +570,18 @@ class RelaySDK implements RelayInstance {
           };
         },
         onSendMessage: async (conversationId: string, body: string) => {
-          if (!this.api) throw new Error('API not initialized');
+          if (!this.api) throw new Error("API not initialized");
           return await this.api.sendMessage(conversationId, body);
         },
         onStartConversation: async (message: string) => {
-          if (!this.api || !this.sessionId) throw new Error('API not initialized');
+          if (!this.api || !this.sessionId)
+            throw new Error("API not initialized");
           const result = await this.api.startConversation({
             sessionId: this.sessionId,
             userId: this.userId || undefined,
             message,
           });
-          this.emit('chat:opened');
+          this.emit("chat:opened");
           return result;
         },
         onMarkMessagesRead: async (conversationId: string) => {
@@ -570,23 +596,31 @@ class RelaySDK implements RelayInstance {
           return result.data as any[];
         },
         onVote: async (itemId: string) => {
-          if (!this.api || !this.sessionId) throw new Error('API not initialized');
-          await this.api.voteFeedback(itemId, this.sessionId, this.userId || undefined);
+          if (!this.api || !this.sessionId)
+            throw new Error("API not initialized");
+          await this.api.voteFeedback(
+            itemId,
+            this.sessionId,
+            this.userId || undefined,
+          );
         },
         onUnvote: async (itemId: string) => {
-          if (!this.api || !this.sessionId) throw new Error('API not initialized');
+          if (!this.api || !this.sessionId)
+            throw new Error("API not initialized");
           await this.api.unvoteFeedback(itemId, this.sessionId);
         },
 
         // File upload
         onUploadFiles: async (files: File[]) => {
-          if (!this.api) throw new Error('API not initialized');
+          if (!this.api) throw new Error("API not initialized");
           const mediaIds: string[] = [];
           for (const file of files) {
             // For now, we need an interactionId to upload files
             // This would typically be passed from the form submission context
             // For now, return empty array - file uploads will be handled in the form submission
-            console.warn('[Relay] File upload requires interactionId - handle in form submission');
+            console.warn(
+              "[Relay] File upload requires interactionId - handle in form submission",
+            );
           }
           return mediaIds;
         },
@@ -599,17 +633,19 @@ class RelaySDK implements RelayInstance {
   /**
    * Capture bug from the widget (with pre-captured screenshot)
    */
-  private async captureBugFromWidget(data: BugReportData & { screenshotBlob?: Blob }): Promise<string> {
+  private async captureBugFromWidget(
+    data: BugReportData & { screenshotBlob?: Blob },
+  ): Promise<string> {
     if (!this.api || !this.sessionId) {
-      throw new Error('Relay not initialized');
+      throw new Error("Relay not initialized");
     }
 
     const context = this.getTechnicalContext();
 
     // Create interaction
     const { interactionId } = await this.api.createInteraction({
-      type: 'bug',
-      source: 'sdk',
+      type: "bug",
+      source: "sdk",
       sessionId: this.sessionId,
       userId: this.userId || undefined,
       contentText: data.description,
@@ -629,7 +665,11 @@ class RelaySDK implements RelayInstance {
       const networkLogs = this.networkCapture.getEntries();
       const errors = this.errorCapture.getEntries();
 
-      if (consoleLogs.length > 0 || networkLogs.length > 0 || errors.length > 0) {
+      if (
+        consoleLogs.length > 0 ||
+        networkLogs.length > 0 ||
+        errors.length > 0
+      ) {
         await this.api.storeLogs({
           interactionId,
           console: consoleLogs,
@@ -641,17 +681,17 @@ class RelaySDK implements RelayInstance {
 
     // Upload screenshot (use pre-captured from widget)
     if (data.screenshotBlob && data.includeScreenshot !== false) {
-      await this.uploadMedia(interactionId, 'screenshot', data.screenshotBlob);
+      await this.uploadMedia(interactionId, "screenshot", data.screenshotBlob);
     }
 
     // Upload attachments
     if (data.attachments) {
       for (const file of data.attachments) {
-        await this.uploadMedia(interactionId, 'attachment', file);
+        await this.uploadMedia(interactionId, "attachment", file);
       }
     }
 
-    this.emit('bug:submitted', { interactionId });
+    this.emit("bug:submitted", { interactionId });
 
     return interactionId;
   }
@@ -666,15 +706,15 @@ class RelaySDK implements RelayInstance {
     attachments?: File[];
   }): Promise<string> {
     if (!this.api || !this.sessionId) {
-      throw new Error('Relay not initialized');
+      throw new Error("Relay not initialized");
     }
 
     const context = this.getTechnicalContext();
 
     // Create interaction
     const { interactionId } = await this.api.createInteraction({
-      type: 'feedback',
-      source: 'sdk',
+      type: "feedback",
+      source: "sdk",
       sessionId: this.sessionId,
       userId: this.userId || undefined,
       contentText: `[Feature Request] ${data.title}\n\n${data.description}`,
@@ -689,11 +729,11 @@ class RelaySDK implements RelayInstance {
     // Upload attachments
     if (data.attachments && data.attachments.length > 0) {
       for (const file of data.attachments) {
-        await this.uploadMedia(interactionId, 'attachment', file);
+        await this.uploadMedia(interactionId, "attachment", file);
       }
     }
 
-    this.emit('feedback:submitted', { interactionId });
+    this.emit("feedback:submitted", { interactionId });
 
     return interactionId;
   }
@@ -728,6 +768,6 @@ export { Relay, RelaySDK };
 export default Relay;
 
 // Auto-attach to window for script tag usage
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   (window as any).Relay = Relay;
 }

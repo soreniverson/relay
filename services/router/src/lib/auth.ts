@@ -1,4 +1,4 @@
-import { HonoRequest } from 'hono';
+import { HonoRequest } from "hono";
 
 interface ApiKeyData {
   keyId: string;
@@ -12,18 +12,18 @@ interface ApiKeyData {
  */
 export function extractApiKey(req: HonoRequest): string | null {
   // Check header first
-  const headerKey = req.header('X-API-Key');
+  const headerKey = req.header("X-API-Key");
   if (headerKey) return headerKey;
 
   // Check Authorization header
-  const authHeader = req.header('Authorization');
-  if (authHeader?.startsWith('Bearer ')) {
+  const authHeader = req.header("Authorization");
+  if (authHeader?.startsWith("Bearer ")) {
     return authHeader.slice(7);
   }
 
   // Check query parameter (for certain endpoints like media upload)
   const url = new URL(req.url);
-  const queryKey = url.searchParams.get('apiKey');
+  const queryKey = url.searchParams.get("apiKey");
   if (queryKey) return queryKey;
 
   return null;
@@ -35,16 +35,16 @@ export function extractApiKey(req: HonoRequest): string | null {
  */
 export async function validateApiKey(
   apiKey: string,
-  cache: KVNamespace
+  cache: KVNamespace,
 ): Promise<ApiKeyData | null> {
   // API keys have format: rly_<env>_<random>
-  if (!apiKey.startsWith('rly_')) {
+  if (!apiKey.startsWith("rly_")) {
     return null;
   }
 
   // Check cache first
   const cacheKey = `apikey:${hashKey(apiKey)}`;
-  const cached = await cache.get(cacheKey, 'json');
+  const cached = await cache.get(cacheKey, "json");
 
   if (cached) {
     return cached as ApiKeyData;
@@ -55,7 +55,7 @@ export async function validateApiKey(
   // or have the key encode the region
 
   // Parse key format: rly_<env>_<projectId>_<random>
-  const parts = apiKey.split('_');
+  const parts = apiKey.split("_");
   if (parts.length < 4) {
     return null;
   }
@@ -65,10 +65,10 @@ export async function validateApiKey(
   const region = deriveRegionFromKey(apiKey);
 
   const keyData: ApiKeyData = {
-    keyId: parts.slice(3).join('_'),
+    keyId: parts.slice(3).join("_"),
     projectId: parts[2],
     region,
-    scopes: ['ingest'], // Default scope
+    scopes: ["ingest"], // Default scope
   };
 
   // Cache for 5 minutes
@@ -82,13 +82,13 @@ export async function validateApiKey(
  */
 export function resolveRegion(
   region: string,
-  env: { US_WEST_API: string; EU_WEST_API: string }
+  env: { US_WEST_API: string; EU_WEST_API: string },
 ): string | null {
   const regionMap: Record<string, string> = {
-    'us-west': env.US_WEST_API,
-    'us-east': env.US_WEST_API, // Alias to us-west for now
-    'eu-west': env.EU_WEST_API,
-    'eu-central': env.EU_WEST_API, // Alias to eu-west for now
+    "us-west": env.US_WEST_API,
+    "us-east": env.US_WEST_API, // Alias to us-west for now
+    "eu-west": env.EU_WEST_API,
+    "eu-central": env.EU_WEST_API, // Alias to eu-west for now
   };
 
   return regionMap[region] || null;
@@ -114,13 +114,13 @@ function hashKey(apiKey: string): string {
  */
 function deriveRegionFromKey(apiKey: string): string {
   // Check for region hint in key
-  if (apiKey.includes('_eu_')) {
-    return 'eu-west';
+  if (apiKey.includes("_eu_")) {
+    return "eu-west";
   }
-  if (apiKey.includes('_us_')) {
-    return 'us-west';
+  if (apiKey.includes("_us_")) {
+    return "us-west";
   }
 
   // Default to us-west
-  return 'us-west';
+  return "us-west";
 }

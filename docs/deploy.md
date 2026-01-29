@@ -38,6 +38,7 @@ pnpm dev
 ```
 
 This starts:
+
 - Web dashboard: http://localhost:3000
 - API server: http://localhost:3001
 - MinIO console: http://localhost:9001
@@ -46,6 +47,7 @@ This starts:
 ### Demo Credentials
 
 After seeding:
+
 - **Email**: admin@relay.dev
 - **Password**: password123 (or use magic link)
 
@@ -54,6 +56,7 @@ After seeding:
 ### Infrastructure Requirements
 
 Per region:
+
 - PostgreSQL 16+ (managed recommended)
 - Redis 7+ (managed recommended)
 - S3-compatible storage
@@ -121,40 +124,40 @@ spec:
         app: relay-api
     spec:
       containers:
-      - name: api
-        image: relay/api:latest
-        ports:
-        - containerPort: 3001
-        env:
-        - name: DATABASE_URL
-          valueFrom:
-            secretKeyRef:
-              name: relay-secrets
-              key: database-url
-        - name: REDIS_URL
-          valueFrom:
-            secretKeyRef:
-              name: relay-secrets
-              key: redis-url
-        resources:
-          requests:
-            memory: "256Mi"
-            cpu: "250m"
-          limits:
-            memory: "512Mi"
-            cpu: "500m"
-        readinessProbe:
-          httpGet:
-            path: /health
-            port: 3001
-          initialDelaySeconds: 5
-          periodSeconds: 10
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 3001
-          initialDelaySeconds: 15
-          periodSeconds: 20
+        - name: api
+          image: relay/api:latest
+          ports:
+            - containerPort: 3001
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: relay-secrets
+                  key: database-url
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: relay-secrets
+                  key: redis-url
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3001
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3001
+            initialDelaySeconds: 15
+            periodSeconds: 20
 ```
 
 ### Database Migrations
@@ -186,13 +189,13 @@ DATABASE_URL="..." npx prisma migrate deploy
 
 ### Scaling Considerations
 
-| Component | Scaling Strategy |
-|-----------|------------------|
-| API | Horizontal (stateless) |
-| Worker | Horizontal (queue-based) |
-| Database | Vertical + read replicas |
-| Redis | Cluster mode |
-| Storage | Managed S3 |
+| Component | Scaling Strategy         |
+| --------- | ------------------------ |
+| API       | Horizontal (stateless)   |
+| Worker    | Horizontal (queue-based) |
+| Database  | Vertical + read replicas |
+| Redis     | Cluster mode             |
+| Storage   | Managed S3               |
 
 ### Monitoring
 
@@ -270,9 +273,9 @@ aws s3 ls s3://relay-us-west-media/
 
 ### Common Errors
 
-| Error | Cause | Solution |
-|-------|-------|----------|
-| `ECONNREFUSED` | Service not running | Check Docker containers |
-| `P1001` | Database unreachable | Check DATABASE_URL |
-| `Invalid API key` | Key not found or expired | Regenerate API key |
-| `CORS error` | Origin not allowed | Check CORS_ORIGIN |
+| Error             | Cause                    | Solution                |
+| ----------------- | ------------------------ | ----------------------- |
+| `ECONNREFUSED`    | Service not running      | Check Docker containers |
+| `P1001`           | Database unreachable     | Check DATABASE_URL      |
+| `Invalid API key` | Key not found or expired | Regenerate API key      |
+| `CORS error`      | Origin not allowed       | Check CORS_ORIGIN       |

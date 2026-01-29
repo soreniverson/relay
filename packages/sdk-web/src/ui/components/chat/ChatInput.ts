@@ -3,7 +3,7 @@
 // Message input with send button for chat threads
 // ============================================================================
 
-import { createElement } from '../../utils/dom';
+import { createElement } from "../../utils/dom";
 
 export interface ChatInputConfig {
   placeholder?: string;
@@ -111,30 +111,32 @@ export interface ChatInputResult {
 
 export function createChatInput(config: ChatInputConfig): ChatInputResult {
   const {
-    placeholder = 'Type a message...',
+    placeholder = "Type a message...",
     onSend,
     disabled = false,
   } = config;
 
   let isDisabled = disabled;
 
-  const container = createElement('div', { class: 'relay-chat-input' });
+  const container = createElement("div", { class: "relay-chat-input" });
 
-  const fieldWrapper = createElement('div', { class: 'relay-chat-input__field' });
+  const fieldWrapper = createElement("div", {
+    class: "relay-chat-input__field",
+  });
 
-  const textarea = createElement('textarea', {
-    class: 'relay-chat-input__textarea',
+  const textarea = createElement("textarea", {
+    class: "relay-chat-input__textarea",
     placeholder,
     rows: 1,
   }) as HTMLTextAreaElement;
 
-  const sendBtn = createElement('button', {
-    type: 'button',
-    class: 'relay-chat-input__send',
+  const sendBtn = createElement("button", {
+    type: "button",
+    class: "relay-chat-input__send",
     disabled: isDisabled,
   }) as HTMLButtonElement;
   sendBtn.innerHTML = SEND_ICON;
-  sendBtn.setAttribute('aria-label', 'Send message');
+  sendBtn.setAttribute("aria-label", "Send message");
 
   fieldWrapper.appendChild(textarea);
   container.appendChild(fieldWrapper);
@@ -142,17 +144,20 @@ export function createChatInput(config: ChatInputConfig): ChatInputResult {
 
   // Auto-resize textarea
   const autoResize = () => {
-    textarea.style.height = 'auto';
-    textarea.style.height = Math.min(textarea.scrollHeight, 100) + 'px';
+    textarea.style.height = "auto";
+    textarea.style.height = Math.min(textarea.scrollHeight, 100) + "px";
   };
 
   // Update button state
   const updateButtonState = () => {
     const hasValue = textarea.value.trim().length > 0;
-    sendBtn.classList.toggle('relay-chat-input__send--active', hasValue && !isDisabled);
+    sendBtn.classList.toggle(
+      "relay-chat-input__send--active",
+      hasValue && !isDisabled,
+    );
   };
 
-  textarea.addEventListener('input', () => {
+  textarea.addEventListener("input", () => {
     autoResize();
     updateButtonState();
   });
@@ -162,26 +167,26 @@ export function createChatInput(config: ChatInputConfig): ChatInputResult {
     const message = textarea.value.trim();
     if (message && !isDisabled) {
       onSend(message);
-      textarea.value = '';
+      textarea.value = "";
       autoResize();
       updateButtonState();
     }
   };
 
-  textarea.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+  textarea.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
   });
 
-  sendBtn.addEventListener('click', handleSend);
+  sendBtn.addEventListener("click", handleSend);
 
   return {
     element: container,
     focus: () => textarea.focus(),
     clear: () => {
-      textarea.value = '';
+      textarea.value = "";
       autoResize();
       updateButtonState();
     },

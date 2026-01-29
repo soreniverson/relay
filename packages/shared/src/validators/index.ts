@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from "zod";
 import {
   InteractionType,
   InteractionSource,
@@ -14,7 +14,7 @@ import {
   Region,
   Environment,
   UserRole,
-} from '../types';
+} from "../types";
 
 // ============================================================================
 // Base Validators
@@ -164,7 +164,7 @@ export const sdkConfigSchema = z.object({
 // ============================================================================
 
 export const deviceInfoSchema = z.object({
-  type: z.enum(['desktop', 'mobile', 'tablet', 'unknown']),
+  type: z.enum(["desktop", "mobile", "tablet", "unknown"]),
   os: z.string().max(50).optional(),
   osVersion: z.string().max(50).optional(),
   browser: z.string().max(50).optional(),
@@ -178,7 +178,7 @@ export const deviceInfoSchema = z.object({
 
 export const technicalContextSchema = z.object({
   url: z.string().url().max(2000),
-  referrer: z.string().url().max(2000).optional().or(z.literal('')),
+  referrer: z.string().url().max(2000).optional().or(z.literal("")),
   userAgent: z.string().max(500),
   viewport: z.object({
     width: z.number().int().positive(),
@@ -205,7 +205,7 @@ export const technicalContextSchema = z.object({
 
 export const annotationSchema = z.object({
   id: z.string(),
-  type: z.enum(['arrow', 'rectangle', 'circle', 'text', 'highlight', 'blur']),
+  type: z.enum(["arrow", "rectangle", "circle", "text", "highlight", "blur"]),
   x: z.number(),
   y: z.number(),
   width: z.number().optional(),
@@ -217,7 +217,7 @@ export const annotationSchema = z.object({
       z.object({
         x: z.number(),
         y: z.number(),
-      })
+      }),
     )
     .optional(),
 });
@@ -267,7 +267,7 @@ export const updateSessionSchema = z.object({
 // ============================================================================
 
 export const consoleEntrySchema = z.object({
-  level: z.enum(['log', 'info', 'warn', 'error', 'debug']),
+  level: z.enum(["log", "info", "warn", "error", "debug"]),
   message: z.string().max(10000),
   args: z.array(z.unknown()).max(10).optional(),
   timestamp: z.number(),
@@ -334,7 +334,11 @@ export const initiateUploadSchema = z.object({
   interactionId: idSchema,
   kind: mediaKindSchema,
   contentType: z.string().max(100),
-  sizeBytes: z.number().int().positive().max(100 * 1024 * 1024), // 100MB max
+  sizeBytes: z
+    .number()
+    .int()
+    .positive()
+    .max(100 * 1024 * 1024), // 100MB max
   filename: z.string().max(255).optional(),
 });
 
@@ -399,7 +403,7 @@ export const updateRoadmapItemSchema = z.object({
 
 export const surveyQuestionSchema = z.object({
   id: z.string(),
-  type: z.enum(['nps', 'rating', 'text', 'single_choice', 'multi_choice']),
+  type: z.enum(["nps", "rating", "text", "single_choice", "multi_choice"]),
   required: z.boolean(),
   text: z.string().max(500),
   placeholder: z.string().max(200).optional(),
@@ -411,7 +415,7 @@ export const surveyQuestionSchema = z.object({
 });
 
 export const surveyDefinitionSchema = z.object({
-  type: z.enum(['nps', 'csat', 'ces', 'custom']),
+  type: z.enum(["nps", "csat", "ces", "custom"]),
   title: z.string().max(200),
   description: z.string().max(1000).optional(),
   questions: z.array(surveyQuestionSchema).min(1).max(20),
@@ -515,11 +519,11 @@ export const syncLinearIssueSchema = z.object({
 // ============================================================================
 
 export const privacyRuleDefinitionSchema = z.object({
-  type: z.enum(['mask', 'block', 'exclude']),
+  type: z.enum(["mask", "block", "exclude"]),
   selector: z.string().max(500).optional(),
   pattern: z.string().max(500).optional(),
   fields: z.array(z.string().max(100)).max(50).optional(),
-  scope: z.enum(['all', 'replay', 'screenshot', 'logs']),
+  scope: z.enum(["all", "replay", "screenshot", "logs"]),
 });
 
 export const createPrivacyRuleSchema = z.object({
@@ -567,7 +571,9 @@ export const updateProjectSchema = z.object({
         .optional(),
       widgetConfig: z
         .object({
-          position: z.enum(['bottom-right', 'bottom-left', 'top-right', 'top-left']).optional(),
+          position: z
+            .enum(["bottom-right", "bottom-left", "top-right", "top-left"])
+            .optional(),
           showBugReport: z.boolean().optional(),
           showFeedback: z.boolean().optional(),
           showChat: z.boolean().optional(),
@@ -581,7 +587,7 @@ export const updateProjectSchema = z.object({
 
 export const createApiKeySchema = z.object({
   name: z.string().min(1).max(200),
-  scopes: z.array(z.enum(['ingest', 'read', 'write', 'admin'])).min(1),
+  scopes: z.array(z.enum(["ingest", "read", "write", "admin"])).min(1),
   expiresAt: dateSchema.optional(),
 });
 
@@ -594,7 +600,9 @@ export const verifyMagicLinkSchema = z.object({
 });
 
 // Password must be at least 8 characters
-export const passwordSchema = z.string().min(8, 'Password must be at least 8 characters');
+export const passwordSchema = z
+  .string()
+  .min(8, "Password must be at least 8 characters");
 
 export const registerSchema = z.object({
   email: emailSchema,
@@ -604,7 +612,7 @@ export const registerSchema = z.object({
 
 export const loginSchema = z.object({
   email: emailSchema,
-  password: z.string().min(1, 'Password is required'),
+  password: z.string().min(1, "Password is required"),
 });
 
 // ============================================================================
@@ -631,11 +639,13 @@ export const inboxFiltersSchema = z.object({
 });
 
 export const inboxSortSchema = z.object({
-  field: z.enum(['createdAt', 'updatedAt', 'severity']).default('createdAt'),
-  direction: z.enum(['asc', 'desc']).default('desc'),
+  field: z.enum(["createdAt", "updatedAt", "severity"]).default("createdAt"),
+  direction: z.enum(["asc", "desc"]).default("desc"),
 });
 
-export const inboxQuerySchema = paginationSchema.merge(inboxFiltersSchema).merge(inboxSortSchema);
+export const inboxQuerySchema = paginationSchema
+  .merge(inboxFiltersSchema)
+  .merge(inboxSortSchema);
 
 // ============================================================================
 // Type Exports

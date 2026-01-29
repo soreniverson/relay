@@ -1,7 +1,12 @@
-import { z } from 'zod';
-import { router, projectProcedure, publicProcedure, sdkProcedure } from '../lib/trpc';
-import { TRPCError } from '@trpc/server';
-import { Prisma } from '@prisma/client';
+import { z } from "zod";
+import {
+  router,
+  projectProcedure,
+  publicProcedure,
+  sdkProcedure,
+} from "../lib/trpc";
+import { TRPCError } from "@trpc/server";
+import { Prisma } from "@prisma/client";
 
 // Targeting schema
 const targetingSchema = z.object({
@@ -21,8 +26,8 @@ export const announcementsRouter = router({
       z.object({
         projectId: z.string(),
         enabled: z.boolean().optional(),
-        type: z.enum(['banner', 'modal', 'slideout', 'feed_item']).optional(),
-      })
+        type: z.enum(["banner", "modal", "slideout", "feed_item"]).optional(),
+      }),
     )
     .query(async ({ ctx, input }) => {
       const announcements = await ctx.prisma.announcement.findMany({
@@ -31,7 +36,7 @@ export const announcementsRouter = router({
           ...(input.enabled !== undefined && { enabled: input.enabled }),
           ...(input.type && { type: input.type }),
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
       });
 
       return announcements;
@@ -45,7 +50,10 @@ export const announcementsRouter = router({
       });
 
       if (!announcement) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Announcement not found' });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Announcement not found",
+        });
       }
 
       return announcement;
@@ -57,8 +65,8 @@ export const announcementsRouter = router({
         projectId: z.string(),
         title: z.string().min(1),
         content: z.string(),
-        type: z.enum(['banner', 'modal', 'slideout', 'feed_item']),
-        style: z.enum(['info', 'success', 'warning', 'celebration']).optional(),
+        type: z.enum(["banner", "modal", "slideout", "feed_item"]),
+        style: z.enum(["info", "success", "warning", "celebration"]).optional(),
         image: z.string().optional(),
         actionLabel: z.string().optional(),
         actionUrl: z.string().optional(),
@@ -68,7 +76,7 @@ export const announcementsRouter = router({
         dismissible: z.boolean().default(true),
         showOnce: z.boolean().default(false),
         enabled: z.boolean().default(false),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const announcement = await ctx.prisma.announcement.create({
@@ -99,8 +107,8 @@ export const announcementsRouter = router({
         id: z.string(),
         title: z.string().min(1).optional(),
         content: z.string().optional(),
-        type: z.enum(['banner', 'modal', 'slideout', 'feed_item']).optional(),
-        style: z.enum(['info', 'success', 'warning', 'celebration']).optional(),
+        type: z.enum(["banner", "modal", "slideout", "feed_item"]).optional(),
+        style: z.enum(["info", "success", "warning", "celebration"]).optional(),
         image: z.string().nullable().optional(),
         actionLabel: z.string().nullable().optional(),
         actionUrl: z.string().nullable().optional(),
@@ -110,7 +118,7 @@ export const announcementsRouter = router({
         dismissible: z.boolean().optional(),
         showOnce: z.boolean().optional(),
         enabled: z.boolean().optional(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const { id, ...data } = input;
@@ -156,7 +164,7 @@ export const announcementsRouter = router({
         sessionId: z.string(),
         url: z.string().optional(),
         userTraits: z.record(z.any()).optional(),
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
       const now = new Date();
@@ -166,16 +174,10 @@ export const announcementsRouter = router({
         where: {
           projectId: input.projectId,
           enabled: true,
-          OR: [
-            { startAt: null },
-            { startAt: { lte: now } },
-          ],
+          OR: [{ startAt: null }, { startAt: { lte: now } }],
           AND: [
             {
-              OR: [
-                { endAt: null },
-                { endAt: { gte: now } },
-              ],
+              OR: [{ endAt: null }, { endAt: { gte: now } }],
             },
           ],
         },
@@ -250,7 +252,7 @@ export const announcementsRouter = router({
       z.object({
         announcementId: z.string(),
         sessionId: z.string(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       await ctx.prisma.announcement.update({
@@ -268,7 +270,7 @@ export const announcementsRouter = router({
         announcementId: z.string(),
         sessionId: z.string(),
         userId: z.string().optional(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       await ctx.prisma.announcementDismissal.upsert({
@@ -299,7 +301,7 @@ export const announcementsRouter = router({
         projectId: z.string(),
         page: z.number().default(1),
         pageSize: z.number().default(10),
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
       const now = new Date();
@@ -307,17 +309,11 @@ export const announcementsRouter = router({
       const where: Prisma.AnnouncementWhereInput = {
         projectId: input.projectId,
         enabled: true,
-        type: 'feed_item',
-        OR: [
-          { startAt: null },
-          { startAt: { lte: now } },
-        ],
+        type: "feed_item",
+        OR: [{ startAt: null }, { startAt: { lte: now } }],
         AND: [
           {
-            OR: [
-              { endAt: null },
-              { endAt: { gte: now } },
-            ],
+            OR: [{ endAt: null }, { endAt: { gte: now } }],
           },
         ],
       };
@@ -325,7 +321,7 @@ export const announcementsRouter = router({
       const [items, total] = await Promise.all([
         ctx.prisma.announcement.findMany({
           where,
-          orderBy: { createdAt: 'desc' },
+          orderBy: { createdAt: "desc" },
           skip: (input.page - 1) * input.pageSize,
           take: input.pageSize,
         }),

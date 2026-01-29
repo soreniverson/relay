@@ -1,12 +1,12 @@
-import { z } from 'zod';
-import { TRPCError } from '@trpc/server';
-import { Prisma } from '@prisma/client';
-import { router, projectProcedure } from '../lib/trpc';
+import { z } from "zod";
+import { TRPCError } from "@trpc/server";
+import { Prisma } from "@prisma/client";
+import { router, projectProcedure } from "../lib/trpc";
 import {
   createPrivacyRuleSchema,
   updatePrivacyRuleSchema,
   paginationSchema,
-} from '@relay/shared';
+} from "@relay/shared";
 
 export const privacyRouter = router({
   // List privacy rules
@@ -15,7 +15,7 @@ export const privacyRouter = router({
     .query(async ({ ctx }) => {
       const rules = await ctx.prisma.privacyRule.findMany({
         where: { projectId: ctx.projectId },
-        orderBy: { createdAt: 'asc' },
+        orderBy: { createdAt: "asc" },
       });
 
       return rules;
@@ -23,7 +23,9 @@ export const privacyRouter = router({
 
   // Create privacy rule
   createRule: projectProcedure
-    .input(z.object({ projectId: z.string().uuid() }).merge(createPrivacyRuleSchema))
+    .input(
+      z.object({ projectId: z.string().uuid() }).merge(createPrivacyRuleSchema),
+    )
     .mutation(async ({ input, ctx }) => {
       const rule = await ctx.prisma.privacyRule.create({
         data: {
@@ -37,10 +39,10 @@ export const privacyRouter = router({
       await ctx.prisma.auditLog.create({
         data: {
           projectId: ctx.projectId,
-          actorType: 'admin',
+          actorType: "admin",
           actorId: ctx.adminUser!.id,
-          action: 'privacy_rule.created',
-          targetType: 'privacy_rule',
+          action: "privacy_rule.created",
+          targetType: "privacy_rule",
           targetId: rule.id,
         },
       });
@@ -51,7 +53,9 @@ export const privacyRouter = router({
   // Update privacy rule
   updateRule: projectProcedure
     .input(
-      z.object({ projectId: z.string().uuid(), ruleId: z.string().uuid() }).merge(updatePrivacyRuleSchema)
+      z
+        .object({ projectId: z.string().uuid(), ruleId: z.string().uuid() })
+        .merge(updatePrivacyRuleSchema),
     )
     .mutation(async ({ input, ctx }) => {
       const rule = await ctx.prisma.privacyRule.update({
@@ -66,10 +70,10 @@ export const privacyRouter = router({
       await ctx.prisma.auditLog.create({
         data: {
           projectId: ctx.projectId,
-          actorType: 'admin',
+          actorType: "admin",
           actorId: ctx.adminUser!.id,
-          action: 'privacy_rule.updated',
-          targetType: 'privacy_rule',
+          action: "privacy_rule.updated",
+          targetType: "privacy_rule",
           targetId: rule.id,
         },
       });
@@ -79,7 +83,9 @@ export const privacyRouter = router({
 
   // Delete privacy rule
   deleteRule: projectProcedure
-    .input(z.object({ projectId: z.string().uuid(), ruleId: z.string().uuid() }))
+    .input(
+      z.object({ projectId: z.string().uuid(), ruleId: z.string().uuid() }),
+    )
     .mutation(async ({ input, ctx }) => {
       await ctx.prisma.privacyRule.delete({
         where: { id: input.ruleId, projectId: ctx.projectId },
@@ -88,10 +94,10 @@ export const privacyRouter = router({
       await ctx.prisma.auditLog.create({
         data: {
           projectId: ctx.projectId,
-          actorType: 'admin',
+          actorType: "admin",
           actorId: ctx.adminUser!.id,
-          action: 'privacy_rule.deleted',
-          targetType: 'privacy_rule',
+          action: "privacy_rule.deleted",
+          targetType: "privacy_rule",
           targetId: input.ruleId,
         },
       });
@@ -106,7 +112,7 @@ export const privacyRouter = router({
         projectId: z.string().uuid(),
         ruleId: z.string().uuid(),
         enabled: z.boolean(),
-      })
+      }),
     )
     .mutation(async ({ input, ctx }) => {
       const rule = await ctx.prisma.privacyRule.update({
@@ -120,16 +126,27 @@ export const privacyRouter = router({
   // Get audit logs
   getAuditLogs: projectProcedure
     .input(
-      z.object({ projectId: z.string().uuid() }).merge(paginationSchema).extend({
-        actorId: z.string().uuid().optional(),
-        action: z.string().optional(),
-        targetType: z.string().optional(),
-        startDate: z.coerce.date().optional(),
-        endDate: z.coerce.date().optional(),
-      })
+      z
+        .object({ projectId: z.string().uuid() })
+        .merge(paginationSchema)
+        .extend({
+          actorId: z.string().uuid().optional(),
+          action: z.string().optional(),
+          targetType: z.string().optional(),
+          startDate: z.coerce.date().optional(),
+          endDate: z.coerce.date().optional(),
+        }),
     )
     .query(async ({ input, ctx }) => {
-      const { page, pageSize, actorId, action, targetType, startDate, endDate } = input;
+      const {
+        page,
+        pageSize,
+        actorId,
+        action,
+        targetType,
+        startDate,
+        endDate,
+      } = input;
 
       const where: Record<string, unknown> = {
         projectId: ctx.projectId,
@@ -138,13 +155,21 @@ export const privacyRouter = router({
       if (actorId) where.actorId = actorId;
       if (action) where.action = { contains: action };
       if (targetType) where.targetType = targetType;
-      if (startDate) where.createdAt = { ...((where.createdAt as Record<string, unknown>) || {}), gte: startDate };
-      if (endDate) where.createdAt = { ...((where.createdAt as Record<string, unknown>) || {}), lte: endDate };
+      if (startDate)
+        where.createdAt = {
+          ...((where.createdAt as Record<string, unknown>) || {}),
+          gte: startDate,
+        };
+      if (endDate)
+        where.createdAt = {
+          ...((where.createdAt as Record<string, unknown>) || {}),
+          lte: endDate,
+        };
 
       const [logs, total] = await Promise.all([
         ctx.prisma.auditLog.findMany({
           where,
-          orderBy: { createdAt: 'desc' },
+          orderBy: { createdAt: "desc" },
           skip: (page - 1) * pageSize,
           take: pageSize,
         }),
@@ -165,7 +190,12 @@ export const privacyRouter = router({
 
   // Get capture inspector for an interaction
   getCaptureInspector: projectProcedure
-    .input(z.object({ projectId: z.string().uuid(), interactionId: z.string().uuid() }))
+    .input(
+      z.object({
+        projectId: z.string().uuid(),
+        interactionId: z.string().uuid(),
+      }),
+    )
     .query(async ({ input, ctx }) => {
       const interaction = await ctx.prisma.interaction.findUnique({
         where: { id: input.interactionId, projectId: ctx.projectId },
@@ -178,8 +208,8 @@ export const privacyRouter = router({
 
       if (!interaction) {
         throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Interaction not found',
+          code: "NOT_FOUND",
+          message: "Interaction not found",
         });
       }
 
@@ -200,14 +230,23 @@ export const privacyRouter = router({
           hasContentJson: !!interaction.contentJson,
           hasTechnicalContext: !!interaction.technicalContext,
           hasLogs: interaction.logs.length > 0,
-          logDetails: interaction.logs.length > 0 ? {
-            hasConsole: !!interaction.logs[0]?.console,
-            consoleCount: (interaction.logs[0]?.console as Array<unknown>)?.length || 0,
-            hasNetwork: !!interaction.logs[0]?.network,
-            networkCount: (interaction.logs[0]?.network as Array<unknown>)?.length || 0,
-            hasErrors: !!interaction.logs[0]?.errors,
-            errorCount: (interaction.logs[0]?.errors as Array<unknown>)?.length || 0,
-          } : null,
+          logDetails:
+            interaction.logs.length > 0
+              ? {
+                  hasConsole: !!interaction.logs[0]?.console,
+                  consoleCount:
+                    (interaction.logs[0]?.console as Array<unknown>)?.length ||
+                    0,
+                  hasNetwork: !!interaction.logs[0]?.network,
+                  networkCount:
+                    (interaction.logs[0]?.network as Array<unknown>)?.length ||
+                    0,
+                  hasErrors: !!interaction.logs[0]?.errors,
+                  errorCount:
+                    (interaction.logs[0]?.errors as Array<unknown>)?.length ||
+                    0,
+                }
+              : null,
           hasMedia: interaction.media.length > 0,
           mediaDetails: interaction.media.map((m) => ({
             kind: m.kind,
@@ -215,23 +254,35 @@ export const privacyRouter = router({
             sizeBytes: m.sizeBytes,
           })),
           hasReplay: interaction.replays.length > 0,
-          replayDetails: interaction.replays.length > 0 ? {
-            duration: interaction.replays[0].duration,
-            eventCount: interaction.replays[0].eventCount,
-            status: interaction.replays[0].status,
-          } : null,
+          replayDetails:
+            interaction.replays.length > 0
+              ? {
+                  duration: interaction.replays[0].duration,
+                  eventCount: interaction.replays[0].eventCount,
+                  status: interaction.replays[0].status,
+                }
+              : null,
         },
         privacyScope: {
           capturedFields: privacyScope?.capturedFields || [],
           maskedFields: privacyScope?.maskedFields || [],
           blockedElements: privacyScope?.blockedElements || 0,
         },
-        technicalContext: interaction.technicalContext ? {
-          url: (interaction.technicalContext as Record<string, unknown>).url,
-          userAgent: (interaction.technicalContext as Record<string, unknown>).userAgent,
-          viewport: (interaction.technicalContext as Record<string, unknown>).viewport,
-          devicePixelRatio: (interaction.technicalContext as Record<string, unknown>).devicePixelRatio,
-        } : null,
+        technicalContext: interaction.technicalContext
+          ? {
+              url: (interaction.technicalContext as Record<string, unknown>)
+                .url,
+              userAgent: (
+                interaction.technicalContext as Record<string, unknown>
+              ).userAgent,
+              viewport: (
+                interaction.technicalContext as Record<string, unknown>
+              ).viewport,
+              devicePixelRatio: (
+                interaction.technicalContext as Record<string, unknown>
+              ).devicePixelRatio,
+            }
+          : null,
       };
     }),
 
@@ -247,13 +298,15 @@ export const privacyRouter = router({
           customMaskSelectors: z.array(z.string()).optional(),
           blockSelectors: z.array(z.string()).optional(),
         }),
-        captureDefaults: z.object({
-          console: z.boolean().optional(),
-          network: z.boolean().optional(),
-          dom: z.boolean().optional(),
-          replay: z.boolean().optional(),
-        }).optional(),
-      })
+        captureDefaults: z
+          .object({
+            console: z.boolean().optional(),
+            network: z.boolean().optional(),
+            dom: z.boolean().optional(),
+            replay: z.boolean().optional(),
+          })
+          .optional(),
+      }),
     )
     .mutation(async ({ input, ctx }) => {
       const project = await ctx.prisma.project.findUnique({
@@ -262,8 +315,8 @@ export const privacyRouter = router({
 
       if (!project) {
         throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Project not found',
+          code: "NOT_FOUND",
+          message: "Project not found",
         });
       }
 
@@ -271,13 +324,19 @@ export const privacyRouter = router({
       const newSettings = {
         ...currentSettings,
         privacyDefaults: {
-          ...((currentSettings.privacyDefaults as Record<string, unknown>) || {}),
+          ...((currentSettings.privacyDefaults as Record<string, unknown>) ||
+            {}),
           ...input.privacyDefaults,
         },
-        captureDefaults: input.captureDefaults ? {
-          ...((currentSettings.captureDefaults as Record<string, unknown>) || {}),
-          ...input.captureDefaults,
-        } : currentSettings.captureDefaults,
+        captureDefaults: input.captureDefaults
+          ? {
+              ...((currentSettings.captureDefaults as Record<
+                string,
+                unknown
+              >) || {}),
+              ...input.captureDefaults,
+            }
+          : currentSettings.captureDefaults,
       };
 
       await ctx.prisma.project.update({
@@ -288,10 +347,10 @@ export const privacyRouter = router({
       await ctx.prisma.auditLog.create({
         data: {
           projectId: ctx.projectId,
-          actorType: 'admin',
+          actorType: "admin",
           actorId: ctx.adminUser!.id,
-          action: 'project.privacy_settings_updated',
-          targetType: 'project',
+          action: "project.privacy_settings_updated",
+          targetType: "project",
           targetId: ctx.projectId,
           meta: input,
         },
@@ -348,9 +407,9 @@ export const privacyRouter = router({
     .input(
       z.object({
         projectId: z.string().uuid(),
-        format: z.enum(['json', 'csv']),
+        format: z.enum(["json", "csv"]),
         includeMedia: z.boolean().default(false),
-      })
+      }),
     )
     .mutation(async ({ input, ctx }) => {
       // In production, this would enqueue a worker job
@@ -359,10 +418,10 @@ export const privacyRouter = router({
       await ctx.prisma.auditLog.create({
         data: {
           projectId: ctx.projectId,
-          actorType: 'admin',
+          actorType: "admin",
           actorId: ctx.adminUser!.id,
-          action: 'data.export_requested',
-          targetType: 'project',
+          action: "data.export_requested",
+          targetType: "project",
           targetId: ctx.projectId,
           meta: {
             format: input.format,
@@ -372,11 +431,12 @@ export const privacyRouter = router({
       });
 
       // TODO: Enqueue export job
-      ctx.logger.info({ projectId: ctx.projectId }, 'Data export requested');
+      ctx.logger.info({ projectId: ctx.projectId }, "Data export requested");
 
       return {
         success: true,
-        message: 'Export request received. You will receive an email when the export is ready.',
+        message:
+          "Export request received. You will receive an email when the export is ready.",
       };
     }),
 
@@ -385,39 +445,48 @@ export const privacyRouter = router({
     .input(
       z.object({
         projectId: z.string().uuid(),
-        deleteType: z.enum(['user', 'session', 'all']),
+        deleteType: z.enum(["user", "session", "all"]),
         userId: z.string().uuid().optional(),
         sessionId: z.string().uuid().optional(),
         confirm: z.literal(true),
-      })
+      }),
     )
     .mutation(async ({ input, ctx }) => {
       // Only project owners can request data deletion
-      if (ctx.membership?.role !== 'owner') {
+      if (ctx.membership?.role !== "owner") {
         throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'Only project owners can request data deletion',
+          code: "FORBIDDEN",
+          message: "Only project owners can request data deletion",
         });
       }
 
       await ctx.prisma.auditLog.create({
         data: {
           projectId: ctx.projectId,
-          actorType: 'admin',
+          actorType: "admin",
           actorId: ctx.adminUser!.id,
-          action: 'data.deletion_requested',
-          targetType: input.deleteType === 'user' ? 'user' : input.deleteType === 'session' ? 'session' : 'project',
+          action: "data.deletion_requested",
+          targetType:
+            input.deleteType === "user"
+              ? "user"
+              : input.deleteType === "session"
+                ? "session"
+                : "project",
           targetId: input.userId || input.sessionId || ctx.projectId,
           meta: input,
         },
       });
 
       // TODO: Enqueue deletion job (with confirmation period)
-      ctx.logger.warn({ projectId: ctx.projectId, deleteType: input.deleteType }, 'Data deletion requested');
+      ctx.logger.warn(
+        { projectId: ctx.projectId, deleteType: input.deleteType },
+        "Data deletion requested",
+      );
 
       return {
         success: true,
-        message: 'Deletion request received. This action will be processed within 30 days.',
+        message:
+          "Deletion request received. This action will be processed within 30 days.",
       };
     }),
 });

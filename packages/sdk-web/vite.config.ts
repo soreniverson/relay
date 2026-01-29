@@ -1,17 +1,17 @@
-import { defineConfig } from 'vite';
-import dts from 'vite-plugin-dts';
-import { resolve } from 'path';
+import { defineConfig } from "vite";
+import dts from "vite-plugin-dts";
+import { resolve } from "path";
 
 export default defineConfig({
   test: {
-    environment: 'jsdom',
+    environment: "jsdom",
   },
   build: {
     lib: {
-      entry: resolve(__dirname, 'src/index.ts'),
-      name: 'Relay',
-      formats: ['es', 'umd'],
-      fileName: (format) => `relay.${format === 'es' ? 'esm' : format}.js`,
+      entry: resolve(__dirname, "src/index.ts"),
+      name: "Relay",
+      formats: ["es", "umd"],
+      fileName: (format) => `relay.${format === "es" ? "esm" : format}.js`,
     },
     rollupOptions: {
       external: [],
@@ -20,7 +20,7 @@ export default defineConfig({
       },
     },
     sourcemap: true,
-    minify: 'esbuild',
+    minify: "esbuild",
   },
   plugins: [
     dts({

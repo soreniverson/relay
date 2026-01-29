@@ -1,28 +1,28 @@
-import { z } from 'zod';
-import { router, projectProcedure } from '../lib/trpc';
-import { TRPCError } from '@trpc/server';
-import { Prisma } from '@prisma/client';
-import crypto from 'crypto';
+import { z } from "zod";
+import { router, projectProcedure } from "../lib/trpc";
+import { TRPCError } from "@trpc/server";
+import { Prisma } from "@prisma/client";
+import crypto from "crypto";
 
 // Webhook event types
 const webhookEventTypes = [
-  'interaction.created',
-  'interaction.updated',
-  'interaction.resolved',
-  'conversation.created',
-  'conversation.closed',
-  'message.received',
-  'message.sent',
-  'survey.response',
-  'user.created',
-  'user.updated',
-  'feedback.received',
-  'bug.reported',
+  "interaction.created",
+  "interaction.updated",
+  "interaction.resolved",
+  "conversation.created",
+  "conversation.closed",
+  "message.received",
+  "message.sent",
+  "survey.response",
+  "user.created",
+  "user.updated",
+  "feedback.received",
+  "bug.reported",
 ] as const;
 
 // Generate webhook secret
 function generateWebhookSecret(): string {
-  return `whsec_${crypto.randomBytes(24).toString('hex')}`;
+  return `whsec_${crypto.randomBytes(24).toString("hex")}`;
 }
 
 // Sign webhook payload
@@ -30,9 +30,9 @@ function signPayload(payload: string, secret: string): string {
   const timestamp = Math.floor(Date.now() / 1000);
   const signedPayload = `${timestamp}.${payload}`;
   const signature = crypto
-    .createHmac('sha256', secret)
+    .createHmac("sha256", secret)
     .update(signedPayload)
-    .digest('hex');
+    .digest("hex");
   return `t=${timestamp},v1=${signature}`;
 }
 
@@ -46,7 +46,7 @@ export const webhooksRouter = router({
       z.object({
         projectId: z.string(),
         enabled: z.boolean().optional(),
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
       const webhooks = await ctx.prisma.webhook.findMany({
@@ -54,7 +54,7 @@ export const webhooksRouter = router({
           projectId: input.projectId,
           ...(input.enabled !== undefined && { enabled: input.enabled }),
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         include: {
           _count: {
             select: { deliveries: true },
@@ -65,7 +65,7 @@ export const webhooksRouter = router({
       // Mask secrets in response
       return webhooks.map((w) => ({
         ...w,
-        secret: w.secret.slice(0, 12) + '...',
+        secret: w.secret.slice(0, 12) + "...",
       }));
     }),
 
@@ -76,19 +76,22 @@ export const webhooksRouter = router({
         where: { id: input.id },
         include: {
           deliveries: {
-            orderBy: { createdAt: 'desc' },
+            orderBy: { createdAt: "desc" },
             take: 20,
           },
         },
       });
 
       if (!webhook) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Webhook not found' });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Webhook not found",
+        });
       }
 
       return {
         ...webhook,
-        secret: webhook.secret.slice(0, 12) + '...',
+        secret: webhook.secret.slice(0, 12) + "...",
       };
     }),
 
@@ -100,7 +103,7 @@ export const webhooksRouter = router({
         url: z.string().url(),
         events: z.array(z.enum(webhookEventTypes)).min(1),
         enabled: z.boolean().default(true),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const secret = generateWebhookSecret();
@@ -128,7 +131,7 @@ export const webhooksRouter = router({
         url: z.string().url().optional(),
         events: z.array(z.enum(webhookEventTypes)).optional(),
         enabled: z.boolean().optional(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const { id, ...data } = input;
@@ -140,7 +143,7 @@ export const webhooksRouter = router({
 
       return {
         ...webhook,
-        secret: webhook.secret.slice(0, 12) + '...',
+        secret: webhook.secret.slice(0, 12) + "...",
       };
     }),
 
@@ -161,7 +164,7 @@ export const webhooksRouter = router({
 
       return {
         ...webhook,
-        secret: webhook.secret.slice(0, 12) + '...',
+        secret: webhook.secret.slice(0, 12) + "...",
       };
     }),
 
@@ -191,7 +194,7 @@ export const webhooksRouter = router({
         statusCode: z.number().optional(), // Filter by HTTP status code
         page: z.number().default(1),
         pageSize: z.number().default(20),
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
       const where: Prisma.WebhookDeliveryWhereInput = {
@@ -202,7 +205,7 @@ export const webhooksRouter = router({
       const [deliveries, total] = await Promise.all([
         ctx.prisma.webhookDelivery.findMany({
           where,
-          orderBy: { createdAt: 'desc' },
+          orderBy: { createdAt: "desc" },
           skip: (input.page - 1) * input.pageSize,
           take: input.pageSize,
         }),
@@ -229,7 +232,10 @@ export const webhooksRouter = router({
       });
 
       if (!delivery) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Delivery not found' });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Delivery not found",
+        });
       }
 
       return delivery;
@@ -245,7 +251,10 @@ export const webhooksRouter = router({
       });
 
       if (!delivery) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Delivery not found' });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Delivery not found",
+        });
       }
 
       // Create new delivery attempt
@@ -255,10 +264,10 @@ export const webhooksRouter = router({
       try {
         const startTime = Date.now();
         const response = await fetch(delivery.webhook.url, {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
-            'X-Webhook-Signature': signature,
+            "Content-Type": "application/json",
+            "X-Webhook-Signature": signature,
           },
           body: payload,
         });
@@ -283,7 +292,7 @@ export const webhooksRouter = router({
           where: { id: input.id },
           data: {
             status: 0, // 0 indicates network error
-            response: error instanceof Error ? error.message : 'Unknown error',
+            response: error instanceof Error ? error.message : "Unknown error",
             attempts: { increment: 1 },
           },
         });
@@ -304,14 +313,17 @@ export const webhooksRouter = router({
       });
 
       if (!webhook) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Webhook not found' });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Webhook not found",
+        });
       }
 
       // Create test payload
       const testPayload = {
-        event: 'webhook.test',
+        event: "webhook.test",
         data: {
-          message: 'This is a test webhook delivery',
+          message: "This is a test webhook delivery",
           timestamp: new Date().toISOString(),
         },
       };
@@ -323,7 +335,7 @@ export const webhooksRouter = router({
       const delivery = await ctx.prisma.webhookDelivery.create({
         data: {
           webhookId: webhook.id,
-          event: 'webhook.test',
+          event: "webhook.test",
           payload: testPayload,
         },
       });
@@ -331,10 +343,10 @@ export const webhooksRouter = router({
       try {
         const startTime = Date.now();
         const response = await fetch(webhook.url, {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
-            'X-Webhook-Signature': signature,
+            "Content-Type": "application/json",
+            "X-Webhook-Signature": signature,
           },
           body: payload,
         });
@@ -361,14 +373,14 @@ export const webhooksRouter = router({
           where: { id: delivery.id },
           data: {
             status: 0, // 0 indicates network error
-            response: error instanceof Error ? error.message : 'Unknown error',
+            response: error instanceof Error ? error.message : "Unknown error",
           },
         });
 
         return {
           success: false,
           delivery: updated,
-          error: error instanceof Error ? error.message : 'Unknown error',
+          error: error instanceof Error ? error.message : "Unknown error",
         };
       }
     }),
@@ -378,10 +390,10 @@ export const webhooksRouter = router({
     return webhookEventTypes.map((event) => ({
       value: event,
       label: event
-        .split('.')
+        .split(".")
         .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
-        .join(' '),
-      category: event.split('.')[0],
+        .join(" "),
+      category: event.split(".")[0],
     }));
   }),
 });

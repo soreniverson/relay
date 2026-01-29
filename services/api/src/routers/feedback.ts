@@ -1,23 +1,26 @@
-import { z } from 'zod';
-import { TRPCError } from '@trpc/server';
-import { router, projectProcedure, sdkProcedure } from '../lib/trpc';
+import { z } from "zod";
+import { TRPCError } from "@trpc/server";
+import { router, projectProcedure, sdkProcedure } from "../lib/trpc";
 import {
   createFeedbackItemSchema,
   updateFeedbackItemSchema,
   paginationSchema,
   feedbackItemStatusSchema,
-} from '@relay/shared';
+} from "@relay/shared";
 
 export const feedbackRouter = router({
   // List feedback items (dashboard)
   list: projectProcedure
     .input(
-      z.object({ projectId: z.string().uuid() }).merge(paginationSchema).extend({
-        status: feedbackItemStatusSchema.optional(),
-        category: z.string().optional(),
-        sortBy: z.enum(['votes', 'createdAt', 'updatedAt']).default('votes'),
-        sortDir: z.enum(['asc', 'desc']).default('desc'),
-      })
+      z
+        .object({ projectId: z.string().uuid() })
+        .merge(paginationSchema)
+        .extend({
+          status: feedbackItemStatusSchema.optional(),
+          category: z.string().optional(),
+          sortBy: z.enum(["votes", "createdAt", "updatedAt"]).default("votes"),
+          sortDir: z.enum(["asc", "desc"]).default("desc"),
+        }),
     )
     .query(async ({ input, ctx }) => {
       const { page, pageSize, status, category, sortBy, sortDir } = input;
@@ -33,7 +36,8 @@ export const feedbackRouter = router({
         where.category = category;
       }
 
-      const orderBy = sortBy === 'votes' ? { voteCount: sortDir } : { [sortBy]: sortDir };
+      const orderBy =
+        sortBy === "votes" ? { voteCount: sortDir } : { [sortBy]: sortDir };
 
       const [items, total] = await Promise.all([
         ctx.prisma.feedbackItem.findMany({
@@ -77,7 +81,12 @@ export const feedbackRouter = router({
 
   // Get single feedback item
   get: projectProcedure
-    .input(z.object({ projectId: z.string().uuid(), feedbackItemId: z.string().uuid() }))
+    .input(
+      z.object({
+        projectId: z.string().uuid(),
+        feedbackItemId: z.string().uuid(),
+      }),
+    )
     .query(async ({ input, ctx }) => {
       const item = await ctx.prisma.feedbackItem.findUnique({
         where: { id: input.feedbackItemId, projectId: ctx.projectId },
@@ -122,8 +131,8 @@ export const feedbackRouter = router({
 
       if (!item) {
         throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Feedback item not found',
+          code: "NOT_FOUND",
+          message: "Feedback item not found",
         });
       }
 
@@ -143,7 +152,11 @@ export const feedbackRouter = router({
 
   // Create feedback item (dashboard)
   create: projectProcedure
-    .input(z.object({ projectId: z.string().uuid() }).merge(createFeedbackItemSchema))
+    .input(
+      z
+        .object({ projectId: z.string().uuid() })
+        .merge(createFeedbackItemSchema),
+    )
     .mutation(async ({ input, ctx }) => {
       const item = await ctx.prisma.feedbackItem.create({
         data: {
@@ -151,7 +164,7 @@ export const feedbackRouter = router({
           title: input.title,
           description: input.description,
           category: input.category,
-          status: input.status || 'under_review',
+          status: input.status || "under_review",
           createdBy: ctx.adminUser!.id,
         },
       });
@@ -159,10 +172,10 @@ export const feedbackRouter = router({
       await ctx.prisma.auditLog.create({
         data: {
           projectId: ctx.projectId,
-          actorType: 'admin',
+          actorType: "admin",
           actorId: ctx.adminUser!.id,
-          action: 'feedback_item.created',
-          targetType: 'feedback_item',
+          action: "feedback_item.created",
+          targetType: "feedback_item",
           targetId: item.id,
         },
       });
@@ -173,7 +186,12 @@ export const feedbackRouter = router({
   // Update feedback item
   update: projectProcedure
     .input(
-      z.object({ projectId: z.string().uuid(), feedbackItemId: z.string().uuid() }).merge(updateFeedbackItemSchema)
+      z
+        .object({
+          projectId: z.string().uuid(),
+          feedbackItemId: z.string().uuid(),
+        })
+        .merge(updateFeedbackItemSchema),
     )
     .mutation(async ({ input, ctx }) => {
       const item = await ctx.prisma.feedbackItem.update({
@@ -189,10 +207,10 @@ export const feedbackRouter = router({
       await ctx.prisma.auditLog.create({
         data: {
           projectId: ctx.projectId,
-          actorType: 'admin',
+          actorType: "admin",
           actorId: ctx.adminUser!.id,
-          action: 'feedback_item.updated',
-          targetType: 'feedback_item',
+          action: "feedback_item.updated",
+          targetType: "feedback_item",
           targetId: item.id,
           meta: input,
         },
@@ -203,7 +221,12 @@ export const feedbackRouter = router({
 
   // Delete feedback item
   delete: projectProcedure
-    .input(z.object({ projectId: z.string().uuid(), feedbackItemId: z.string().uuid() }))
+    .input(
+      z.object({
+        projectId: z.string().uuid(),
+        feedbackItemId: z.string().uuid(),
+      }),
+    )
     .mutation(async ({ input, ctx }) => {
       await ctx.prisma.feedbackItem.delete({
         where: { id: input.feedbackItemId, projectId: ctx.projectId },
@@ -212,10 +235,10 @@ export const feedbackRouter = router({
       await ctx.prisma.auditLog.create({
         data: {
           projectId: ctx.projectId,
-          actorType: 'admin',
+          actorType: "admin",
           actorId: ctx.adminUser!.id,
-          action: 'feedback_item.deleted',
-          targetType: 'feedback_item',
+          action: "feedback_item.deleted",
+          targetType: "feedback_item",
           targetId: input.feedbackItemId,
         },
       });
@@ -230,7 +253,7 @@ export const feedbackRouter = router({
         projectId: z.string().uuid(),
         feedbackItemId: z.string().uuid(),
         interactionId: z.string().uuid(),
-      })
+      }),
     )
     .mutation(async ({ input, ctx }) => {
       // Verify both exist
@@ -245,8 +268,8 @@ export const feedbackRouter = router({
 
       if (!item || !interaction) {
         throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Feedback item or interaction not found',
+          code: "NOT_FOUND",
+          message: "Feedback item or interaction not found",
         });
       }
 
@@ -274,7 +297,7 @@ export const feedbackRouter = router({
         projectId: z.string().uuid(),
         feedbackItemId: z.string().uuid(),
         interactionId: z.string().uuid(),
-      })
+      }),
     )
     .mutation(async ({ input, ctx }) => {
       await ctx.prisma.feedbackLink.delete({
@@ -302,7 +325,7 @@ export const feedbackRouter = router({
         feedbackItemId: z.string().uuid(),
         sessionId: z.string().uuid(),
         userId: z.string().optional(),
-      })
+      }),
     )
     .mutation(async ({ input, ctx }) => {
       // Check if already voted
@@ -317,8 +340,8 @@ export const feedbackRouter = router({
 
       if (existingVote) {
         throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'Already voted on this item',
+          code: "BAD_REQUEST",
+          message: "Already voted on this item",
         });
       }
 
@@ -360,7 +383,7 @@ export const feedbackRouter = router({
       z.object({
         feedbackItemId: z.string().uuid(),
         sessionId: z.string().uuid(),
-      })
+      }),
     )
     .mutation(async ({ input, ctx }) => {
       const existingVote = await ctx.prisma.feedbackVote.findUnique({
@@ -374,8 +397,8 @@ export const feedbackRouter = router({
 
       if (!existingVote) {
         throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'No vote to remove',
+          code: "BAD_REQUEST",
+          message: "No vote to remove",
         });
       }
 
@@ -399,7 +422,7 @@ export const feedbackRouter = router({
         sessionId: z.string().uuid().optional(),
         page: z.number().int().positive().default(1),
         pageSize: z.number().int().positive().max(50).default(20),
-      })
+      }),
     )
     .query(async ({ input, ctx }) => {
       const { page, pageSize, sessionId } = input;
@@ -408,9 +431,9 @@ export const feedbackRouter = router({
       const items = await ctx.prisma.feedbackItem.findMany({
         where: {
           projectId: ctx.projectId,
-          status: { in: ['under_review', 'planned', 'in_progress', 'shipped'] },
+          status: { in: ["under_review", "planned", "in_progress", "shipped"] },
         },
-        orderBy: { voteCount: 'desc' },
+        orderBy: { voteCount: "desc" },
         skip: (page - 1) * pageSize,
         take: pageSize,
         select: {
@@ -455,7 +478,7 @@ export const feedbackRouter = router({
       const items = await ctx.prisma.feedbackItem.findMany({
         where: { projectId: ctx.projectId, category: { not: null } },
         select: { category: true },
-        distinct: ['category'],
+        distinct: ["category"],
       });
 
       return items.map((i) => i.category).filter(Boolean) as string[];

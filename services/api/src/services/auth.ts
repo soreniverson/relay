@@ -1,24 +1,24 @@
-import { prisma } from '../lib/prisma';
-import { cache } from '../lib/redis';
-import { createLogger } from '../lib/logger';
-import * as jose from 'jose';
-import * as bcrypt from 'bcryptjs';
-import { nanoid } from 'nanoid';
-import type { Project, AdminUser, ApiKey } from '@prisma/client';
+import { prisma } from "../lib/prisma";
+import { cache } from "../lib/redis";
+import { createLogger } from "../lib/logger";
+import * as jose from "jose";
+import * as bcrypt from "bcryptjs";
+import { nanoid } from "nanoid";
+import type { Project, AdminUser, ApiKey } from "@prisma/client";
 
-const logger = createLogger('auth');
+const logger = createLogger("auth");
 
 // JWT configuration
 const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'relay-dev-secret-change-in-production'
+  process.env.JWT_SECRET || "relay-dev-secret-change-in-production",
 );
-const JWT_ISSUER = 'relay';
-const JWT_AUDIENCE = 'relay-dashboard';
-const JWT_EXPIRY = '7d';
+const JWT_ISSUER = "relay";
+const JWT_AUDIENCE = "relay-dashboard";
+const JWT_EXPIRY = "7d";
 
 // API Key utilities
 export function generateApiKey(): string {
-  const prefix = 'rly';
+  const prefix = "rly";
   const random = nanoid(32);
   return `${prefix}_${random}`;
 }
@@ -31,7 +31,10 @@ export async function hashApiKey(key: string): Promise<string> {
   return bcrypt.hash(key, 10);
 }
 
-export async function verifyApiKeyHash(key: string, hash: string): Promise<boolean> {
+export async function verifyApiKeyHash(
+  key: string,
+  hash: string,
+): Promise<boolean> {
   return bcrypt.compare(key, hash);
 }
 
@@ -44,7 +47,9 @@ export async function verifyApiKey(key: string): Promise<{
 
   // Check cache first
   const cacheKey = `apikey:${prefix}`;
-  const cached = await cache.get<{ projectId: string; keyId: string }>(cacheKey);
+  const cached = await cache.get<{ projectId: string; keyId: string }>(
+    cacheKey,
+  );
 
   if (cached) {
     // Validate hash
@@ -53,7 +58,7 @@ export async function verifyApiKey(key: string): Promise<{
       include: { project: true },
     });
 
-    if (apiKey && await verifyApiKeyHash(key, apiKey.keyHash)) {
+    if (apiKey && (await verifyApiKeyHash(key, apiKey.keyHash))) {
       // Update last used
       await prisma.apiKey.update({
         where: { id: apiKey.id },
@@ -74,12 +79,16 @@ export async function verifyApiKey(key: string): Promise<{
     if (await verifyApiKeyHash(key, apiKey.keyHash)) {
       // Check expiry
       if (apiKey.expiresAt && apiKey.expiresAt < new Date()) {
-        logger.warn({ keyId: apiKey.id }, 'API key expired');
+        logger.warn({ keyId: apiKey.id }, "API key expired");
         return null;
       }
 
       // Cache for 5 minutes
-      await cache.set(cacheKey, { projectId: apiKey.projectId, keyId: apiKey.id }, 300);
+      await cache.set(
+        cacheKey,
+        { projectId: apiKey.projectId, keyId: apiKey.id },
+        300,
+      );
 
       // Update last used
       await prisma.apiKey.update({
@@ -91,7 +100,7 @@ export async function verifyApiKey(key: string): Promise<{
     }
   }
 
-  logger.warn({ prefix }, 'Invalid API key');
+  logger.warn({ prefix }, "Invalid API key");
   return null;
 }
 
@@ -100,7 +109,7 @@ export async function createApiKey(
   projectId: string,
   name: string,
   scopes: string[],
-  expiresAt?: Date
+  expiresAt?: Date,
 ): Promise<{ key: string; apiKey: ApiKey }> {
   const key = generateApiKey();
   const keyHash = await hashApiKey(key);
@@ -117,15 +126,18 @@ export async function createApiKey(
     },
   });
 
-  logger.info({ projectId, keyId: apiKey.id }, 'Created API key');
+  logger.info({ projectId, keyId: apiKey.id }, "Created API key");
 
   return { key, apiKey };
 }
 
 // JWT utilities
-export async function createJwt(userId: string, email: string): Promise<string> {
+export async function createJwt(
+  userId: string,
+  email: string,
+): Promise<string> {
   const jwt = await new jose.SignJWT({ userId, email })
-    .setProtectedHeader({ alg: 'HS256' })
+    .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setIssuer(JWT_ISSUER)
     .setAudience(JWT_AUDIENCE)
@@ -150,7 +162,7 @@ export async function verifyJwt(token: string): Promise<{
       email: payload.email as string,
     };
   } catch (error) {
-    logger.warn({ error }, 'Invalid JWT');
+    logger.warn({ error }, "Invalid JWT");
     return null;
   }
 }
@@ -172,12 +184,14 @@ export async function createMagicLink(email: string): Promise<{
       data: { email },
     });
     isNewUser = true;
-    logger.info({ userId: user.id, email }, 'Created new admin user');
+    logger.info({ userId: user.id, email }, "Created new admin user");
   }
 
   // Create magic link token
   const token = nanoid(48);
-  const expiresAt = new Date(Date.now() + MAGIC_LINK_EXPIRY_MINUTES * 60 * 1000);
+  const expiresAt = new Date(
+    Date.now() + MAGIC_LINK_EXPIRY_MINUTES * 60 * 1000,
+  );
 
   await prisma.magicLink.create({
     data: {
@@ -187,7 +201,7 @@ export async function createMagicLink(email: string): Promise<{
     },
   });
 
-  logger.info({ userId: user.id }, 'Created magic link');
+  logger.info({ userId: user.id }, "Created magic link");
 
   return { token, user, isNewUser };
 }
@@ -202,17 +216,17 @@ export async function verifyMagicLink(token: string): Promise<{
   });
 
   if (!magicLink) {
-    logger.warn('Magic link not found');
+    logger.warn("Magic link not found");
     return null;
   }
 
   if (magicLink.usedAt) {
-    logger.warn({ token }, 'Magic link already used');
+    logger.warn({ token }, "Magic link already used");
     return null;
   }
 
   if (magicLink.expiresAt < new Date()) {
-    logger.warn({ token }, 'Magic link expired');
+    logger.warn({ token }, "Magic link expired");
     return null;
   }
 
@@ -231,7 +245,7 @@ export async function verifyMagicLink(token: string): Promise<{
   // Create JWT
   const jwt = await createJwt(magicLink.user.id, magicLink.user.email);
 
-  logger.info({ userId: magicLink.user.id }, 'Magic link verified');
+  logger.info({ userId: magicLink.user.id }, "Magic link verified");
 
   return { user: magicLink.user, jwt };
 }
@@ -241,6 +255,9 @@ export async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, 12);
 }
 
-export async function verifyPassword(password: string, hash: string): Promise<boolean> {
+export async function verifyPassword(
+  password: string,
+  hash: string,
+): Promise<boolean> {
   return bcrypt.compare(password, hash);
 }

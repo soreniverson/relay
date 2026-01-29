@@ -1,13 +1,18 @@
-import { z } from 'zod';
-import { TRPCError } from '@trpc/server';
-import { router, projectProcedure } from '../lib/trpc';
-import { integrationProviderSchema, connectLinearSchema, connectSlackSchema, syncLinearIssueSchema } from '@relay/shared';
+import { z } from "zod";
+import { TRPCError } from "@trpc/server";
+import { router, projectProcedure } from "../lib/trpc";
+import {
+  integrationProviderSchema,
+  connectLinearSchema,
+  connectSlackSchema,
+  syncLinearIssueSchema,
+} from "@relay/shared";
 
 // Feature flag check
 async function checkIntegrationEnabled(
   prisma: any,
   projectId: string,
-  provider: string
+  provider: string,
 ): Promise<boolean> {
   const flag = await prisma.featureFlag.findUnique({
     where: {
@@ -30,7 +35,13 @@ export const integrationsRouter = router({
       });
 
       // Add all available integrations (even if not configured)
-      const allProviders = ['linear', 'slack', 'jira', 'github', 'email'] as const;
+      const allProviders = [
+        "linear",
+        "slack",
+        "jira",
+        "github",
+        "email",
+      ] as const;
       const result = allProviders.map((provider) => {
         const existing = integrations.find((i) => i.provider === provider);
         return {
@@ -46,7 +57,12 @@ export const integrationsRouter = router({
 
   // Get integration details
   get: projectProcedure
-    .input(z.object({ projectId: z.string().uuid(), provider: integrationProviderSchema }))
+    .input(
+      z.object({
+        projectId: z.string().uuid(),
+        provider: integrationProviderSchema,
+      }),
+    )
     .query(async ({ input, ctx }) => {
       const integration = await ctx.prisma.integration.findUnique({
         where: {
@@ -64,9 +80,9 @@ export const integrationsRouter = router({
       // Mask sensitive config
       const config = integration.config as Record<string, unknown>;
       const safeConfig = { ...config };
-      if ('accessToken' in safeConfig) safeConfig.accessToken = '***';
-      if ('webhookUrl' in safeConfig) safeConfig.webhookUrl = '***';
-      if ('apiToken' in safeConfig) safeConfig.apiToken = '***';
+      if ("accessToken" in safeConfig) safeConfig.accessToken = "***";
+      if ("webhookUrl" in safeConfig) safeConfig.webhookUrl = "***";
+      if ("apiToken" in safeConfig) safeConfig.apiToken = "***";
 
       return {
         provider: integration.provider,
@@ -79,39 +95,41 @@ export const integrationsRouter = router({
 
   // Connect Linear
   connectLinear: projectProcedure
-    .input(z.object({ projectId: z.string().uuid() }).merge(connectLinearSchema))
+    .input(
+      z.object({ projectId: z.string().uuid() }).merge(connectLinearSchema),
+    )
     .mutation(async ({ input, ctx }) => {
       // In production, exchange OAuth code for access token
       // For now, simulate OAuth flow
       // const tokenResponse = await exchangeLinearCode(input.code, input.redirectUri);
 
       // TODO: Implement real OAuth exchange
-      ctx.logger.info('Linear OAuth code exchange would happen here');
+      ctx.logger.info("Linear OAuth code exchange would happen here");
 
       // For demo purposes, create a placeholder integration
       const integration = await ctx.prisma.integration.upsert({
         where: {
           projectId_provider: {
             projectId: ctx.projectId,
-            provider: 'linear',
+            provider: "linear",
           },
         },
         update: {
           enabled: true,
           config: {
-            provider: 'linear',
+            provider: "linear",
             // accessToken would be stored encrypted in production
-            accessToken: 'placeholder_token',
+            accessToken: "placeholder_token",
             autoCreateIssues: false,
           },
         },
         create: {
           projectId: ctx.projectId,
-          provider: 'linear',
+          provider: "linear",
           enabled: true,
           config: {
-            provider: 'linear',
-            accessToken: 'placeholder_token',
+            provider: "linear",
+            accessToken: "placeholder_token",
             autoCreateIssues: false,
           },
         },
@@ -120,12 +138,12 @@ export const integrationsRouter = router({
       await ctx.prisma.auditLog.create({
         data: {
           projectId: ctx.projectId,
-          actorType: 'admin',
+          actorType: "admin",
           actorId: ctx.adminUser!.id,
-          action: 'integration.connected',
-          targetType: 'integration',
+          action: "integration.connected",
+          targetType: "integration",
           targetId: integration.id,
-          meta: { provider: 'linear' },
+          meta: { provider: "linear" },
         },
       });
 
@@ -140,13 +158,13 @@ export const integrationsRouter = router({
         where: {
           projectId_provider: {
             projectId: ctx.projectId,
-            provider: 'slack',
+            provider: "slack",
           },
         },
         update: {
           enabled: true,
           config: {
-            provider: 'slack',
+            provider: "slack",
             webhookUrl: input.webhookUrl,
             channelId: input.channelId,
             notifyOn: {
@@ -159,10 +177,10 @@ export const integrationsRouter = router({
         },
         create: {
           projectId: ctx.projectId,
-          provider: 'slack',
+          provider: "slack",
           enabled: true,
           config: {
-            provider: 'slack',
+            provider: "slack",
             webhookUrl: input.webhookUrl,
             channelId: input.channelId,
             notifyOn: {
@@ -178,12 +196,12 @@ export const integrationsRouter = router({
       await ctx.prisma.auditLog.create({
         data: {
           projectId: ctx.projectId,
-          actorType: 'admin',
+          actorType: "admin",
           actorId: ctx.adminUser!.id,
-          action: 'integration.connected',
-          targetType: 'integration',
+          action: "integration.connected",
+          targetType: "integration",
           targetId: integration.id,
-          meta: { provider: 'slack' },
+          meta: { provider: "slack" },
         },
       });
 
@@ -192,7 +210,12 @@ export const integrationsRouter = router({
 
   // Disconnect integration
   disconnect: projectProcedure
-    .input(z.object({ projectId: z.string().uuid(), provider: integrationProviderSchema }))
+    .input(
+      z.object({
+        projectId: z.string().uuid(),
+        provider: integrationProviderSchema,
+      }),
+    )
     .mutation(async ({ input, ctx }) => {
       const integration = await ctx.prisma.integration.findUnique({
         where: {
@@ -205,8 +228,8 @@ export const integrationsRouter = router({
 
       if (!integration) {
         throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Integration not found',
+          code: "NOT_FOUND",
+          message: "Integration not found",
         });
       }
 
@@ -217,10 +240,10 @@ export const integrationsRouter = router({
       await ctx.prisma.auditLog.create({
         data: {
           projectId: ctx.projectId,
-          actorType: 'admin',
+          actorType: "admin",
           actorId: ctx.adminUser!.id,
-          action: 'integration.disconnected',
-          targetType: 'integration',
+          action: "integration.disconnected",
+          targetType: "integration",
           targetId: integration.id,
           meta: { provider: input.provider },
         },
@@ -236,7 +259,7 @@ export const integrationsRouter = router({
         projectId: z.string().uuid(),
         provider: integrationProviderSchema,
         enabled: z.boolean(),
-      })
+      }),
     )
     .mutation(async ({ input, ctx }) => {
       const integration = await ctx.prisma.integration.update({
@@ -259,7 +282,7 @@ export const integrationsRouter = router({
         projectId: z.string().uuid(),
         provider: integrationProviderSchema,
         config: z.record(z.unknown()),
-      })
+      }),
     )
     .mutation(async ({ input, ctx }) => {
       const integration = await ctx.prisma.integration.findUnique({
@@ -273,8 +296,8 @@ export const integrationsRouter = router({
 
       if (!integration) {
         throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Integration not found',
+          code: "NOT_FOUND",
+          message: "Integration not found",
         });
       }
 
@@ -296,21 +319,23 @@ export const integrationsRouter = router({
 
   // Sync issue to Linear
   syncLinearIssue: projectProcedure
-    .input(z.object({ projectId: z.string().uuid() }).merge(syncLinearIssueSchema))
+    .input(
+      z.object({ projectId: z.string().uuid() }).merge(syncLinearIssueSchema),
+    )
     .mutation(async ({ input, ctx }) => {
       const integration = await ctx.prisma.integration.findUnique({
         where: {
           projectId_provider: {
             projectId: ctx.projectId,
-            provider: 'linear',
+            provider: "linear",
           },
         },
       });
 
       if (!integration || !integration.enabled) {
         throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'Linear integration is not enabled',
+          code: "BAD_REQUEST",
+          message: "Linear integration is not enabled",
         });
       }
 
@@ -321,8 +346,8 @@ export const integrationsRouter = router({
 
       if (!interaction) {
         throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Interaction not found',
+          code: "NOT_FOUND",
+          message: "Interaction not found",
         });
       }
 
@@ -338,9 +363,9 @@ export const integrationsRouter = router({
       await ctx.prisma.integrationLink.create({
         data: {
           projectId: ctx.projectId,
-          provider: 'linear',
+          provider: "linear",
           externalId: mockIssueId,
-          internalType: 'interaction',
+          internalType: "interaction",
           internalId: input.interactionId,
           externalUrl: mockIssueUrl,
         },
@@ -350,7 +375,7 @@ export const integrationsRouter = router({
       await ctx.prisma.interaction.update({
         where: { id: input.interactionId },
         data: {
-          linkedIssueProvider: 'linear',
+          linkedIssueProvider: "linear",
           linkedIssueId: mockIssueId,
           linkedIssueUrl: mockIssueUrl,
         },
@@ -359,16 +384,19 @@ export const integrationsRouter = router({
       await ctx.prisma.auditLog.create({
         data: {
           projectId: ctx.projectId,
-          actorType: 'admin',
+          actorType: "admin",
           actorId: ctx.adminUser!.id,
-          action: 'integration.issue_synced',
-          targetType: 'interaction',
+          action: "integration.issue_synced",
+          targetType: "interaction",
           targetId: input.interactionId,
-          meta: { provider: 'linear', issueId: mockIssueId },
+          meta: { provider: "linear", issueId: mockIssueId },
         },
       });
 
-      ctx.logger.info({ interactionId: input.interactionId, issueId: mockIssueId }, 'Issue synced to Linear');
+      ctx.logger.info(
+        { interactionId: input.interactionId, issueId: mockIssueId },
+        "Issue synced to Linear",
+      );
 
       return {
         issueId: mockIssueId,
@@ -383,22 +411,22 @@ export const integrationsRouter = router({
         projectId: z.string().uuid(),
         message: z.string().max(10000),
         interactionId: z.string().uuid().optional(),
-      })
+      }),
     )
     .mutation(async ({ input, ctx }) => {
       const integration = await ctx.prisma.integration.findUnique({
         where: {
           projectId_provider: {
             projectId: ctx.projectId,
-            provider: 'slack',
+            provider: "slack",
           },
         },
       });
 
       if (!integration || !integration.enabled) {
         throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'Slack integration is not enabled',
+          code: "BAD_REQUEST",
+          message: "Slack integration is not enabled",
         });
       }
 
@@ -406,8 +434,8 @@ export const integrationsRouter = router({
 
       if (!config.webhookUrl) {
         throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'Slack webhook URL not configured',
+          code: "BAD_REQUEST",
+          message: "Slack webhook URL not configured",
         });
       }
 
@@ -418,20 +446,28 @@ export const integrationsRouter = router({
       //   body: JSON.stringify({ text: input.message }),
       // });
 
-      ctx.logger.info({ projectId: ctx.projectId }, 'Slack notification would be sent');
+      ctx.logger.info(
+        { projectId: ctx.projectId },
+        "Slack notification would be sent",
+      );
 
       return { success: true };
     }),
 
   // Get linked issues for interaction
   getLinkedIssues: projectProcedure
-    .input(z.object({ projectId: z.string().uuid(), interactionId: z.string().uuid() }))
+    .input(
+      z.object({
+        projectId: z.string().uuid(),
+        interactionId: z.string().uuid(),
+      }),
+    )
     .query(async ({ input, ctx }) => {
       const links = await ctx.prisma.integrationLink.findMany({
         where: {
           projectId: ctx.projectId,
           internalId: input.interactionId,
-          internalType: 'interaction',
+          internalType: "interaction",
         },
       });
 
@@ -452,22 +488,26 @@ export const integrationsRouter = router({
         siteUrl: z.string().url(),
         apiToken: z.string(),
         projectKey: z.string(),
-      })
+      }),
     )
     .mutation(async ({ ctx }) => {
       // Check feature flag
-      const enabled = await checkIntegrationEnabled(ctx.prisma, ctx.projectId, 'jira');
+      const enabled = await checkIntegrationEnabled(
+        ctx.prisma,
+        ctx.projectId,
+        "jira",
+      );
       if (!enabled) {
         throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'Jira integration is not yet available. Coming soon!',
+          code: "FORBIDDEN",
+          message: "Jira integration is not yet available. Coming soon!",
         });
       }
 
       // TODO: Implement Jira integration
       throw new TRPCError({
-        code: 'NOT_IMPLEMENTED',
-        message: 'Jira integration coming soon',
+        code: "NOT_IMPLEMENTED",
+        message: "Jira integration coming soon",
       });
     }),
 
@@ -478,22 +518,26 @@ export const integrationsRouter = router({
         projectId: z.string().uuid(),
         code: z.string(),
         redirectUri: z.string().url(),
-      })
+      }),
     )
     .mutation(async ({ ctx }) => {
       // Check feature flag
-      const enabled = await checkIntegrationEnabled(ctx.prisma, ctx.projectId, 'github');
+      const enabled = await checkIntegrationEnabled(
+        ctx.prisma,
+        ctx.projectId,
+        "github",
+      );
       if (!enabled) {
         throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'GitHub integration is not yet available. Coming soon!',
+          code: "FORBIDDEN",
+          message: "GitHub integration is not yet available. Coming soon!",
         });
       }
 
       // TODO: Implement GitHub integration
       throw new TRPCError({
-        code: 'NOT_IMPLEMENTED',
-        message: 'GitHub integration coming soon',
+        code: "NOT_IMPLEMENTED",
+        message: "GitHub integration coming soon",
       });
     }),
 
@@ -504,22 +548,26 @@ export const integrationsRouter = router({
         projectId: z.string().uuid(),
         notifyAddresses: z.array(z.string().email()).max(10),
         replyToAddress: z.string().email().optional(),
-      })
+      }),
     )
     .mutation(async ({ ctx }) => {
       // Check feature flag
-      const enabled = await checkIntegrationEnabled(ctx.prisma, ctx.projectId, 'email');
+      const enabled = await checkIntegrationEnabled(
+        ctx.prisma,
+        ctx.projectId,
+        "email",
+      );
       if (!enabled) {
         throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'Email integration is not yet available. Coming soon!',
+          code: "FORBIDDEN",
+          message: "Email integration is not yet available. Coming soon!",
         });
       }
 
       // TODO: Implement email integration
       throw new TRPCError({
-        code: 'NOT_IMPLEMENTED',
-        message: 'Email integration coming soon',
+        code: "NOT_IMPLEMENTED",
+        message: "Email integration coming soon",
       });
     }),
 });

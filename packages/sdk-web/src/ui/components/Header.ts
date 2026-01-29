@@ -3,8 +3,8 @@
 // Widget header with title, back button, and close button
 // ============================================================================
 
-import { createElement } from '../utils/dom';
-import { createIconButton } from './shared/Button';
+import { createElement } from "../utils/dom";
+import { createIconButton } from "./shared/Button";
 
 export interface HeaderConfig {
   title: string;
@@ -96,33 +96,35 @@ export function createHeader(config: HeaderConfig): HeaderResult {
   const { title, showBack = false, showClose = true, onBack, onClose } = config;
 
   // Create header container
-  const header = createElement('header', { class: 'relay-header' });
+  const header = createElement("header", { class: "relay-header" });
 
   // Create back button
-  const backBtn = createElement('button', {
-    type: 'button',
-    class: 'relay-header__btn relay-header__back',
+  const backBtn = createElement("button", {
+    type: "button",
+    class: "relay-header__btn relay-header__back",
   });
   backBtn.innerHTML = BACK_ICON;
-  backBtn.setAttribute('aria-label', 'Go back');
-  backBtn.style.display = showBack ? 'flex' : 'none';
+  backBtn.setAttribute("aria-label", "Go back");
+  backBtn.style.display = showBack ? "flex" : "none";
   if (onBack) {
-    backBtn.addEventListener('click', onBack);
+    backBtn.addEventListener("click", onBack);
   }
 
   // Create title
-  const titleEl = createElement('h3', { class: 'relay-header__title' }, [title]);
+  const titleEl = createElement("h3", { class: "relay-header__title" }, [
+    title,
+  ]);
 
   // Create close button
-  const closeBtn = createElement('button', {
-    type: 'button',
-    class: 'relay-header__btn relay-header__close',
+  const closeBtn = createElement("button", {
+    type: "button",
+    class: "relay-header__btn relay-header__close",
   });
   closeBtn.innerHTML = CLOSE_ICON;
-  closeBtn.setAttribute('aria-label', 'Close widget');
-  closeBtn.style.display = showClose ? 'flex' : 'none';
+  closeBtn.setAttribute("aria-label", "Close widget");
+  closeBtn.style.display = showClose ? "flex" : "none";
   if (onClose) {
-    closeBtn.addEventListener('click', onClose);
+    closeBtn.addEventListener("click", onClose);
   }
 
   // Assemble
@@ -136,7 +138,7 @@ export function createHeader(config: HeaderConfig): HeaderResult {
       titleEl.textContent = newTitle;
     },
     setShowBack: (show: boolean) => {
-      backBtn.style.display = show ? 'flex' : 'none';
+      backBtn.style.display = show ? "flex" : "none";
     },
   };
 }

@@ -3,9 +3,9 @@
 // Captures console.log, warn, error, etc.
 // ============================================================================
 
-import type { ConsoleEntry } from '../types';
+import type { ConsoleEntry } from "../types";
 
-type ConsoleMethod = 'log' | 'info' | 'warn' | 'error' | 'debug';
+type ConsoleMethod = "log" | "info" | "warn" | "error" | "debug";
 
 interface ConsoleCapture {
   start(): void;
@@ -28,7 +28,12 @@ export function createConsoleCapture(maxEntries = 500): ConsoleCapture {
 
   function serialize(arg: unknown): unknown {
     if (arg === null || arg === undefined) return arg;
-    if (typeof arg === 'string' || typeof arg === 'number' || typeof arg === 'boolean') return arg;
+    if (
+      typeof arg === "string" ||
+      typeof arg === "number" ||
+      typeof arg === "boolean"
+    )
+      return arg;
 
     try {
       // Try to serialize objects
@@ -53,7 +58,7 @@ export function createConsoleCapture(maxEntries = 500): ConsoleCapture {
         return JSON.parse(str);
       }
 
-      return '[Object too large]';
+      return "[Object too large]";
     } catch {
       return String(arg);
     }
@@ -68,13 +73,15 @@ export function createConsoleCapture(maxEntries = 500): ConsoleCapture {
 
       const entry: ConsoleEntry = {
         level,
-        message: args.map((a) => (typeof a === 'string' ? a : JSON.stringify(a))).join(' '),
+        message: args
+          .map((a) => (typeof a === "string" ? a : JSON.stringify(a)))
+          .join(" "),
         args: args.slice(0, 5).map(serialize),
         timestamp: Date.now(),
       };
 
       // Capture stack for errors
-      if (level === 'error' && args[0] instanceof Error) {
+      if (level === "error" && args[0] instanceof Error) {
         entry.stack = (args[0] as Error).stack;
       }
 

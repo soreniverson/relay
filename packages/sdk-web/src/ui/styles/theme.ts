@@ -4,66 +4,68 @@
 // ============================================================================
 
 export interface ThemeColors {
-  '--relay-bg': string;
-  '--relay-bg-secondary': string;
-  '--relay-bg-tertiary': string;
-  '--relay-text': string;
-  '--relay-text-muted': string;
-  '--relay-text-subtle': string;
-  '--relay-border': string;
-  '--relay-border-hover': string;
-  '--relay-primary': string;
-  '--relay-primary-hover': string;
-  '--relay-primary-text': string;
-  '--relay-success': string;
-  '--relay-warning': string;
-  '--relay-error': string;
-  '--relay-shadow': string;
-  '--relay-shadow-lg': string;
-  '--relay-overlay': string;
+  "--relay-bg": string;
+  "--relay-bg-secondary": string;
+  "--relay-bg-tertiary": string;
+  "--relay-text": string;
+  "--relay-text-muted": string;
+  "--relay-text-subtle": string;
+  "--relay-border": string;
+  "--relay-border-hover": string;
+  "--relay-primary": string;
+  "--relay-primary-hover": string;
+  "--relay-primary-text": string;
+  "--relay-success": string;
+  "--relay-warning": string;
+  "--relay-error": string;
+  "--relay-shadow": string;
+  "--relay-shadow-lg": string;
+  "--relay-overlay": string;
 }
 
 export const lightTheme: ThemeColors = {
-  '--relay-bg': '0 0% 100%',
-  '--relay-bg-secondary': '240 5% 96%',
-  '--relay-bg-tertiary': '240 5% 92%',
-  '--relay-text': '240 10% 4%',
-  '--relay-text-muted': '240 4% 46%',
-  '--relay-text-subtle': '240 4% 65%',
-  '--relay-border': '240 6% 90%',
-  '--relay-border-hover': '240 5% 75%',
-  '--relay-primary': '240 6% 10%',
-  '--relay-primary-hover': '240 5% 20%',
-  '--relay-primary-text': '0 0% 100%',
-  '--relay-success': '142 71% 45%',
-  '--relay-warning': '38 92% 50%',
-  '--relay-error': '0 72% 51%',
-  '--relay-shadow': '0 1px 2px rgba(0, 0, 0, 0.05)',
-  '--relay-shadow-lg': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)',
-  '--relay-overlay': 'rgba(0, 0, 0, 0.4)',
+  "--relay-bg": "0 0% 100%",
+  "--relay-bg-secondary": "240 5% 96%",
+  "--relay-bg-tertiary": "240 5% 92%",
+  "--relay-text": "240 10% 4%",
+  "--relay-text-muted": "240 4% 46%",
+  "--relay-text-subtle": "240 4% 65%",
+  "--relay-border": "240 6% 90%",
+  "--relay-border-hover": "240 5% 75%",
+  "--relay-primary": "240 6% 10%",
+  "--relay-primary-hover": "240 5% 20%",
+  "--relay-primary-text": "0 0% 100%",
+  "--relay-success": "142 71% 45%",
+  "--relay-warning": "38 92% 50%",
+  "--relay-error": "0 72% 51%",
+  "--relay-shadow": "0 1px 2px rgba(0, 0, 0, 0.05)",
+  "--relay-shadow-lg":
+    "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)",
+  "--relay-overlay": "rgba(0, 0, 0, 0.4)",
 };
 
 export const darkTheme: ThemeColors = {
-  '--relay-bg': '240 10% 4%',
-  '--relay-bg-secondary': '240 6% 10%',
-  '--relay-bg-tertiary': '240 4% 16%',
-  '--relay-text': '0 0% 98%',
-  '--relay-text-muted': '240 5% 65%',
-  '--relay-text-subtle': '240 4% 46%',
-  '--relay-border': '240 4% 16%',
-  '--relay-border-hover': '240 5% 26%',
-  '--relay-primary': '0 0% 98%',
-  '--relay-primary-hover': '0 0% 85%',
-  '--relay-primary-text': '240 10% 4%',
-  '--relay-success': '142 71% 45%',
-  '--relay-warning': '38 92% 50%',
-  '--relay-error': '0 72% 51%',
-  '--relay-shadow': '0 1px 2px rgba(0, 0, 0, 0.3)',
-  '--relay-shadow-lg': '0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3)',
-  '--relay-overlay': 'rgba(0, 0, 0, 0.6)',
+  "--relay-bg": "240 10% 4%",
+  "--relay-bg-secondary": "240 6% 10%",
+  "--relay-bg-tertiary": "240 4% 16%",
+  "--relay-text": "0 0% 98%",
+  "--relay-text-muted": "240 5% 65%",
+  "--relay-text-subtle": "240 4% 46%",
+  "--relay-border": "240 4% 16%",
+  "--relay-border-hover": "240 5% 26%",
+  "--relay-primary": "0 0% 98%",
+  "--relay-primary-hover": "0 0% 85%",
+  "--relay-primary-text": "240 10% 4%",
+  "--relay-success": "142 71% 45%",
+  "--relay-warning": "38 92% 50%",
+  "--relay-error": "0 72% 51%",
+  "--relay-shadow": "0 1px 2px rgba(0, 0, 0, 0.3)",
+  "--relay-shadow-lg":
+    "0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3)",
+  "--relay-overlay": "rgba(0, 0, 0, 0.6)",
 };
 
-export type ThemeMode = 'light' | 'dark' | 'auto';
+export type ThemeMode = "light" | "dark" | "auto";
 
 /**
  * Detects the page's color scheme
@@ -71,48 +73,50 @@ export type ThemeMode = 'light' | 'dark' | 'auto';
  * Note: We prioritize page appearance over system preference since the widget
  * should match the host page, not the user's OS setting.
  */
-export function detectTheme(): 'light' | 'dark' {
-  if (typeof window === 'undefined') return 'light';
+export function detectTheme(): "light" | "dark" {
+  if (typeof window === "undefined") return "light";
 
   const html = document.documentElement;
   const body = document.body;
 
   // Check class-based dark mode
   if (
-    html.classList.contains('dark') ||
-    body?.classList.contains('dark') ||
-    html.classList.contains('dark-mode') ||
-    body?.classList.contains('dark-mode') ||
-    html.classList.contains('theme-dark') ||
-    body?.classList.contains('theme-dark')
+    html.classList.contains("dark") ||
+    body?.classList.contains("dark") ||
+    html.classList.contains("dark-mode") ||
+    body?.classList.contains("dark-mode") ||
+    html.classList.contains("theme-dark") ||
+    body?.classList.contains("theme-dark")
   ) {
-    return 'dark';
+    return "dark";
   }
 
   // Check data-theme attribute
-  const htmlTheme = html.getAttribute('data-theme') || html.getAttribute('data-mode');
-  const bodyTheme = body?.getAttribute('data-theme') || body?.getAttribute('data-mode');
-  if (htmlTheme === 'dark' || bodyTheme === 'dark') {
-    return 'dark';
+  const htmlTheme =
+    html.getAttribute("data-theme") || html.getAttribute("data-mode");
+  const bodyTheme =
+    body?.getAttribute("data-theme") || body?.getAttribute("data-mode");
+  if (htmlTheme === "dark" || bodyTheme === "dark") {
+    return "dark";
   }
 
   // Check color-scheme CSS property
   const htmlColorScheme = getComputedStyle(html).colorScheme;
-  const bodyColorScheme = body ? getComputedStyle(body).colorScheme : '';
-  if (htmlColorScheme === 'dark' || bodyColorScheme === 'dark') {
-    return 'dark';
+  const bodyColorScheme = body ? getComputedStyle(body).colorScheme : "";
+  if (htmlColorScheme === "dark" || bodyColorScheme === "dark") {
+    return "dark";
   }
 
   // Try to detect dark mode from background color
   if (body) {
     const bgColor = getComputedStyle(body).backgroundColor;
     if (bgColor && isDarkColor(bgColor)) {
-      return 'dark';
+      return "dark";
     }
   }
 
   // Default to light - widget should match page, and most pages are light by default
-  return 'light';
+  return "light";
 }
 
 /**
@@ -138,20 +142,23 @@ function isDarkColor(color: string): boolean {
  * Returns the theme colors based on mode
  */
 export function getTheme(mode: ThemeMode): ThemeColors {
-  if (mode === 'auto') {
-    return detectTheme() === 'dark' ? darkTheme : lightTheme;
+  if (mode === "auto") {
+    return detectTheme() === "dark" ? darkTheme : lightTheme;
   }
-  return mode === 'dark' ? darkTheme : lightTheme;
+  return mode === "dark" ? darkTheme : lightTheme;
 }
 
 /**
  * Generates CSS variables string from theme
  */
-export function generateThemeCSS(theme: ThemeColors, primaryColor?: string): string {
-  let css = '';
+export function generateThemeCSS(
+  theme: ThemeColors,
+  primaryColor?: string,
+): string {
+  let css = "";
   for (const [key, value] of Object.entries(theme)) {
     // Skip shadow and overlay (they're not HSL)
-    if (key.includes('shadow') || key.includes('overlay')) {
+    if (key.includes("shadow") || key.includes("overlay")) {
       css += `${key}: ${value};\n`;
     } else {
       css += `${key}: ${value};\n`;
@@ -164,7 +171,9 @@ export function generateThemeCSS(theme: ThemeColors, primaryColor?: string): str
     if (hsl) {
       css += `--relay-primary: ${hsl};\n`;
       // Compute hover state (slightly lighter/darker)
-      const [h, s, l] = hsl.split(' ').map((v) => parseFloat(v.replace('%', '')));
+      const [h, s, l] = hsl
+        .split(" ")
+        .map((v) => parseFloat(v.replace("%", "")));
       const hoverL = l > 50 ? l - 10 : l + 10;
       css += `--relay-primary-hover: ${h} ${s}% ${hoverL}%;\n`;
     }
@@ -178,7 +187,7 @@ export function generateThemeCSS(theme: ThemeColors, primaryColor?: string): str
  */
 function hexToHSL(hex: string): string | null {
   // Remove # if present
-  hex = hex.replace(/^#/, '');
+  hex = hex.replace(/^#/, "");
 
   // Parse RGB
   let r: number, g: number, b: number;
@@ -229,8 +238,10 @@ function hexToHSL(hex: string): string | null {
  * Creates a listener for theme changes
  * Watches: media query, class changes, data-theme attribute changes
  */
-export function onThemeChange(callback: (theme: 'light' | 'dark') => void): () => void {
-  if (typeof window === 'undefined') return () => {};
+export function onThemeChange(
+  callback: (theme: "light" | "dark") => void,
+): () => void {
+  if (typeof window === "undefined") return () => {};
 
   let lastTheme = detectTheme();
 
@@ -243,27 +254,27 @@ export function onThemeChange(callback: (theme: 'light' | 'dark') => void): () =
   };
 
   // Watch media query
-  const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+  const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
   const mediaHandler = () => checkTheme();
-  mediaQuery.addEventListener('change', mediaHandler);
+  mediaQuery.addEventListener("change", mediaHandler);
 
   // Watch class/attribute changes on html and body
   const observer = new MutationObserver(checkTheme);
 
   observer.observe(document.documentElement, {
     attributes: true,
-    attributeFilter: ['class', 'data-theme'],
+    attributeFilter: ["class", "data-theme"],
   });
 
   if (document.body) {
     observer.observe(document.body, {
       attributes: true,
-      attributeFilter: ['class', 'data-theme'],
+      attributeFilter: ["class", "data-theme"],
     });
   }
 
   return () => {
-    mediaQuery.removeEventListener('change', mediaHandler);
+    mediaQuery.removeEventListener("change", mediaHandler);
     observer.disconnect();
   };
 }

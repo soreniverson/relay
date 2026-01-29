@@ -1,5 +1,5 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 interface Project {
   id: string;
@@ -42,19 +42,19 @@ export const useAuthStore = create<AuthState>()(
       },
       logout: () => {
         set({ user: null, token: null, currentProject: null });
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('relay_token');
-          window.location.href = '/auth/login';
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("relay_token");
+          window.location.href = "/auth/login";
         }
       },
     }),
     {
-      name: 'relay-auth',
+      name: "relay-auth",
       partialize: (state) => ({
         user: state.user,
         token: state.token,
         currentProject: state.currentProject,
       }),
-    }
-  )
+    },
+  ),
 );

@@ -1,7 +1,7 @@
-import { Resend } from 'resend';
-import { createLogger } from '../lib/logger';
+import { Resend } from "resend";
+import { createLogger } from "../lib/logger";
 
-const logger = createLogger('email');
+const logger = createLogger("email");
 
 // Lazy-initialize Resend client (only when needed and API key exists)
 let _resend: Resend | null = null;
@@ -16,9 +16,9 @@ function getResendClient(): Resend | null {
 }
 
 // Email configuration
-const FROM_EMAIL = process.env.EMAIL_FROM || 'Relay <noreply@relay.dev>';
-const APP_URL = process.env.APP_URL || 'http://localhost:3000';
-const APP_NAME = 'Relay';
+const FROM_EMAIL = process.env.EMAIL_FROM || "Relay <noreply@relay.dev>";
+const APP_URL = process.env.APP_URL || "http://localhost:3000";
+const APP_NAME = "Relay";
 
 // ============================================================================
 // EMAIL TEMPLATES
@@ -47,18 +47,21 @@ interface NotificationEmailParams {
 // SEND FUNCTIONS
 // ============================================================================
 
-export async function sendMagicLinkEmail({ to, token }: MagicLinkEmailParams): Promise<boolean> {
+export async function sendMagicLinkEmail({
+  to,
+  token,
+}: MagicLinkEmailParams): Promise<boolean> {
   const magicLinkUrl = `${APP_URL}/auth/verify?token=${token}`;
-  const env = process.env.NODE_ENV || 'development';
-  const isDev = env === 'development' || env === 'test';
+  const env = process.env.NODE_ENV || "development";
+  const isDev = env === "development" || env === "test";
 
   // Always log magic link URL in non-production for easy testing
   if (isDev) {
-    console.log('\n' + '='.repeat(60));
-    console.log('MAGIC LINK FOR:', to);
-    console.log('='.repeat(60));
+    console.log("\n" + "=".repeat(60));
+    console.log("MAGIC LINK FOR:", to);
+    console.log("=".repeat(60));
     console.log(magicLinkUrl);
-    console.log('='.repeat(60) + '\n');
+    console.log("=".repeat(60) + "\n");
     // Skip sending email in dev - just use the logged URL
     return true;
   }
@@ -67,7 +70,10 @@ export async function sendMagicLinkEmail({ to, token }: MagicLinkEmailParams): P
     // In production without API key, log warning
     const resend = getResendClient();
     if (!resend) {
-      logger.warn({ to, magicLinkUrl }, 'No RESEND_API_KEY configured - email not sent');
+      logger.warn(
+        { to, magicLinkUrl },
+        "No RESEND_API_KEY configured - email not sent",
+      );
       return true;
     }
 
@@ -136,25 +142,28 @@ export async function sendMagicLinkEmail({ to, token }: MagicLinkEmailParams): P
     });
 
     if (error) {
-      logger.error({ error, to }, 'Failed to send magic link email');
+      logger.error({ error, to }, "Failed to send magic link email");
       return false;
     }
 
-    logger.info({ to, emailId: data?.id }, 'Magic link email sent');
+    logger.info({ to, emailId: data?.id }, "Magic link email sent");
     return true;
   } catch (error) {
-    logger.error({ error, to }, 'Failed to send magic link email');
+    logger.error({ error, to }, "Failed to send magic link email");
     return false;
   }
 }
 
-export async function sendWelcomeEmail({ to, name }: WelcomeEmailParams): Promise<boolean> {
-  const greeting = name ? `Hi ${name}` : 'Welcome';
+export async function sendWelcomeEmail({
+  to,
+  name,
+}: WelcomeEmailParams): Promise<boolean> {
+  const greeting = name ? `Hi ${name}` : "Welcome";
 
   try {
     const resend = getResendClient();
     if (!resend) {
-      logger.info({ to }, 'Welcome email (no API key - email not sent)');
+      logger.info({ to }, "Welcome email (no API key - email not sent)");
       return true;
     }
 
@@ -225,14 +234,14 @@ export async function sendWelcomeEmail({ to, name }: WelcomeEmailParams): Promis
     });
 
     if (error) {
-      logger.error({ error, to }, 'Failed to send welcome email');
+      logger.error({ error, to }, "Failed to send welcome email");
       return false;
     }
 
-    logger.info({ to, emailId: data?.id }, 'Welcome email sent');
+    logger.info({ to, emailId: data?.id }, "Welcome email sent");
     return true;
   } catch (error) {
-    logger.error({ error, to }, 'Failed to send welcome email');
+    logger.error({ error, to }, "Failed to send welcome email");
     return false;
   }
 }
@@ -248,12 +257,16 @@ export async function sendNotificationEmail({
   try {
     const resend = getResendClient();
     if (!resend) {
-      logger.info({ to, subject }, 'Notification email (no API key - email not sent)');
+      logger.info(
+        { to, subject },
+        "Notification email (no API key - email not sent)",
+      );
       return true;
     }
 
-    const actionButton = actionUrl && actionLabel
-      ? `
+    const actionButton =
+      actionUrl && actionLabel
+        ? `
         <table width="100%" cellpadding="0" cellspacing="0">
           <tr>
             <td align="center" style="padding: 24px 0 0;">
@@ -264,11 +277,10 @@ export async function sendNotificationEmail({
           </tr>
         </table>
       `
-      : '';
+        : "";
 
-    const actionText = actionUrl && actionLabel
-      ? `\n\n${actionLabel}: ${actionUrl}`
-      : '';
+    const actionText =
+      actionUrl && actionLabel ? `\n\n${actionLabel}: ${actionUrl}` : "";
 
     const { data, error } = await resend.emails.send({
       from: FROM_EMAIL,
@@ -321,14 +333,14 @@ export async function sendNotificationEmail({
     });
 
     if (error) {
-      logger.error({ error, to, subject }, 'Failed to send notification email');
+      logger.error({ error, to, subject }, "Failed to send notification email");
       return false;
     }
 
-    logger.info({ to, subject, emailId: data?.id }, 'Notification email sent');
+    logger.info({ to, subject, emailId: data?.id }, "Notification email sent");
     return true;
   } catch (error) {
-    logger.error({ error, to, subject }, 'Failed to send notification email');
+    logger.error({ error, to, subject }, "Failed to send notification email");
     return false;
   }
 }

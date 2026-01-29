@@ -3,7 +3,7 @@
 // Checkbox with label
 // ============================================================================
 
-import { createElement, generateId } from '../../utils/dom';
+import { createElement, generateId } from "../../utils/dom";
 
 export interface CheckboxProps {
   name?: string;
@@ -108,48 +108,61 @@ export interface CheckboxResult {
   isChecked: () => boolean;
 }
 
-export function createCheckbox(label: string, props: CheckboxProps = {}, description?: string): CheckboxResult {
+export function createCheckbox(
+  label: string,
+  props: CheckboxProps = {},
+  description?: string,
+): CheckboxResult {
   const {
     name,
     checked = false,
     disabled = false,
-    className = '',
+    className = "",
     onChange,
   } = props;
 
-  const id = generateId('checkbox');
+  const id = generateId("checkbox");
 
   // Create container label
-  const container = createElement('label', {
-    class: `relay-checkbox ${disabled ? 'relay-checkbox--disabled' : ''} ${className}`.trim(),
+  const container = createElement("label", {
+    class:
+      `relay-checkbox ${disabled ? "relay-checkbox--disabled" : ""} ${className}`.trim(),
     htmlFor: id,
   }) as HTMLLabelElement;
 
   // Create hidden input
-  const input = createElement('input', {
-    type: 'checkbox',
+  const input = createElement("input", {
+    type: "checkbox",
     id,
     name: name || id,
-    class: 'relay-checkbox__input',
+    class: "relay-checkbox__input",
     checked,
     disabled,
   }) as HTMLInputElement;
 
   // Create custom checkbox box
-  const box = createElement('span', { class: 'relay-checkbox__box' });
+  const box = createElement("span", { class: "relay-checkbox__box" });
 
   // Checkmark icon
-  const icon = createElement('span', { class: 'relay-checkbox__icon' });
+  const icon = createElement("span", { class: "relay-checkbox__icon" });
   icon.innerHTML = `<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6l3 3 5-6"/></svg>`;
   box.appendChild(icon);
 
   // Create label text
-  const labelWrapper = createElement('div', { class: 'relay-checkbox__content' });
-  const labelText = createElement('span', { class: 'relay-checkbox__label' }, [label]);
+  const labelWrapper = createElement("div", {
+    class: "relay-checkbox__content",
+  });
+  const labelText = createElement("span", { class: "relay-checkbox__label" }, [
+    label,
+  ]);
   labelWrapper.appendChild(labelText);
 
   if (description) {
-    const descEl = createElement('span', { class: 'relay-checkbox__description' }, [description]);
+    const descEl = createElement(
+      "span",
+      { class: "relay-checkbox__description" },
+      [description],
+    );
     labelWrapper.appendChild(descEl);
   }
 
@@ -160,7 +173,7 @@ export function createCheckbox(label: string, props: CheckboxProps = {}, descrip
 
   // Event handler
   if (onChange) {
-    input.addEventListener('change', () => onChange(input.checked));
+    input.addEventListener("change", () => onChange(input.checked));
   }
 
   return {

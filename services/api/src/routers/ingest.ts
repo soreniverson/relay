@@ -1,14 +1,14 @@
-import { z } from 'zod';
-import { TRPCError } from '@trpc/server';
-import { Prisma } from '@prisma/client';
-import { router, sdkProcedure, sdkProcedureWithRateLimit } from '../lib/trpc';
+import { z } from "zod";
+import { TRPCError } from "@trpc/server";
+import { Prisma } from "@prisma/client";
+import { router, sdkProcedure, sdkProcedureWithRateLimit } from "../lib/trpc";
 import {
   getBucketName,
   generateStorageKey,
   getPresignedUploadUrl,
   getExtensionFromContentType,
-} from '../lib/storage';
-import { pubsub } from '../lib/redis';
+} from "../lib/storage";
+import { pubsub } from "../lib/redis";
 import {
   createInteractionSchema,
   createSessionSchema,
@@ -19,7 +19,7 @@ import {
   startReplaySchema,
   replayChunkSchema,
   endReplaySchema,
-} from '@relay/shared';
+} from "@relay/shared";
 
 export const ingestRouter = router({
   // Create or update session
@@ -71,7 +71,7 @@ export const ingestRouter = router({
         },
       });
 
-      ctx.logger.debug({ sessionId }, 'Session created/updated');
+      ctx.logger.debug({ sessionId }, "Session created/updated");
 
       return {
         sessionId: session.id,
@@ -90,7 +90,9 @@ export const ingestRouter = router({
         },
         data: {
           lastSeenAt: input.lastSeenAt || new Date(),
-          pageViews: input.pageViews ? { increment: input.pageViews } : undefined,
+          pageViews: input.pageViews
+            ? { increment: input.pageViews }
+            : undefined,
         },
       });
 
@@ -119,19 +121,31 @@ export const ingestRouter = router({
 
       // Infer severity for bugs
       let severity = input.severity;
-      if (input.type === 'bug' && !severity) {
+      if (input.type === "bug" && !severity) {
         // Basic severity inference from content
-        const text = (input.contentText || '').toLowerCase();
+        const text = (input.contentText || "").toLowerCase();
         const content = input.content;
 
-        if (text.includes('crash') || text.includes('critical') || text.includes('urgent')) {
-          severity = 'critical';
-        } else if (text.includes('error') || text.includes('broken') || text.includes('fail')) {
-          severity = 'high';
-        } else if (text.includes('slow') || text.includes('performance') || text.includes('issue')) {
-          severity = 'med';
+        if (
+          text.includes("crash") ||
+          text.includes("critical") ||
+          text.includes("urgent")
+        ) {
+          severity = "critical";
+        } else if (
+          text.includes("error") ||
+          text.includes("broken") ||
+          text.includes("fail")
+        ) {
+          severity = "high";
+        } else if (
+          text.includes("slow") ||
+          text.includes("performance") ||
+          text.includes("issue")
+        ) {
+          severity = "med";
         } else {
-          severity = 'low';
+          severity = "low";
         }
       }
 
@@ -159,7 +173,7 @@ export const ingestRouter = router({
 
       // Publish realtime event
       await pubsub.publish(`project:${ctx.projectId}`, {
-        type: 'interaction.created',
+        type: "interaction.created",
         projectId: ctx.projectId,
         payload: {
           id: interaction.id,
@@ -169,7 +183,10 @@ export const ingestRouter = router({
         },
       });
 
-      ctx.logger.info({ interactionId, type: input.type }, 'Interaction created');
+      ctx.logger.info(
+        { interactionId, type: input.type },
+        "Interaction created",
+      );
 
       return {
         interactionId: interaction.id,
@@ -187,8 +204,8 @@ export const ingestRouter = router({
 
       if (!interaction) {
         throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Interaction not found',
+          code: "NOT_FOUND",
+          message: "Interaction not found",
         });
       }
 
@@ -206,30 +223,33 @@ export const ingestRouter = router({
       if (input.errors && input.errors.length > 0) {
         const hasPaymentError = input.errors.some(
           (e) =>
-            e.message.toLowerCase().includes('payment') ||
-            e.message.toLowerCase().includes('checkout') ||
-            e.message.toLowerCase().includes('billing')
+            e.message.toLowerCase().includes("payment") ||
+            e.message.toLowerCase().includes("checkout") ||
+            e.message.toLowerCase().includes("billing"),
         );
 
         const hasAuthError = input.errors.some(
           (e) =>
-            e.message.toLowerCase().includes('auth') ||
-            e.message.toLowerCase().includes('login') ||
-            e.message.toLowerCase().includes('permission')
+            e.message.toLowerCase().includes("auth") ||
+            e.message.toLowerCase().includes("login") ||
+            e.message.toLowerCase().includes("permission"),
         );
 
         if (hasPaymentError || hasAuthError) {
           // Bump severity if not already high
-          if (interaction.severity === 'low' || interaction.severity === 'med') {
+          if (
+            interaction.severity === "low" ||
+            interaction.severity === "med"
+          ) {
             await ctx.prisma.interaction.update({
               where: { id: input.interactionId },
-              data: { severity: 'high' },
+              data: { severity: "high" },
             });
           }
         }
       }
 
-      ctx.logger.debug({ interactionId: input.interactionId }, 'Logs stored');
+      ctx.logger.debug({ interactionId: input.interactionId }, "Logs stored");
 
       return { logsId: logs.id };
     }),
@@ -245,18 +265,26 @@ export const ingestRouter = router({
 
       if (!interaction) {
         throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Interaction not found',
+          code: "NOT_FOUND",
+          message: "Interaction not found",
         });
       }
 
       // Generate storage key
       const extension = getExtensionFromContentType(input.contentType);
-      const storageKey = generateStorageKey(ctx.projectId, input.kind, extension);
-      const bucket = getBucketName(ctx.region, 'media');
+      const storageKey = generateStorageKey(
+        ctx.projectId,
+        input.kind,
+        extension,
+      );
+      const bucket = getBucketName(ctx.region, "media");
 
       // Get presigned upload URL
-      const uploadUrl = await getPresignedUploadUrl(bucket, storageKey, input.contentType);
+      const uploadUrl = await getPresignedUploadUrl(
+        bucket,
+        storageKey,
+        input.contentType,
+      );
 
       // Create media record
       const media = await ctx.prisma.media.create({
@@ -264,24 +292,27 @@ export const ingestRouter = router({
           projectId: ctx.projectId,
           interactionId: input.interactionId,
           kind: input.kind,
-          url: '', // Will be filled after upload complete
+          url: "", // Will be filled after upload complete
           storageKey,
           contentType: input.contentType,
           sizeBytes: input.sizeBytes,
           meta: {
-            processingStatus: 'pending',
+            processingStatus: "pending",
             filename: input.filename,
           },
         },
       });
 
-      ctx.logger.debug({ mediaId: media.id, kind: input.kind }, 'Upload initiated');
+      ctx.logger.debug(
+        { mediaId: media.id, kind: input.kind },
+        "Upload initiated",
+      );
 
       return {
         mediaId: media.id,
         uploadUrl,
         uploadHeaders: {
-          'Content-Type': input.contentType,
+          "Content-Type": input.contentType,
         },
         expiresAt: new Date(Date.now() + 3600 * 1000), // 1 hour
       };
@@ -297,14 +328,14 @@ export const ingestRouter = router({
 
       if (!media) {
         throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Media not found',
+          code: "NOT_FOUND",
+          message: "Media not found",
         });
       }
 
       // Generate CDN URL (in production this would be CloudFront/CDN URL)
-      const bucket = getBucketName(ctx.region, 'media');
-      const url = `${process.env.STORAGE_URL || 'http://localhost:9000'}/${bucket}/${media.storageKey}`;
+      const bucket = getBucketName(ctx.region, "media");
+      const url = `${process.env.STORAGE_URL || "http://localhost:9000"}/${bucket}/${media.storageKey}`;
 
       await ctx.prisma.media.update({
         where: { id: input.mediaId },
@@ -312,12 +343,12 @@ export const ingestRouter = router({
           url,
           meta: {
             ...((media.meta as Record<string, unknown>) || {}),
-            processingStatus: 'complete',
+            processingStatus: "complete",
           },
         },
       });
 
-      ctx.logger.debug({ mediaId: media.id }, 'Upload completed');
+      ctx.logger.debug({ mediaId: media.id }, "Upload completed");
 
       return { success: true, url };
     }),
@@ -331,12 +362,12 @@ export const ingestRouter = router({
           projectId: ctx.projectId,
           sessionId: input.sessionId,
           interactionId: input.interactionId,
-          status: 'recording',
+          status: "recording",
           chunks: [],
         },
       });
 
-      ctx.logger.debug({ replayId: replay.id }, 'Replay started');
+      ctx.logger.debug({ replayId: replay.id }, "Replay started");
 
       return { replayId: replay.id };
     }),
@@ -351,25 +382,30 @@ export const ingestRouter = router({
 
       if (!replay) {
         throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Replay session not found',
+          code: "NOT_FOUND",
+          message: "Replay session not found",
         });
       }
 
-      if (replay.status !== 'recording') {
+      if (replay.status !== "recording") {
         throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'Replay is not in recording state',
+          code: "BAD_REQUEST",
+          message: "Replay is not in recording state",
         });
       }
 
       // Store chunk in object storage
-      const bucket = getBucketName(ctx.region, 'replay');
+      const bucket = getBucketName(ctx.region, "replay");
       const storageKey = `${ctx.projectId}/${replay.id}/chunk-${input.chunkIndex}.json`;
-      const uploadUrl = await getPresignedUploadUrl(bucket, storageKey, 'application/json');
+      const uploadUrl = await getPresignedUploadUrl(
+        bucket,
+        storageKey,
+        "application/json",
+      );
 
       // Update chunks array
-      const existingChunks = (replay.chunks as Array<Record<string, unknown>>) || [];
+      const existingChunks =
+        (replay.chunks as Array<Record<string, unknown>>) || [];
       const newChunk = {
         index: input.chunkIndex,
         storageKey,
@@ -399,12 +435,13 @@ export const ingestRouter = router({
 
       if (!replay) {
         throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Replay session not found',
+          code: "NOT_FOUND",
+          message: "Replay session not found",
         });
       }
 
-      const chunks = (replay.chunks as Array<{ startTime: number; endTime: number }>) || [];
+      const chunks =
+        (replay.chunks as Array<{ startTime: number; endTime: number }>) || [];
       const duration =
         chunks.length > 0
           ? chunks[chunks.length - 1].endTime - chunks[0].startTime
@@ -413,7 +450,7 @@ export const ingestRouter = router({
       await ctx.prisma.replay.update({
         where: { id: input.replayId },
         data: {
-          status: 'processing',
+          status: "processing",
           endedAt: new Date(),
           duration,
           eventCount: input.totalEventCount,
@@ -424,10 +461,17 @@ export const ingestRouter = router({
       // For now, mark as ready immediately
       await ctx.prisma.replay.update({
         where: { id: input.replayId },
-        data: { status: 'ready' },
+        data: { status: "ready" },
       });
 
-      ctx.logger.info({ replayId: input.replayId, duration, eventCount: input.totalEventCount }, 'Replay ended');
+      ctx.logger.info(
+        {
+          replayId: input.replayId,
+          duration,
+          eventCount: input.totalEventCount,
+        },
+        "Replay ended",
+      );
 
       return { success: true };
     }),
@@ -441,7 +485,7 @@ export const ingestRouter = router({
         email: z.string().email().optional(),
         name: z.string().max(255).optional(),
         traits: z.record(z.unknown()).optional(),
-      })
+      }),
     )
     .mutation(async ({ input, ctx }) => {
       // Find or create user
@@ -461,7 +505,10 @@ export const ingestRouter = router({
           data: {
             email: input.email || user.email,
             name: input.name || user.name,
-            traits: { ...((user.traits as Record<string, unknown>) || {}), ...input.traits } as Prisma.InputJsonValue,
+            traits: {
+              ...((user.traits as Record<string, unknown>) || {}),
+              ...input.traits,
+            } as Prisma.InputJsonValue,
           },
         });
       } else {
@@ -483,7 +530,10 @@ export const ingestRouter = router({
         data: { userId: user.id },
       });
 
-      ctx.logger.debug({ sessionId: input.sessionId, userId: user.id }, 'User identified');
+      ctx.logger.debug(
+        { sessionId: input.sessionId, userId: user.id },
+        "User identified",
+      );
 
       return { userId: user.id };
     }),
@@ -495,19 +545,22 @@ export const ingestRouter = router({
         sessionId: z.string().uuid(),
         event: z.string().max(200),
         properties: z.record(z.unknown()).optional(),
-      })
+      }),
     )
     .mutation(async ({ input, ctx }) => {
       // For now, just log the event
       // In production, this would go to ClickHouse or event store
-      ctx.logger.debug({ sessionId: input.sessionId, event: input.event }, 'Event tracked');
+      ctx.logger.debug(
+        { sessionId: input.sessionId, event: input.event },
+        "Event tracked",
+      );
 
       // Store as system interaction for now
       await ctx.prisma.interaction.create({
         data: {
           projectId: ctx.projectId,
-          type: 'system',
-          source: 'sdk',
+          type: "system",
+          source: "sdk",
           sessionId: input.sessionId,
           contentJson: {
             event: input.event,

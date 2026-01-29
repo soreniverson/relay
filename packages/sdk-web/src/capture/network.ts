@@ -3,7 +3,7 @@
 // Captures fetch and XHR requests
 // ============================================================================
 
-import type { NetworkEntry } from '../types';
+import type { NetworkEntry } from "../types";
 
 interface NetworkCapture {
   start(): void;
@@ -13,11 +13,7 @@ interface NetworkCapture {
 }
 
 // Patterns to exclude from capture (e.g., Relay's own API calls)
-const EXCLUDE_PATTERNS = [
-  /relay\.dev/i,
-  /localhost:3001/i,
-  /\/trpc\//i,
-];
+const EXCLUDE_PATTERNS = [/relay\.dev/i, /localhost:3001/i, /\/trpc\//i];
 
 function shouldCapture(url: string): boolean {
   return !EXCLUDE_PATTERNS.some((pattern) => pattern.test(url));
@@ -44,10 +40,18 @@ export function createNetworkCapture(maxEntries = 200): NetworkCapture {
   }
 
   // Fetch interceptor
-  function fetchInterceptor(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  function fetchInterceptor(
+    input: RequestInfo | URL,
+    init?: RequestInit,
+  ): Promise<Response> {
     const startTime = Date.now();
-    const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
-    const method = init?.method || 'GET';
+    const url =
+      typeof input === "string"
+        ? input
+        : input instanceof URL
+          ? input.toString()
+          : input.url;
+    const method = init?.method || "GET";
 
     if (!shouldCapture(url)) {
       return originalFetch.call(window, input, init);
@@ -63,7 +67,7 @@ export function createNetworkCapture(maxEntries = 200): NetworkCapture {
     if (init?.body) {
       try {
         entry.requestSize =
-          typeof init.body === 'string'
+          typeof init.body === "string"
             ? init.body.length
             : init.body instanceof Blob
               ? init.body.size
@@ -81,7 +85,7 @@ export function createNetworkCapture(maxEntries = 200): NetworkCapture {
         entry.duration = Date.now() - startTime;
 
         // Try to get response size from header
-        const contentLength = response.headers.get('content-length');
+        const contentLength = response.headers.get("content-length");
         if (contentLength) {
           entry.responseSize = parseInt(contentLength, 10);
         }
@@ -91,10 +95,10 @@ export function createNetworkCapture(maxEntries = 200): NetworkCapture {
       },
       (error) => {
         entry.duration = Date.now() - startTime;
-        entry.error = error?.message || 'Network error';
+        entry.error = error?.message || "Network error";
         addEntry(entry);
         throw error;
-      }
+      },
     );
   }
 
@@ -112,7 +116,7 @@ export function createNetworkCapture(maxEntries = 200): NetworkCapture {
         url: string | URL,
         async?: boolean,
         username?: string | null,
-        password?: string | null
+        password?: string | null,
       ) {
         const urlStr = url.toString();
 
@@ -123,10 +127,19 @@ export function createNetworkCapture(maxEntries = 200): NetworkCapture {
           shouldCapture: shouldCapture(urlStr),
         };
 
-        return originalXHROpen.call(this, method, url, async ?? true, username, password);
+        return originalXHROpen.call(
+          this,
+          method,
+          url,
+          async ?? true,
+          username,
+          password,
+        );
       };
 
-      XMLHttpRequest.prototype.send = function (body?: Document | XMLHttpRequestBodyInit | null) {
+      XMLHttpRequest.prototype.send = function (
+        body?: Document | XMLHttpRequestBodyInit | null,
+      ) {
         const data = (this as any).__relayData;
 
         if (data?.shouldCapture) {
@@ -136,7 +149,7 @@ export function createNetworkCapture(maxEntries = 200): NetworkCapture {
           if (body) {
             try {
               data.requestSize =
-                typeof body === 'string'
+                typeof body === "string"
                   ? body.length
                   : body instanceof Blob
                     ? body.size
@@ -148,7 +161,7 @@ export function createNetworkCapture(maxEntries = 200): NetworkCapture {
             }
           }
 
-          this.addEventListener('load', () => {
+          this.addEventListener("load", () => {
             const entry: NetworkEntry = {
               method: data.method,
               url: data.url,
@@ -159,7 +172,7 @@ export function createNetworkCapture(maxEntries = 200): NetworkCapture {
             };
 
             // Try to get response size
-            const contentLength = this.getResponseHeader('content-length');
+            const contentLength = this.getResponseHeader("content-length");
             if (contentLength) {
               entry.responseSize = parseInt(contentLength, 10);
             }
@@ -167,23 +180,23 @@ export function createNetworkCapture(maxEntries = 200): NetworkCapture {
             addEntry(entry);
           });
 
-          this.addEventListener('error', () => {
+          this.addEventListener("error", () => {
             const entry: NetworkEntry = {
               method: data.method,
               url: data.url,
               duration: Date.now() - data.startTime,
-              error: 'Network error',
+              error: "Network error",
               timestamp: data.startTime,
             };
             addEntry(entry);
           });
 
-          this.addEventListener('timeout', () => {
+          this.addEventListener("timeout", () => {
             const entry: NetworkEntry = {
               method: data.method,
               url: data.url,
               duration: Date.now() - data.startTime,
-              error: 'Timeout',
+              error: "Timeout",
               timestamp: data.startTime,
             };
             addEntry(entry);

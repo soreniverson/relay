@@ -1,4 +1,4 @@
-import { Region, Severity, InteractionStatus } from '../types';
+import { Region, Severity, InteractionStatus } from "../types";
 
 // ============================================================================
 // ID Generation
@@ -14,20 +14,20 @@ export function generateId(prefix: string): string {
 }
 
 export const idPrefixes = {
-  project: 'prj',
-  apiKey: 'key',
-  user: 'usr',
-  session: 'ses',
-  interaction: 'int',
-  media: 'med',
-  replay: 'rpl',
-  feedback: 'fdb',
-  roadmap: 'rdm',
-  survey: 'srv',
-  conversation: 'cnv',
-  message: 'msg',
-  integration: 'itg',
-  auditLog: 'aud',
+  project: "prj",
+  apiKey: "key",
+  user: "usr",
+  session: "ses",
+  interaction: "int",
+  media: "med",
+  replay: "rpl",
+  feedback: "fdb",
+  roadmap: "rdm",
+  survey: "srv",
+  conversation: "cnv",
+  message: "msg",
+  integration: "itg",
+  auditLog: "aud",
 } as const;
 
 // ============================================================================
@@ -38,9 +38,10 @@ export const idPrefixes = {
  * Generate a new API key (returns the raw key, not hashed)
  */
 export function generateApiKey(): string {
-  const prefix = 'rly';
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let key = '';
+  const prefix = "rly";
+  const chars =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let key = "";
   for (let i = 0; i < 32; i++) {
     key += chars.charAt(Math.floor(Math.random() * chars.length));
   }
@@ -66,13 +67,13 @@ export function isValidApiKeyFormat(key: string): boolean {
 // ============================================================================
 
 export const regionEndpoints: Record<Region, string> = {
-  'us-west': 'https://us-west.api.relay.dev',
-  'eu-west': 'https://eu-west.api.relay.dev',
+  "us-west": "https://us-west.api.relay.dev",
+  "eu-west": "https://eu-west.api.relay.dev",
 };
 
 export const regionDisplayNames: Record<Region, string> = {
-  'us-west': 'US West (Oregon)',
-  'eu-west': 'EU West (Ireland)',
+  "us-west": "US West (Oregon)",
+  "eu-west": "EU West (Ireland)",
 };
 
 /**
@@ -94,10 +95,10 @@ export const severityOrder: Record<Severity, number> = {
 };
 
 export const severityColors: Record<Severity, string> = {
-  low: '#22c55e', // green
-  med: '#eab308', // yellow
-  high: '#f97316', // orange
-  critical: '#ef4444', // red
+  low: "#22c55e", // green
+  med: "#eab308", // yellow
+  high: "#f97316", // orange
+  critical: "#ef4444", // red
 };
 
 /**
@@ -127,19 +128,19 @@ export const statusOrder: Record<InteractionStatus, number> = {
 };
 
 export const statusColors: Record<InteractionStatus, string> = {
-  new: '#3b82f6', // blue
-  triaging: '#8b5cf6', // purple
-  in_progress: '#f59e0b', // amber
-  resolved: '#22c55e', // green
-  closed: '#6b7280', // gray
+  new: "#3b82f6", // blue
+  triaging: "#8b5cf6", // purple
+  in_progress: "#f59e0b", // amber
+  resolved: "#22c55e", // green
+  closed: "#6b7280", // gray
 };
 
 export const statusLabels: Record<InteractionStatus, string> = {
-  new: 'New',
-  triaging: 'Triaging',
-  in_progress: 'In Progress',
-  resolved: 'Resolved',
-  closed: 'Closed',
+  new: "New",
+  triaging: "Triaging",
+  in_progress: "In Progress",
+  resolved: "Resolved",
+  closed: "Closed",
 };
 
 // ============================================================================
@@ -156,14 +157,17 @@ export function generateErrorSignature(error: {
 }): string {
   // Normalize the error message (remove dynamic parts like IDs, timestamps)
   const normalizedMessage = error.message
-    .replace(/\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/gi, '<UUID>')
-    .replace(/\b\d{10,13}\b/g, '<TIMESTAMP>')
-    .replace(/\b\d+\b/g, '<NUM>');
+    .replace(
+      /\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/gi,
+      "<UUID>",
+    )
+    .replace(/\b\d{10,13}\b/g, "<TIMESTAMP>")
+    .replace(/\b\d+\b/g, "<NUM>");
 
   // Get the first few lines of the stack trace
-  const stackLines = error.stack?.split('\n').slice(0, 5).join('\n') || '';
+  const stackLines = error.stack?.split("\n").slice(0, 5).join("\n") || "";
 
-  const content = `${normalizedMessage}|${error.filename || ''}|${stackLines}`;
+  const content = `${normalizedMessage}|${error.filename || ""}|${stackLines}`;
   return simpleHash(content);
 }
 
@@ -205,7 +209,7 @@ export function extractDomain(url: string): string {
     const parsed = new URL(url);
     return parsed.hostname;
   } catch {
-    return '';
+    return "";
   }
 }
 
@@ -214,7 +218,8 @@ export function extractDomain(url: string): string {
 // ============================================================================
 
 const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
-const phoneRegex = /(\+?1?[-.\s]?)?\(?[0-9]{3}\)?[-.\s]?[0-9]{3}[-.\s]?[0-9]{4}/g;
+const phoneRegex =
+  /(\+?1?[-.\s]?)?\(?[0-9]{3}\)?[-.\s]?[0-9]{3}[-.\s]?[0-9]{4}/g;
 const creditCardRegex = /\b(?:\d{4}[-\s]?){3}\d{4}\b/g;
 const ssnRegex = /\b\d{3}[-\s]?\d{2}[-\s]?\d{4}\b/g;
 
@@ -228,21 +233,21 @@ export function maskSensitiveData(
     maskPhones?: boolean;
     maskCreditCards?: boolean;
     maskSSN?: boolean;
-  } = {}
+  } = {},
 ): string {
   let result = text;
 
   if (options.maskEmails !== false) {
-    result = result.replace(emailRegex, '[EMAIL]');
+    result = result.replace(emailRegex, "[EMAIL]");
   }
   if (options.maskPhones !== false) {
-    result = result.replace(phoneRegex, '[PHONE]');
+    result = result.replace(phoneRegex, "[PHONE]");
   }
   if (options.maskCreditCards !== false) {
-    result = result.replace(creditCardRegex, '[CARD]');
+    result = result.replace(creditCardRegex, "[CARD]");
   }
   if (options.maskSSN !== false) {
-    result = result.replace(ssnRegex, '[SSN]');
+    result = result.replace(ssnRegex, "[SSN]");
   }
 
   return result;
@@ -270,7 +275,7 @@ export function formatRelativeTime(date: Date): string {
   const diffHours = Math.floor(diffMins / 60);
   const diffDays = Math.floor(diffHours / 24);
 
-  if (diffSecs < 60) return 'just now';
+  if (diffSecs < 60) return "just now";
   if (diffMins < 60) return `${diffMins}m ago`;
   if (diffHours < 24) return `${diffHours}h ago`;
   if (diffDays < 7) return `${diffDays}d ago`;
@@ -285,7 +290,8 @@ export function formatRelativeTime(date: Date): string {
 export function formatDuration(ms: number): string {
   if (ms < 1000) return `${ms}ms`;
   if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
-  if (ms < 3600000) return `${Math.floor(ms / 60000)}m ${Math.floor((ms % 60000) / 1000)}s`;
+  if (ms < 3600000)
+    return `${Math.floor(ms / 60000)}m ${Math.floor((ms % 60000) / 1000)}s`;
   return `${Math.floor(ms / 3600000)}h ${Math.floor((ms % 3600000) / 60000)}m`;
 }
 
@@ -297,9 +303,9 @@ export function formatDuration(ms: number): string {
  * Format bytes to human readable
  */
 export function formatBytes(bytes: number): string {
-  if (bytes === 0) return '0 B';
+  if (bytes === 0) return "0 B";
   const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const sizes = ["B", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
 }
@@ -325,8 +331,12 @@ export const defaultRetryOptions: RetryOptions = {
 /**
  * Calculate delay for exponential backoff
  */
-export function calculateBackoffDelay(attempt: number, options: RetryOptions = defaultRetryOptions): number {
-  const delay = options.baseDelayMs * Math.pow(options.backoffMultiplier, attempt - 1);
+export function calculateBackoffDelay(
+  attempt: number,
+  options: RetryOptions = defaultRetryOptions,
+): number {
+  const delay =
+    options.baseDelayMs * Math.pow(options.backoffMultiplier, attempt - 1);
   // Add jitter (±10%)
   const jitter = delay * 0.1 * (Math.random() * 2 - 1);
   return Math.min(delay + jitter, options.maxDelayMs);
@@ -342,14 +352,14 @@ export const MAX_SCREENSHOT_SIZE = 10 * 1024 * 1024; // 10MB
 export const REPLAY_CHUNK_INTERVAL_MS = 5000; // 5 seconds
 export const SESSION_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
 
-export const ALLOWED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
-export const ALLOWED_VIDEO_TYPES = ['video/webm', 'video/mp4'];
+export const ALLOWED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp"];
+export const ALLOWED_VIDEO_TYPES = ["video/webm", "video/mp4"];
 export const ALLOWED_ATTACHMENT_TYPES = [
   ...ALLOWED_IMAGE_TYPES,
   ...ALLOWED_VIDEO_TYPES,
-  'application/pdf',
-  'text/plain',
-  'application/json',
+  "application/pdf",
+  "text/plain",
+  "application/json",
 ];
 
 // ============================================================================
@@ -361,24 +371,24 @@ export const ALLOWED_ATTACHMENT_TYPES = [
  */
 export function truncate(str: string, maxLength: number): string {
   if (str.length <= maxLength) return str;
-  return str.slice(0, maxLength - 3) + '...';
+  return str.slice(0, maxLength - 3) + "...";
 }
 
 /**
  * Mask an email address (e.g., "u***@e***.com")
  */
 export function maskEmail(email: string): string {
-  const [local, domain] = email.split('@');
+  const [local, domain] = email.split("@");
   if (!domain) return email;
-  const [domainName, ...tld] = domain.split('.');
-  return `${local[0]}***@${domainName[0]}***.${tld.join('.')}`;
+  const [domainName, ...tld] = domain.split(".");
+  return `${local[0]}***@${domainName[0]}***.${tld.join(".")}`;
 }
 
 /**
  * Mask a phone number (e.g., "***-***-4567")
  */
 export function maskPhone(phone: string): string {
-  const digits = phone.replace(/\D/g, '');
+  const digits = phone.replace(/\D/g, "");
   if (digits.length < 4) return phone;
   const lastFour = digits.slice(-4);
   const digitsToMask = digits.length - 4;
@@ -387,7 +397,7 @@ export function maskPhone(phone: string): string {
   masked = masked.replace(/\d/g, (match) => {
     if (count < digitsToMask) {
       count++;
-      return '*';
+      return "*";
     }
     return match;
   });

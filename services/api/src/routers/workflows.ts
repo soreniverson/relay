@@ -1,17 +1,17 @@
-import { z } from 'zod';
-import { router, projectProcedure } from '../lib/trpc';
-import { TRPCError } from '@trpc/server';
-import { Prisma } from '@prisma/client';
+import { z } from "zod";
+import { router, projectProcedure } from "../lib/trpc";
+import { TRPCError } from "@trpc/server";
+import { Prisma } from "@prisma/client";
 
 // Workflow trigger types
 const triggerSchema = z.object({
   type: z.enum([
-    'interaction.created',
-    'interaction.updated',
-    'conversation.created',
-    'message.received',
-    'survey.response',
-    'schedule',
+    "interaction.created",
+    "interaction.updated",
+    "conversation.created",
+    "message.received",
+    "survey.response",
+    "schedule",
   ]),
   config: z.record(z.any()).optional(),
 });
@@ -20,15 +20,15 @@ const triggerSchema = z.object({
 const conditionSchema = z.object({
   field: z.string(),
   operator: z.enum([
-    'equals',
-    'not_equals',
-    'contains',
-    'not_contains',
-    'greater_than',
-    'less_than',
-    'is_empty',
-    'is_not_empty',
-    'matches_regex',
+    "equals",
+    "not_equals",
+    "contains",
+    "not_contains",
+    "greater_than",
+    "less_than",
+    "is_empty",
+    "is_not_empty",
+    "matches_regex",
   ]),
   value: z.any(),
 });
@@ -36,19 +36,19 @@ const conditionSchema = z.object({
 // Workflow action schema
 const actionSchema = z.object({
   type: z.enum([
-    'send_email',
-    'send_slack',
-    'assign_to',
-    'add_tag',
-    'remove_tag',
-    'set_status',
-    'set_priority',
-    'create_linear_issue',
-    'create_jira_issue',
-    'create_github_issue',
-    'trigger_webhook',
-    'ai_respond',
-    'delay',
+    "send_email",
+    "send_slack",
+    "assign_to",
+    "add_tag",
+    "remove_tag",
+    "set_status",
+    "set_priority",
+    "create_linear_issue",
+    "create_jira_issue",
+    "create_github_issue",
+    "trigger_webhook",
+    "ai_respond",
+    "delay",
   ]),
   config: z.record(z.any()),
 });
@@ -63,7 +63,7 @@ export const workflowsRouter = router({
       z.object({
         projectId: z.string(),
         enabled: z.boolean().optional(),
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
       const workflows = await ctx.prisma.workflow.findMany({
@@ -71,7 +71,7 @@ export const workflowsRouter = router({
           projectId: input.projectId,
           ...(input.enabled !== undefined && { enabled: input.enabled }),
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
       });
 
       return workflows;
@@ -84,14 +84,17 @@ export const workflowsRouter = router({
         where: { id: input.id },
         include: {
           runs: {
-            orderBy: { startedAt: 'desc' },
+            orderBy: { startedAt: "desc" },
             take: 10,
           },
         },
       });
 
       if (!workflow) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Workflow not found' });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Workflow not found",
+        });
       }
 
       return workflow;
@@ -107,7 +110,7 @@ export const workflowsRouter = router({
         conditions: z.array(conditionSchema).optional(),
         actions: z.array(actionSchema).min(1),
         enabled: z.boolean().default(false),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const workflow = await ctx.prisma.workflow.create({
@@ -135,7 +138,7 @@ export const workflowsRouter = router({
         conditions: z.array(conditionSchema).optional(),
         actions: z.array(actionSchema).optional(),
         enabled: z.boolean().optional(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const { id, ...data } = input;
@@ -179,10 +182,10 @@ export const workflowsRouter = router({
     .input(
       z.object({
         workflowId: z.string(),
-        status: z.enum(['running', 'completed', 'failed']).optional(),
+        status: z.enum(["running", "completed", "failed"]).optional(),
         page: z.number().default(1),
         pageSize: z.number().default(20),
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
       const where: Prisma.WorkflowRunWhereInput = {
@@ -193,7 +196,7 @@ export const workflowsRouter = router({
       const [runs, total] = await Promise.all([
         ctx.prisma.workflowRun.findMany({
           where,
-          orderBy: { startedAt: 'desc' },
+          orderBy: { startedAt: "desc" },
           skip: (input.page - 1) * input.pageSize,
           take: input.pageSize,
         }),
@@ -220,7 +223,10 @@ export const workflowsRouter = router({
       });
 
       if (!run) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Workflow run not found' });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Workflow run not found",
+        });
       }
 
       return run;
@@ -235,7 +241,7 @@ export const workflowsRouter = router({
       z.object({
         workflowId: z.string(),
         testData: z.record(z.any()),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const workflow = await ctx.prisma.workflow.findUnique({
@@ -243,11 +249,19 @@ export const workflowsRouter = router({
       });
 
       if (!workflow) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Workflow not found' });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Workflow not found",
+        });
       }
 
       // Simulate workflow execution
-      const steps: { action: string; status: string; result: any; duration: number }[] = [];
+      const steps: {
+        action: string;
+        status: string;
+        result: any;
+        duration: number;
+      }[] = [];
       const actions = workflow.actions as any[];
 
       for (const action of actions) {
@@ -256,7 +270,7 @@ export const workflowsRouter = router({
         // Simulate action execution
         steps.push({
           action: action.type,
-          status: 'completed',
+          status: "completed",
           result: { simulated: true },
           duration: Date.now() - startTime,
         });
@@ -265,7 +279,7 @@ export const workflowsRouter = router({
       return {
         success: true,
         steps,
-        message: 'Workflow test completed successfully (dry run)',
+        message: "Workflow test completed successfully (dry run)",
       };
     }),
 
@@ -276,54 +290,49 @@ export const workflowsRouter = router({
   getTemplates: projectProcedure.query(async () => {
     return [
       {
-        id: 'auto-assign-critical',
-        name: 'Auto-assign Critical Bugs',
-        description: 'Automatically assign critical bugs to the on-call engineer',
-        trigger: { type: 'interaction.created', config: {} },
+        id: "auto-assign-critical",
+        name: "Auto-assign Critical Bugs",
+        description:
+          "Automatically assign critical bugs to the on-call engineer",
+        trigger: { type: "interaction.created", config: {} },
         conditions: [
-          { field: 'type', operator: 'equals', value: 'bug' },
-          { field: 'severity', operator: 'equals', value: 'critical' },
+          { field: "type", operator: "equals", value: "bug" },
+          { field: "severity", operator: "equals", value: "critical" },
         ],
         actions: [
-          { type: 'assign_to', config: { assigneeId: '$on_call' } },
-          { type: 'send_slack', config: { channel: '#critical-bugs' } },
+          { type: "assign_to", config: { assigneeId: "$on_call" } },
+          { type: "send_slack", config: { channel: "#critical-bugs" } },
         ],
       },
       {
-        id: 'welcome-message',
-        name: 'Welcome Message',
-        description: 'Send a welcome message when a new conversation starts',
-        trigger: { type: 'conversation.created', config: {} },
+        id: "welcome-message",
+        name: "Welcome Message",
+        description: "Send a welcome message when a new conversation starts",
+        trigger: { type: "conversation.created", config: {} },
         conditions: [],
+        actions: [{ type: "ai_respond", config: { useWelcomeMessage: true } }],
+      },
+      {
+        id: "nps-followup",
+        name: "NPS Detractor Follow-up",
+        description: "Create a task when NPS score is low",
+        trigger: { type: "survey.response", config: { surveyType: "nps" } },
+        conditions: [{ field: "score", operator: "less_than", value: 7 }],
         actions: [
-          { type: 'ai_respond', config: { useWelcomeMessage: true } },
+          { type: "add_tag", config: { tag: "detractor" } },
+          { type: "send_slack", config: { channel: "#customer-success" } },
         ],
       },
       {
-        id: 'nps-followup',
-        name: 'NPS Detractor Follow-up',
-        description: 'Create a task when NPS score is low',
-        trigger: { type: 'survey.response', config: { surveyType: 'nps' } },
+        id: "auto-close-resolved",
+        name: "Auto-close Resolved Issues",
+        description: "Close resolved issues after 7 days of inactivity",
+        trigger: { type: "schedule", config: { cron: "0 0 * * *" } },
         conditions: [
-          { field: 'score', operator: 'less_than', value: 7 },
+          { field: "status", operator: "equals", value: "resolved" },
+          { field: "updatedAt", operator: "less_than", value: "7d" },
         ],
-        actions: [
-          { type: 'add_tag', config: { tag: 'detractor' } },
-          { type: 'send_slack', config: { channel: '#customer-success' } },
-        ],
-      },
-      {
-        id: 'auto-close-resolved',
-        name: 'Auto-close Resolved Issues',
-        description: 'Close resolved issues after 7 days of inactivity',
-        trigger: { type: 'schedule', config: { cron: '0 0 * * *' } },
-        conditions: [
-          { field: 'status', operator: 'equals', value: 'resolved' },
-          { field: 'updatedAt', operator: 'less_than', value: '7d' },
-        ],
-        actions: [
-          { type: 'set_status', config: { status: 'closed' } },
-        ],
+        actions: [{ type: "set_status", config: { status: "closed" } }],
       },
     ];
   }),

@@ -3,10 +3,10 @@
 // Text input with label and validation
 // ============================================================================
 
-import { createElement, generateId } from '../../utils/dom';
+import { createElement, generateId } from "../../utils/dom";
 
 export interface InputProps {
-  type?: 'text' | 'email' | 'password' | 'url' | 'search';
+  type?: "text" | "email" | "password" | "url" | "search";
   name?: string;
   placeholder?: string;
   value?: string;
@@ -100,39 +100,48 @@ export interface InputResult {
   getValue: () => string;
 }
 
-export function createInput(label: string, props: InputProps = {}): InputResult {
+export function createInput(
+  label: string,
+  props: InputProps = {},
+): InputResult {
   const {
-    type = 'text',
+    type = "text",
     name,
     placeholder,
-    value = '',
+    value = "",
     required = false,
     disabled = false,
     maxLength,
     pattern,
     autoFocus = false,
-    className = '',
+    className = "",
     onChange,
     onBlur,
   } = props;
 
-  const id = generateId('input');
+  const id = generateId("input");
 
   // Create container
-  const container = createElement('div', { class: `relay-input-group ${className}`.trim() });
+  const container = createElement("div", {
+    class: `relay-input-group ${className}`.trim(),
+  });
 
   // Create label
-  const labelEl = createElement('label', {
-    class: `relay-input-label ${required ? 'relay-input-label--required' : ''}`,
-    htmlFor: id,
-  }, [label]);
+  const labelEl = createElement(
+    "label",
+    {
+      class: `relay-input-label ${required ? "relay-input-label--required" : ""}`,
+      htmlFor: id,
+    },
+    [label],
+  );
 
   // Create input
-  const input = createElement('input', {
+  const input = createElement("input", {
     id,
     type,
     name: name || id,
-    class: 'relay-input',
+    class: "relay-input",
     placeholder,
     value,
     required,
@@ -143,8 +152,8 @@ export function createInput(label: string, props: InputProps = {}): InputResult 
   }) as HTMLInputElement;
 
   // Create error container
-  const errorEl = createElement('span', { class: 'relay-input-error' });
-  errorEl.style.display = 'none';
+  const errorEl = createElement("span", { class: "relay-input-error" });
+  errorEl.style.display = "none";
 
   // Assemble
   container.appendChild(labelEl);
@@ -153,11 +162,11 @@ export function createInput(label: string, props: InputProps = {}): InputResult 
 
   // Event handlers
   if (onChange) {
-    input.addEventListener('input', () => onChange(input.value));
+    input.addEventListener("input", () => onChange(input.value));
   }
 
   if (onBlur) {
-    input.addEventListener('blur', () => onBlur(input.value));
+    input.addEventListener("blur", () => onBlur(input.value));
   }
 
   return {
@@ -166,12 +175,12 @@ export function createInput(label: string, props: InputProps = {}): InputResult 
     setError: (error: string | null) => {
       if (error) {
         errorEl.textContent = error;
-        errorEl.style.display = 'block';
-        input.classList.add('relay-input--error');
+        errorEl.style.display = "block";
+        input.classList.add("relay-input--error");
       } else {
-        errorEl.textContent = '';
-        errorEl.style.display = 'none';
-        input.classList.remove('relay-input--error');
+        errorEl.textContent = "";
+        errorEl.style.display = "none";
+        input.classList.remove("relay-input--error");
       }
     },
     setValue: (newValue: string) => {

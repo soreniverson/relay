@@ -1,7 +1,7 @@
-import Redis from 'ioredis';
+import Redis from "ioredis";
 
-const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
-const isDev = process.env.NODE_ENV !== 'production';
+const redisUrl = process.env.REDIS_URL || "redis://localhost:6379";
+const isDev = process.env.NODE_ENV !== "production";
 
 // In-memory fallback for development without Redis
 const memoryCache = new Map<string, { value: string; expires?: number }>();
@@ -16,7 +16,7 @@ if (!isDev || process.env.REDIS_URL) {
     lazyConnect: true,
     retryStrategy(times) {
       if (isDev && times > 2) {
-        console.log('Redis not available, using in-memory fallback');
+        console.log("Redis not available, using in-memory fallback");
         return null; // Stop retrying in dev
       }
       const delay = Math.min(times * 50, 2000);
@@ -24,26 +24,28 @@ if (!isDev || process.env.REDIS_URL) {
     },
   });
 
-  redis.on('error', (err) => {
+  redis.on("error", (err) => {
     if (!isDev) {
-      console.error('Redis connection error:', err);
+      console.error("Redis connection error:", err);
     }
     redisConnected = false;
   });
 
-  redis.on('connect', () => {
-    console.log('Redis connected');
+  redis.on("connect", () => {
+    console.log("Redis connected");
     redisConnected = true;
   });
 
   // Try to connect
   redis.connect().catch(() => {
     if (isDev) {
-      console.log('Redis not available, using in-memory fallback for development');
+      console.log(
+        "Redis not available, using in-memory fallback for development",
+      );
     }
   });
 } else {
-  console.log('Development mode: Using in-memory cache (no Redis)');
+  console.log("Development mode: Using in-memory cache (no Redis)");
 }
 
 // Cache utilities with fallback
@@ -73,7 +75,8 @@ export const cache = {
   },
 
   async set(key: string, value: unknown, ttlSeconds?: number): Promise<void> {
-    const serialized = typeof value === 'string' ? value : JSON.stringify(value);
+    const serialized =
+      typeof value === "string" ? value : JSON.stringify(value);
     if (redis && redisConnected) {
       if (ttlSeconds) {
         await redis.setex(key, ttlSeconds, serialized);
@@ -136,7 +139,11 @@ export const cache = {
 
 // Rate limiting with fallback
 export const rateLimit = {
-  async check(key: string, limit: number, windowSeconds: number): Promise<{
+  async check(
+    key: string,
+    limit: number,
+    windowSeconds: number,
+  ): Promise<{
     allowed: boolean;
     remaining: number;
     resetAt: number;
@@ -151,7 +158,8 @@ export const rateLimit = {
 
     const allowed = count <= limit;
     const remaining = Math.max(0, limit - count);
-    const resetAt = Math.ceil(now / (windowSeconds * 1000)) * windowSeconds * 1000;
+    const resetAt =
+      Math.ceil(now / (windowSeconds * 1000)) * windowSeconds * 1000;
 
     return { allowed, remaining, resetAt };
   },

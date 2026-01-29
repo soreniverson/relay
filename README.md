@@ -61,6 +61,7 @@ pnpm dev
 ```
 
 Access:
+
 - **Dashboard**: http://localhost:3000
 - **API**: http://localhost:3001
 - **MinIO Console**: http://localhost:9001
@@ -73,8 +74,8 @@ Demo credentials: `admin@relay.dev` / `password123`
 <script src="http://localhost:3001/widget.js"></script>
 <script>
   Relay.init({
-    apiKey: 'rly_your_api_key', // From seed output
-    environment: 'development',
+    apiKey: "rly_your_api_key", // From seed output
+    environment: "development",
   });
 </script>
 ```
@@ -86,15 +87,15 @@ npm install @relay/sdk-web
 ```
 
 ```javascript
-import Relay from '@relay/sdk-web';
+import Relay from "@relay/sdk-web";
 
 Relay.init({
-  apiKey: 'rly_your_api_key',
-  environment: 'production',
+  apiKey: "rly_your_api_key",
+  environment: "production",
   user: {
-    id: 'user_123',
-    email: 'user@example.com',
-    name: 'Jane Doe',
+    id: "user_123",
+    email: "user@example.com",
+    name: "Jane Doe",
   },
 });
 ```
@@ -138,17 +139,17 @@ relay/
 
 ## Technology Stack
 
-| Layer | Technology |
-|-------|------------|
+| Layer    | Technology                                         |
+| -------- | -------------------------------------------------- |
 | Frontend | Next.js 14, React, TypeScript, Tailwind, shadcn/ui |
-| API | Node.js, Express, tRPC, Prisma |
-| Database | PostgreSQL 16 |
-| Cache | Redis 7 |
-| Storage | S3 / MinIO |
-| Queue | Redis (Bull) |
-| Realtime | WebSocket |
-| Replay | rrweb |
-| AI | OpenAI (optional) |
+| API      | Node.js, Express, tRPC, Prisma                     |
+| Database | PostgreSQL 16                                      |
+| Cache    | Redis 7                                            |
+| Storage  | S3 / MinIO                                         |
+| Queue    | Redis (Bull)                                       |
+| Realtime | WebSocket                                          |
+| Replay   | rrweb                                              |
+| AI       | OpenAI (optional)                                  |
 
 ## Data Residency
 
@@ -158,6 +159,7 @@ Relay supports multi-region deployments where data never leaves its designated r
 - **EU-West**: Ireland (eu-west-1)
 
 Each region has isolated:
+
 - PostgreSQL database
 - Redis cache/queue
 - S3-compatible storage

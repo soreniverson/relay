@@ -3,12 +3,12 @@
 // Displays messages in a conversation thread
 // ============================================================================
 
-import { createElement, formatRelativeTime } from '../../utils/dom';
+import { createElement, formatRelativeTime } from "../../utils/dom";
 
 export interface Message {
   id: string;
   body: string;
-  direction: 'inbound' | 'outbound';
+  direction: "inbound" | "outbound";
   createdAt: string;
 }
 
@@ -149,7 +149,9 @@ export interface MessageThreadResult {
   setLoading: (loading: boolean) => void;
 }
 
-export function createMessageThread(config: MessageThreadConfig): MessageThreadResult {
+export function createMessageThread(
+  config: MessageThreadConfig,
+): MessageThreadResult {
   const {
     messages: initialMessages,
     onLoadMore,
@@ -160,16 +162,20 @@ export function createMessageThread(config: MessageThreadConfig): MessageThreadR
   let messages = [...initialMessages];
   let isLoading = loading;
 
-  const container = createElement('div', { class: 'relay-message-thread' });
+  const container = createElement("div", { class: "relay-message-thread" });
 
   // Render messages
   const render = () => {
-    container.innerHTML = '';
+    container.innerHTML = "";
 
     // Loading indicator at top
     if (isLoading && messages.length === 0) {
-      const loadingEl = createElement('div', { class: 'relay-message-thread__loading' });
-      const spinner = createElement('div', { class: 'relay-message-thread__spinner' });
+      const loadingEl = createElement("div", {
+        class: "relay-message-thread__loading",
+      });
+      const spinner = createElement("div", {
+        class: "relay-message-thread__spinner",
+      });
       loadingEl.appendChild(spinner);
       container.appendChild(loadingEl);
       return;
@@ -177,10 +183,14 @@ export function createMessageThread(config: MessageThreadConfig): MessageThreadR
 
     // Empty state
     if (messages.length === 0) {
-      const emptyEl = createElement('div', { class: 'relay-message-thread__empty' });
-      const icon = createElement('div', { class: 'relay-message-thread__empty-icon' });
+      const emptyEl = createElement("div", {
+        class: "relay-message-thread__empty",
+      });
+      const icon = createElement("div", {
+        class: "relay-message-thread__empty-icon",
+      });
       icon.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>`;
-      const text = createElement('p', {}, ['No messages yet']);
+      const text = createElement("p", {}, ["No messages yet"]);
       emptyEl.appendChild(icon);
       emptyEl.appendChild(text);
       container.appendChild(emptyEl);
@@ -189,24 +199,32 @@ export function createMessageThread(config: MessageThreadConfig): MessageThreadR
 
     // Load more button
     if (hasMore && onLoadMore) {
-      const loadMoreWrapper = createElement('div', { class: 'relay-message-thread__load-more' });
-      const loadMoreBtn = createElement('button', {
-        type: 'button',
-        class: 'relay-message-thread__load-more-btn',
-      }, ['Load earlier messages']);
-      loadMoreBtn.addEventListener('click', onLoadMore);
+      const loadMoreWrapper = createElement("div", {
+        class: "relay-message-thread__load-more",
+      });
+      const loadMoreBtn = createElement(
+        "button",
+        {
+          type: "button",
+          class: "relay-message-thread__load-more-btn",
+        },
+        ["Load earlier messages"],
+      );
+      loadMoreBtn.addEventListener("click", onLoadMore);
       loadMoreWrapper.appendChild(loadMoreBtn);
       container.appendChild(loadMoreWrapper);
     }
 
     // Messages
-    messages.forEach(msg => {
-      const messageEl = createElement('div', {
+    messages.forEach((msg) => {
+      const messageEl = createElement("div", {
         class: `relay-message relay-message--${msg.direction}`,
       });
 
-      const bubble = createElement('div', { class: 'relay-message__bubble' }, [msg.body]);
-      const time = createElement('div', { class: 'relay-message__time' }, [
+      const bubble = createElement("div", { class: "relay-message__bubble" }, [
+        msg.body,
+      ]);
+      const time = createElement("div", { class: "relay-message__time" }, [
         formatRelativeTime(new Date(msg.createdAt)),
       ]);
 

@@ -3,7 +3,7 @@
 // Captures unhandled errors and promise rejections
 // ============================================================================
 
-import type { ErrorEntry } from '../types';
+import type { ErrorEntry } from "../types";
 
 interface ErrorCapture {
   start(): void;
@@ -17,8 +17,12 @@ export function createErrorCapture(maxEntries = 100): ErrorCapture {
   const errorCounts = new Map<string, number>();
   let isCapturing = false;
 
-  function getErrorKey(error: { message: string; filename?: string; lineno?: number }): string {
-    return `${error.message}|${error.filename || ''}|${error.lineno || 0}`;
+  function getErrorKey(error: {
+    message: string;
+    filename?: string;
+    lineno?: number;
+  }): string {
+    return `${error.message}|${error.filename || ""}|${error.lineno || 0}`;
   }
 
   function addError(error: {
@@ -37,7 +41,10 @@ export function createErrorCapture(maxEntries = 100): ErrorCapture {
 
     // Find existing entry
     const existingIndex = entries.findIndex(
-      (e) => e.message === error.message && e.filename === error.filename && e.lineno === error.lineno
+      (e) =>
+        e.message === error.message &&
+        e.filename === error.filename &&
+        e.lineno === error.lineno,
     );
 
     if (existingIndex >= 0) {
@@ -66,9 +73,9 @@ export function createErrorCapture(maxEntries = 100): ErrorCapture {
 
   function handleError(event: ErrorEvent): void {
     addError({
-      message: event.message || 'Unknown error',
+      message: event.message || "Unknown error",
       stack: event.error?.stack,
-      type: event.error?.name || 'Error',
+      type: event.error?.name || "Error",
       filename: event.filename,
       lineno: event.lineno,
       colno: event.colno,
@@ -78,9 +85,10 @@ export function createErrorCapture(maxEntries = 100): ErrorCapture {
   function handleRejection(event: PromiseRejectionEvent): void {
     const reason = event.reason;
     addError({
-      message: reason?.message || String(reason) || 'Unhandled Promise Rejection',
+      message:
+        reason?.message || String(reason) || "Unhandled Promise Rejection",
       stack: reason?.stack,
-      type: 'UnhandledRejection',
+      type: "UnhandledRejection",
     });
   }
 
@@ -89,16 +97,16 @@ export function createErrorCapture(maxEntries = 100): ErrorCapture {
       if (isCapturing) return;
       isCapturing = true;
 
-      window.addEventListener('error', handleError);
-      window.addEventListener('unhandledrejection', handleRejection);
+      window.addEventListener("error", handleError);
+      window.addEventListener("unhandledrejection", handleRejection);
     },
 
     stop() {
       if (!isCapturing) return;
       isCapturing = false;
 
-      window.removeEventListener('error', handleError);
-      window.removeEventListener('unhandledrejection', handleRejection);
+      window.removeEventListener("error", handleError);
+      window.removeEventListener("unhandledrejection", handleRejection);
     },
 
     getEntries() {

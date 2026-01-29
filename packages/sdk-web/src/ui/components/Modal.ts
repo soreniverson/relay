@@ -3,11 +3,16 @@
 // Container with animations for the widget content
 // ============================================================================
 
-import { createElement, setStyles, waitForAnimation } from '../utils/dom';
-import { getPositionStyles, onBreakpointChange, getCurrentBreakpoint, type Breakpoint } from '../utils/responsive';
+import { createElement, setStyles, waitForAnimation } from "../utils/dom";
+import {
+  getPositionStyles,
+  onBreakpointChange,
+  getCurrentBreakpoint,
+  type Breakpoint,
+} from "../utils/responsive";
 
 export interface ModalConfig {
-  position: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
+  position: "bottom-right" | "bottom-left" | "top-right" | "top-left";
   onClose?: () => void;
 }
 
@@ -150,7 +155,7 @@ export interface ModalResult {
   close: () => Promise<void>;
   isOpen: () => boolean;
   setContent: (content: HTMLElement | HTMLElement[]) => void;
-  updatePosition: (position: ModalConfig['position']) => void;
+  updatePosition: (position: ModalConfig["position"]) => void;
   destroy: () => void;
 }
 
@@ -160,28 +165,35 @@ export function createModal(config: ModalConfig): ModalResult {
   let closing = false;
 
   // Create overlay (for mobile)
-  const overlay = createElement('div', { class: 'relay-modal-overlay' });
+  const overlay = createElement("div", { class: "relay-modal-overlay" });
 
   // Create modal container
-  const modal = createElement('div', { class: 'relay-modal' }) as HTMLDivElement;
+  const modal = createElement("div", {
+    class: "relay-modal",
+  }) as HTMLDivElement;
 
   // Create content container
-  const contentEl = createElement('div', { class: 'relay-modal__content' }) as HTMLDivElement;
+  const contentEl = createElement("div", {
+    class: "relay-modal__content",
+  }) as HTMLDivElement;
   modal.appendChild(contentEl);
 
   // Apply initial position
-  const applyPosition = (pos: ModalConfig['position'], breakpoint?: Breakpoint) => {
+  const applyPosition = (
+    pos: ModalConfig["position"],
+    breakpoint?: Breakpoint,
+  ) => {
     const bp = breakpoint || getCurrentBreakpoint();
     const styles = getPositionStyles(pos, bp);
 
     // Reset all position properties
-    modal.style.top = '';
-    modal.style.right = '';
-    modal.style.bottom = '';
-    modal.style.left = '';
+    modal.style.top = "";
+    modal.style.right = "";
+    modal.style.bottom = "";
+    modal.style.left = "";
 
     // Only apply desktop positioning (mobile is handled by CSS)
-    if (bp === 'desktop') {
+    if (bp === "desktop") {
       setStyles(modal, styles.modal as any);
     }
   };
@@ -194,7 +206,7 @@ export function createModal(config: ModalConfig): ModalResult {
   });
 
   // Overlay click handler
-  overlay.addEventListener('click', () => {
+  overlay.addEventListener("click", () => {
     if (open && !closing) {
       closeModal();
     }
@@ -202,27 +214,27 @@ export function createModal(config: ModalConfig): ModalResult {
 
   // Close on escape key
   const handleKeydown = (e: KeyboardEvent) => {
-    if (e.key === 'Escape' && open && !closing) {
+    if (e.key === "Escape" && open && !closing) {
       closeModal();
     }
   };
-  document.addEventListener('keydown', handleKeydown);
+  document.addEventListener("keydown", handleKeydown);
 
   const openModal = () => {
     if (open) return;
     open = true;
-    modal.classList.add('relay-modal--open');
-    modal.classList.remove('relay-modal--closing');
+    modal.classList.add("relay-modal--open");
+    modal.classList.remove("relay-modal--closing");
 
     // Show overlay on mobile
-    if (getCurrentBreakpoint() === 'mobile') {
-      overlay.classList.add('relay-modal-overlay--visible');
-      overlay.classList.remove('relay-modal-overlay--hiding');
+    if (getCurrentBreakpoint() === "mobile") {
+      overlay.classList.add("relay-modal-overlay--visible");
+      overlay.classList.remove("relay-modal-overlay--hiding");
     }
 
     // Focus management
     const firstFocusable = modal.querySelector<HTMLElement>(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
     );
     firstFocusable?.focus();
   };
@@ -231,16 +243,19 @@ export function createModal(config: ModalConfig): ModalResult {
     if (!open || closing) return;
     closing = true;
 
-    modal.classList.add('relay-modal--closing');
+    modal.classList.add("relay-modal--closing");
 
-    if (getCurrentBreakpoint() === 'mobile') {
-      overlay.classList.add('relay-modal-overlay--hiding');
+    if (getCurrentBreakpoint() === "mobile") {
+      overlay.classList.add("relay-modal-overlay--hiding");
     }
 
     await waitForAnimation(modal);
 
-    modal.classList.remove('relay-modal--open', 'relay-modal--closing');
-    overlay.classList.remove('relay-modal-overlay--visible', 'relay-modal-overlay--hiding');
+    modal.classList.remove("relay-modal--open", "relay-modal--closing");
+    overlay.classList.remove(
+      "relay-modal-overlay--visible",
+      "relay-modal-overlay--hiding",
+    );
 
     open = false;
     closing = false;
@@ -255,19 +270,19 @@ export function createModal(config: ModalConfig): ModalResult {
     close: closeModal,
     isOpen: () => open,
     setContent: (content: HTMLElement | HTMLElement[]) => {
-      contentEl.innerHTML = '';
+      contentEl.innerHTML = "";
       if (Array.isArray(content)) {
         content.forEach((el) => contentEl.appendChild(el));
       } else {
         contentEl.appendChild(content);
       }
     },
-    updatePosition: (newPosition: ModalConfig['position']) => {
+    updatePosition: (newPosition: ModalConfig["position"]) => {
       applyPosition(newPosition);
     },
     destroy: () => {
       removeBreakpointListener();
-      document.removeEventListener('keydown', handleKeydown);
+      document.removeEventListener("keydown", handleKeydown);
       modal.remove();
       overlay.remove();
     },

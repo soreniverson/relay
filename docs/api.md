@@ -37,11 +37,11 @@ curl https://api.relay.dev/api/trpc/interactions.list \
 
 ## Rate Limits
 
-| Endpoint Type | Limit |
-|--------------|-------|
-| SDK Ingest | 1000 req/min per API key |
-| Dashboard | 100 req/min per user |
-| Media Upload | 50 req/min per API key |
+| Endpoint Type | Limit                    |
+| ------------- | ------------------------ |
+| SDK Ingest    | 1000 req/min per API key |
+| Dashboard     | 100 req/min per user     |
+| Media Upload  | 50 req/min per API key   |
 
 ## SDK Endpoints
 
@@ -314,28 +314,34 @@ Request: { conversationId, body }
 
 ```typescript
 // List integrations
-GET /api/trpc/integrations.list
-Query: { projectId }
+GET / api / trpc / integrations.list;
+Query: {
+  projectId;
+}
 
 // Connect integration
-POST /api/trpc/integrations.connect
-Request: { provider, config }
+POST / api / trpc / integrations.connect;
+Request: {
+  (provider, config);
+}
 
 // Create external issue
-POST /api/trpc/integrations.createIssue
-Request: { interactionId, provider, data }
+POST / api / trpc / integrations.createIssue;
+Request: {
+  (interactionId, provider, data);
+}
 ```
 
 ## Error Codes
 
-| Code | Description |
-|------|-------------|
-| `UNAUTHORIZED` | Invalid or missing authentication |
-| `FORBIDDEN` | Insufficient permissions |
-| `NOT_FOUND` | Resource not found |
-| `RATE_LIMITED` | Too many requests |
-| `VALIDATION_ERROR` | Invalid request data |
-| `INTERNAL_ERROR` | Server error |
+| Code               | Description                       |
+| ------------------ | --------------------------------- |
+| `UNAUTHORIZED`     | Invalid or missing authentication |
+| `FORBIDDEN`        | Insufficient permissions          |
+| `NOT_FOUND`        | Resource not found                |
+| `RATE_LIMITED`     | Too many requests                 |
+| `VALIDATION_ERROR` | Invalid request data              |
+| `INTERNAL_ERROR`   | Server error                      |
 
 ## Webhooks
 
@@ -368,9 +374,9 @@ Verify webhook signature:
 
 ```typescript
 const signature = crypto
-  .createHmac('sha256', webhookSecret)
+  .createHmac("sha256", webhookSecret)
   .update(JSON.stringify(payload))
-  .digest('hex');
+  .digest("hex");
 
-const isValid = signature === request.headers['x-relay-signature'];
+const isValid = signature === request.headers["x-relay-signature"];
 ```

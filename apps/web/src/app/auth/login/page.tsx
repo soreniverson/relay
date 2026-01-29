@@ -1,19 +1,19 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { trpc } from '@/lib/trpc';
-import { useAuthStore } from '@/stores/auth';
+import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { trpc } from "@/lib/trpc";
+import { useAuthStore } from "@/stores/auth";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { login: setAuth } = useAuthStore();
 
@@ -21,7 +21,7 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     try {
@@ -36,16 +36,16 @@ export default function LoginPage() {
 
       // Store auth in zustand and localStorage
       setAuth(user, result.token);
-      localStorage.setItem('relay_token', result.token);
+      localStorage.setItem("relay_token", result.token);
 
       // Redirect to dashboard or onboarding
       if (result.user.projects.length === 0) {
-        router.push('/onboarding');
+        router.push("/onboarding");
       } else {
-        router.push('/dashboard/inbox');
+        router.push("/dashboard/inbox");
       }
     } catch (err: any) {
-      setError(err.message || 'Invalid email or password');
+      setError(err.message || "Invalid email or password");
     } finally {
       setLoading(false);
     }
@@ -102,13 +102,16 @@ export default function LoginPage() {
           </div>
 
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? 'Signing in...' : 'Sign in'}
+            {loading ? "Signing in..." : "Sign in"}
           </Button>
         </form>
 
         <p className="text-center text-sm text-muted-foreground">
-          Don't have an account?{' '}
-          <Link href="/auth/signup" className="font-medium text-primary hover:underline">
+          Don't have an account?{" "}
+          <Link
+            href="/auth/signup"
+            className="font-medium text-primary hover:underline"
+          >
             Sign up
           </Link>
         </p>

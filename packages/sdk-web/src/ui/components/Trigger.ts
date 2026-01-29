@@ -3,11 +3,15 @@
 // Floating button to open the widget
 // ============================================================================
 
-import { createElement, setStyles } from '../utils/dom';
-import { getPositionStyles, onBreakpointChange, type Breakpoint } from '../utils/responsive';
+import { createElement, setStyles } from "../utils/dom";
+import {
+  getPositionStyles,
+  onBreakpointChange,
+  type Breakpoint,
+} from "../utils/responsive";
 
 export interface TriggerConfig {
-  position: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
+  position: "bottom-right" | "bottom-left" | "top-right" | "top-left";
   primaryColor?: string;
   icon?: string;
   ariaLabel?: string;
@@ -107,38 +111,46 @@ export interface TriggerResult {
   element: HTMLButtonElement;
   setOpen: (open: boolean) => void;
   setBadge: (count: number | null) => void;
-  updatePosition: (position: TriggerConfig['position']) => void;
+  updatePosition: (position: TriggerConfig["position"]) => void;
   destroy: () => void;
 }
 
 export function createTrigger(config: TriggerConfig): TriggerResult {
-  const { position, icon = DEFAULT_ICON, ariaLabel = 'Open feedback widget', onClick } = config;
+  const {
+    position,
+    icon = DEFAULT_ICON,
+    ariaLabel = "Open feedback widget",
+    onClick,
+  } = config;
 
   // Create button
-  const button = createElement('button', {
-    type: 'button',
-    class: 'relay-trigger',
+  const button = createElement("button", {
+    type: "button",
+    class: "relay-trigger",
   }) as HTMLButtonElement;
-  button.setAttribute('aria-label', ariaLabel);
+  button.setAttribute("aria-label", ariaLabel);
 
   // Create icon container
-  const iconEl = createElement('span', { class: 'relay-trigger__icon' });
+  const iconEl = createElement("span", { class: "relay-trigger__icon" });
   iconEl.innerHTML = icon;
   button.appendChild(iconEl);
 
   // Create badge (hidden by default)
-  const badge = createElement('span', { class: 'relay-trigger__badge' });
-  badge.style.display = 'none';
+  const badge = createElement("span", { class: "relay-trigger__badge" });
+  badge.style.display = "none";
   button.appendChild(badge);
 
   // Apply initial position
-  const applyPosition = (pos: TriggerConfig['position'], breakpoint?: Breakpoint) => {
+  const applyPosition = (
+    pos: TriggerConfig["position"],
+    breakpoint?: Breakpoint,
+  ) => {
     const styles = getPositionStyles(pos, breakpoint);
     // Reset all position properties
-    button.style.top = '';
-    button.style.right = '';
-    button.style.bottom = '';
-    button.style.left = '';
+    button.style.top = "";
+    button.style.right = "";
+    button.style.bottom = "";
+    button.style.left = "";
     // Apply new position
     setStyles(button, styles.trigger as any);
   };
@@ -152,7 +164,7 @@ export function createTrigger(config: TriggerConfig): TriggerResult {
 
   // Click handler
   if (onClick) {
-    button.addEventListener('click', onClick);
+    button.addEventListener("click", onClick);
   }
 
   let isOpen = false;
@@ -161,19 +173,22 @@ export function createTrigger(config: TriggerConfig): TriggerResult {
     element: button,
     setOpen: (open: boolean) => {
       isOpen = open;
-      button.classList.toggle('relay-trigger--open', open);
+      button.classList.toggle("relay-trigger--open", open);
       iconEl.innerHTML = open ? CLOSE_ICON : icon;
-      button.setAttribute('aria-label', open ? 'Close feedback widget' : ariaLabel);
+      button.setAttribute(
+        "aria-label",
+        open ? "Close feedback widget" : ariaLabel,
+      );
     },
     setBadge: (count: number | null) => {
       if (count && count > 0) {
-        badge.textContent = count > 99 ? '99+' : String(count);
-        badge.style.display = 'flex';
+        badge.textContent = count > 99 ? "99+" : String(count);
+        badge.style.display = "flex";
       } else {
-        badge.style.display = 'none';
+        badge.style.display = "none";
       }
     },
-    updatePosition: (newPosition: TriggerConfig['position']) => {
+    updatePosition: (newPosition: TriggerConfig["position"]) => {
       applyPosition(newPosition);
     },
     destroy: () => {

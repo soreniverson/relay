@@ -3,9 +3,15 @@
 // Tools for annotating screenshots
 // ============================================================================
 
-import { createElement } from '../../utils/dom';
+import { createElement } from "../../utils/dom";
 
-export type AnnotationTool = 'arrow' | 'rectangle' | 'circle' | 'highlight' | 'blur' | 'text';
+export type AnnotationTool =
+  | "arrow"
+  | "rectangle"
+  | "circle"
+  | "highlight"
+  | "blur"
+  | "text";
 
 export interface AnnotationToolbarConfig {
   activeTool?: AnnotationTool;
@@ -141,13 +147,13 @@ const TOOL_ICONS: Record<AnnotationTool, string> = {
 };
 
 const COLORS = [
-  '#ef4444', // red
-  '#f97316', // orange
-  '#eab308', // yellow
-  '#22c55e', // green
-  '#3b82f6', // blue
-  '#8b5cf6', // purple
-  '#000000', // black
+  "#ef4444", // red
+  "#f97316", // orange
+  "#eab308", // yellow
+  "#22c55e", // green
+  "#3b82f6", // blue
+  "#8b5cf6", // purple
+  "#000000", // black
 ];
 
 export interface AnnotationToolbarResult {
@@ -160,9 +166,11 @@ export interface AnnotationToolbarResult {
   getActiveColor: () => string;
 }
 
-export function createAnnotationToolbar(config: AnnotationToolbarConfig = {}): AnnotationToolbarResult {
+export function createAnnotationToolbar(
+  config: AnnotationToolbarConfig = {},
+): AnnotationToolbarResult {
   const {
-    activeTool = 'arrow',
+    activeTool = "arrow",
     activeColor = COLORS[0],
     onToolChange,
     onColorChange,
@@ -176,22 +184,24 @@ export function createAnnotationToolbar(config: AnnotationToolbarConfig = {}): A
   let currentColor: string = activeColor;
 
   // Create container
-  const toolbar = createElement('div', { class: 'relay-annotation-toolbar' });
+  const toolbar = createElement("div", { class: "relay-annotation-toolbar" });
 
   // Tools section
-  const toolsContainer = createElement('div', { class: 'relay-annotation-toolbar__tools' });
+  const toolsContainer = createElement("div", {
+    class: "relay-annotation-toolbar__tools",
+  });
   const toolButtons = new Map<AnnotationTool, HTMLButtonElement>();
 
   (Object.keys(TOOL_ICONS) as AnnotationTool[]).forEach((tool) => {
-    const btn = createElement('button', {
-      type: 'button',
-      class: `relay-annotation-toolbar__tool ${tool === currentTool ? 'relay-annotation-toolbar__tool--active' : ''}`,
+    const btn = createElement("button", {
+      type: "button",
+      class: `relay-annotation-toolbar__tool ${tool === currentTool ? "relay-annotation-toolbar__tool--active" : ""}`,
     }) as HTMLButtonElement;
     btn.innerHTML = TOOL_ICONS[tool];
-    btn.setAttribute('aria-label', `${tool} tool`);
-    btn.setAttribute('title', tool.charAt(0).toUpperCase() + tool.slice(1));
+    btn.setAttribute("aria-label", `${tool} tool`);
+    btn.setAttribute("title", tool.charAt(0).toUpperCase() + tool.slice(1));
 
-    btn.addEventListener('click', () => {
+    btn.addEventListener("click", () => {
       setActiveTool(tool);
       onToolChange?.(tool);
     });
@@ -201,21 +211,25 @@ export function createAnnotationToolbar(config: AnnotationToolbarConfig = {}): A
   });
 
   // Divider
-  const divider1 = createElement('div', { class: 'relay-annotation-toolbar__divider' });
+  const divider1 = createElement("div", {
+    class: "relay-annotation-toolbar__divider",
+  });
 
   // Colors section
-  const colorsContainer = createElement('div', { class: 'relay-annotation-toolbar__colors' });
+  const colorsContainer = createElement("div", {
+    class: "relay-annotation-toolbar__colors",
+  });
   const colorButtons = new Map<string, HTMLButtonElement>();
 
   COLORS.forEach((color) => {
-    const btn = createElement('button', {
-      type: 'button',
-      class: `relay-annotation-toolbar__color ${color === currentColor ? 'relay-annotation-toolbar__color--active' : ''}`,
+    const btn = createElement("button", {
+      type: "button",
+      class: `relay-annotation-toolbar__color ${color === currentColor ? "relay-annotation-toolbar__color--active" : ""}`,
     }) as HTMLButtonElement;
     btn.style.backgroundColor = color;
-    btn.setAttribute('aria-label', `Color ${color}`);
+    btn.setAttribute("aria-label", `Color ${color}`);
 
-    btn.addEventListener('click', () => {
+    btn.addEventListener("click", () => {
       setActiveColor(color);
       onColorChange?.(color);
     });
@@ -225,33 +239,37 @@ export function createAnnotationToolbar(config: AnnotationToolbarConfig = {}): A
   });
 
   // Divider
-  const divider2 = createElement('div', { class: 'relay-annotation-toolbar__divider' });
+  const divider2 = createElement("div", {
+    class: "relay-annotation-toolbar__divider",
+  });
 
   // Actions section
-  const actionsContainer = createElement('div', { class: 'relay-annotation-toolbar__actions' });
+  const actionsContainer = createElement("div", {
+    class: "relay-annotation-toolbar__actions",
+  });
 
-  const undoBtn = createElement('button', {
-    type: 'button',
-    class: 'relay-annotation-toolbar__action',
+  const undoBtn = createElement("button", {
+    type: "button",
+    class: "relay-annotation-toolbar__action",
     disabled: !canUndo,
   }) as HTMLButtonElement;
   undoBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v6h6M3 13l4-4c1.33-1.33 3.17-2 5-2s3.67.67 5 2c1.33 1.33 2 3.17 2 5s-.67 3.67-2 5"/></svg>`;
-  undoBtn.setAttribute('aria-label', 'Undo');
-  undoBtn.setAttribute('title', 'Undo (Ctrl+Z)');
+  undoBtn.setAttribute("aria-label", "Undo");
+  undoBtn.setAttribute("title", "Undo (Ctrl+Z)");
   if (onUndo) {
-    undoBtn.addEventListener('click', onUndo);
+    undoBtn.addEventListener("click", onUndo);
   }
 
-  const redoBtn = createElement('button', {
-    type: 'button',
-    class: 'relay-annotation-toolbar__action',
+  const redoBtn = createElement("button", {
+    type: "button",
+    class: "relay-annotation-toolbar__action",
     disabled: !canRedo,
   }) as HTMLButtonElement;
   redoBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 7v6h-6M21 13l-4-4c-1.33-1.33-3.17-2-5-2s-3.67.67-5 2c-1.33 1.33-2 3.17-2 5s.67 3.67 2 5"/></svg>`;
-  redoBtn.setAttribute('aria-label', 'Redo');
-  redoBtn.setAttribute('title', 'Redo (Ctrl+Shift+Z)');
+  redoBtn.setAttribute("aria-label", "Redo");
+  redoBtn.setAttribute("title", "Redo (Ctrl+Shift+Z)");
   if (onRedo) {
-    redoBtn.addEventListener('click', onRedo);
+    redoBtn.addEventListener("click", onRedo);
   }
 
   actionsContainer.appendChild(undoBtn);
@@ -266,14 +284,22 @@ export function createAnnotationToolbar(config: AnnotationToolbarConfig = {}): A
 
   // Helper functions
   const setActiveTool = (tool: AnnotationTool) => {
-    toolButtons.get(currentTool)?.classList.remove('relay-annotation-toolbar__tool--active');
-    toolButtons.get(tool)?.classList.add('relay-annotation-toolbar__tool--active');
+    toolButtons
+      .get(currentTool)
+      ?.classList.remove("relay-annotation-toolbar__tool--active");
+    toolButtons
+      .get(tool)
+      ?.classList.add("relay-annotation-toolbar__tool--active");
     currentTool = tool;
   };
 
   const setActiveColor = (color: string) => {
-    colorButtons.get(currentColor)?.classList.remove('relay-annotation-toolbar__color--active');
-    colorButtons.get(color)?.classList.add('relay-annotation-toolbar__color--active');
+    colorButtons
+      .get(currentColor)
+      ?.classList.remove("relay-annotation-toolbar__color--active");
+    colorButtons
+      .get(color)
+      ?.classList.add("relay-annotation-toolbar__color--active");
     currentColor = color;
   };
 
