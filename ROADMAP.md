@@ -12,45 +12,48 @@
 
 - [x] SDK: Bug reports, feedback, chat, screenshots, annotations, replay capture
 - [x] API: Sessions, interactions, conversations, surveys, feedback, roadmap
-- [x] Dashboard: Inbox, conversations, surveys, feedback, roadmap, settings (UI complete)
+- [x] Dashboard: Inbox, conversations, surveys, feedback, roadmap, settings (fully wired)
 - [x] Infrastructure: Docker, Postgres, Redis, MinIO, multi-region schema
 - [x] Worker: BullMQ queues configured, job structure in place
+- [x] Auth: Password-based login/signup (replaced magic links for simplicity)
+- [x] CI/CD: GitHub Actions (lint, typecheck, test, build) + Railway/Vercel deployment
 
 ### Needs Completion
 
-- [ ] Email delivery (magic links work locally via Mailhog, need production provider)
 - [ ] Replay processing & playback (capture works, storage/player incomplete)
-- [ ] Dashboard ↔ API wiring (some views use mock data)
 - [ ] Billing/payments (UI mocked, no Stripe)
 - [ ] AI features (queued but processors are stubs)
 - [ ] Integrations (Linear/Slack scaffolded, API calls are TODOs)
-- [ ] Deployment pipeline (no CI/CD)
 
 ---
 
-## Phase 0: Launch Blockers (Week 1-2)
+## Phase 0: Launch Blockers ✅ COMPLETE
 
-_Cannot go live without these._
+_Completed January 29, 2026_
 
-### 0.1 Email Delivery
+### 0.1 Authentication
 
-- [ ] Integrate Resend or AWS SES
-- [ ] Magic link emails working in production
-- [ ] Basic transactional templates (welcome, password reset, notifications)
+- [x] Password-based auth (replaced magic links for simplicity)
+- [x] Login and signup pages functional
+- [x] JWT token-based sessions
+- [ ] ~~Magic link emails~~ (punted - password auth is simpler for MVP)
+- [ ] Basic transactional templates (deferred to Phase 1)
 
 ### 0.2 Deployment Pipeline
 
-- [ ] GitHub Actions: lint, typecheck, test, build
-- [ ] Production Docker Compose or Railway/Render config
-- [ ] Environment management (staging, production)
-- [ ] Database migration strategy for production
+- [x] GitHub Actions: lint, typecheck, test, build
+- [x] Railway deployment for API (api-production-6495.up.railway.app)
+- [x] Vercel deployment for dashboard (relay-rouge.vercel.app)
+- [x] Supabase PostgreSQL database
+- [x] Database migrations via Prisma
 
 ### 0.3 Core Dashboard Wiring
 
-- [ ] Replace mock data with real API calls across all views
-- [ ] Inbox → API integration complete
-- [ ] Conversations → real-time messaging working
-- [ ] Settings → API keys, team members functional
+- [x] Inbox → tRPC API integration complete
+- [x] Conversations → real messaging with tRPC
+- [x] Settings → API keys (create, list, revoke) functional
+- [x] Feedback page → real API calls
+- [x] SDK widget tested and working locally
 
 ---
 
@@ -323,4 +326,9 @@ These are 2027+ features after core product-market fit.
 
 ## Next Action
 
-Start Phase 0.1 — Email delivery with Resend.
+**Start Phase 1** — Billing, Replay System, and Onboarding Flow.
+
+Priority order:
+1. 1.1 Billing & Subscriptions (Stripe) — enables revenue
+2. 1.3 Onboarding Flow — improves conversion
+3. 1.2 Replay System — completes core feature set
