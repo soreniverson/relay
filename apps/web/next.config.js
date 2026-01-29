@@ -1,3 +1,5 @@
+const path = require("path");
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -10,17 +12,10 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  // Exclude patterns that cause micromatch stack overflow
+  // Use standalone output and limit tracing root to prevent stack overflow in CI
+  output: "standalone",
   experimental: {
-    outputFileTracingExcludes: {
-      "*": [
-        "node_modules/@swc/core-linux-x64-gnu",
-        "node_modules/@swc/core-linux-x64-musl",
-        "node_modules/@esbuild/linux-x64",
-        "node_modules/sharp",
-        "node_modules/prisma",
-      ],
-    },
+    outputFileTracingRoot: path.join(__dirname, "../../"),
   },
   async rewrites() {
     return [
