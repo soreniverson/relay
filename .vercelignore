@@ -1,0 +1,17 @@
+# Ignore service-specific code (deployed separately)
+services/
+
+# Ignore test files
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
+e2e/
+
+# Ignore dev configs
+*.md
+.github/
+.husky/
+
+# Ignore turbo cache
+.turbo/

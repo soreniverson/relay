@@ -1,0 +1,16 @@
+name = "relay-router"
+main = "src/index.ts"
+compatibility_date = "2024-02-01"
+
+[vars]
+US_WEST_API = "https://us-west-api.relay.dev"
+EU_WEST_API = "https://eu-west-api.relay.dev"
+
+# KV namespace for API key -> region mapping cache
+[[kv_namespaces]]
+binding = "API_KEY_CACHE"
+id = "your-kv-namespace-id"
+
+# For local development
+[env.development]
+vars = { US_WEST_API = "http://localhost:3001", EU_WEST_API = "http://localhost:3002" }

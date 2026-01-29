@@ -1,0 +1,188 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event.inputs.environment == 'staging'
+    environment:
+      name: staging
+      url: https://staging.relay.dev
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma Client
+        run: pnpm db:generate
+
+      - name: Build
+        run: pnpm build
+
+      - name: Run Database Migrations
+        env:
+          DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+        run: pnpm db:migrate:deploy
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Deploy API to Railway
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          cd services/api
+          railway up --service api --detach
+
+      - name: Deploy Worker to Railway
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          cd services/worker
+          railway up --service worker --detach
+
+      - name: Deploy Web to Vercel
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          npm install -g vercel
+          cd apps/web
+          vercel pull --yes --environment=preview --token=$VERCEL_TOKEN
+          vercel build --token=$VERCEL_TOKEN
+          vercel deploy --prebuilt --token=$VERCEL_TOKEN
+
+      - name: Smoke Tests
+        run: |
+          sleep 30  # Wait for services to start
+          curl -f https://staging-api.relay.dev/health || exit 1
+          echo "Staging health check passed"
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    if: github.event.inputs.environment == 'production'
+    needs: [deploy-staging]
+    environment:
+      name: production
+      url: https://relay.dev
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma Client
+        run: pnpm db:generate
+
+      - name: Build
+        run: pnpm build
+
+      - name: Run Database Migrations (US-West)
+        env:
+          DATABASE_URL: ${{ secrets.US_WEST_DATABASE_URL }}
+        run: pnpm db:migrate:deploy
+
+      - name: Run Database Migrations (EU-West)
+        env:
+          DATABASE_URL: ${{ secrets.EU_WEST_DATABASE_URL }}
+        run: pnpm db:migrate:deploy
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Deploy API to US-West
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_US_WEST }}
+        run: |
+          cd services/api
+          railway up --service api --detach
+
+      - name: Deploy Worker to US-West
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_US_WEST }}
+        run: |
+          cd services/worker
+          railway up --service worker --detach
+
+      - name: Deploy API to EU-West
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_EU_WEST }}
+        run: |
+          cd services/api
+          railway up --service api --detach
+
+      - name: Deploy Worker to EU-West
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_EU_WEST }}
+        run: |
+          cd services/worker
+          railway up --service worker --detach
+
+      - name: Deploy Web to Vercel (Production)
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          npm install -g vercel
+          cd apps/web
+          vercel pull --yes --environment=production --token=$VERCEL_TOKEN
+          vercel build --prod --token=$VERCEL_TOKEN
+          vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN
+
+      - name: Verify Deployment
+        run: |
+          sleep 30  # Wait for services to start
+          curl -f https://api.relay.dev/health || exit 1
+          curl -f https://eu.api.relay.dev/health || exit 1
+          echo "Production health checks passed"
+
+      - name: Notify Slack
+        if: always()
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "text": "Production deployment ${{ job.status }}: ${{ github.sha }}"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

@@ -1,0 +1,197 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 9%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 9%;
+    --primary: 0 0% 9%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
+    --accent: 0 0% 96%;
+    --accent-foreground: 0 0% 9%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 0 0% 9%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 0 0% 5%;
+    --foreground: 0 0% 90%;
+    --card: 0 0% 7%;
+    --card-foreground: 0 0% 90%;
+    --popover: 0 0% 8%;
+    --popover-foreground: 0 0% 90%;
+    --primary: 0 0% 90%;
+    --primary-foreground: 0 0% 5%;
+    --secondary: 0 0% 12%;
+    --secondary-foreground: 0 0% 90%;
+    --muted: 0 0% 12%;
+    --muted-foreground: 0 0% 55%;
+    --accent: 0 0% 15%;
+    --accent-foreground: 0 0% 90%;
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 142 70% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+    --border: 0 0% 15%;
+    --input: 0 0% 15%;
+    --ring: 0 0% 90%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+/* Page header - consistent across all pages */
+@layer components {
+  .page-header {
+    @apply flex items-center justify-between h-14 px-6 border-b border-border;
+    border-bottom-width: 0.5px;
+  }
+
+  .page-title {
+    @apply text-base font-medium text-foreground;
+  }
+
+  .page-content {
+    @apply p-6;
+  }
+
+  .page-content-flush {
+    @apply p-0;
+  }
+}
+
+/* Card styling */
+@layer components {
+  .stat-card {
+    @apply rounded-lg border bg-card p-6;
+  }
+
+  .stat-card-label {
+    @apply text-sm font-medium text-muted-foreground;
+  }
+
+  .stat-card-value {
+    @apply text-2xl font-bold text-foreground mt-2;
+  }
+}
+
+/* List items */
+@layer components {
+  .list-item {
+    @apply flex items-center gap-4 p-4 rounded-lg border border-border bg-card hover:bg-accent/50 transition-colors;
+  }
+
+  .list-item-active {
+    @apply bg-accent;
+  }
+}
+
+/* Status badge colors - muted for Linear-style */
+@layer utilities {
+  .badge-new {
+    @apply bg-muted text-muted-foreground;
+  }
+  .badge-triaging {
+    @apply bg-violet-500/10 text-violet-400;
+  }
+  .badge-in-progress {
+    @apply bg-amber-500/10 text-amber-400;
+  }
+  .badge-resolved {
+    @apply bg-emerald-500/10 text-emerald-400;
+  }
+  .badge-closed {
+    @apply bg-muted text-muted-foreground;
+  }
+
+  .badge-low {
+    @apply bg-emerald-500/10 text-emerald-400;
+  }
+  .badge-med {
+    @apply bg-yellow-500/10 text-yellow-400;
+  }
+  .badge-high {
+    @apply bg-orange-500/10 text-orange-400;
+  }
+  .badge-critical {
+    @apply bg-red-500/10 text-red-400;
+  }
+}
+
+/* Tags - muted style */
+@layer components {
+  .tag {
+    @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-muted text-muted-foreground;
+  }
+
+  .tag-active {
+    @apply bg-foreground text-background;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-muted-foreground/20 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-muted-foreground/30;
+}
+
+/* Focus ring styling */
+@layer utilities {
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background;
+  }
+}
+
+/* Filter tabs - Linear style */
+@layer components {
+  .filter-tabs {
+    @apply flex items-center gap-1 bg-muted rounded-lg p-1;
+  }
+
+  .filter-tab {
+    @apply px-3 py-1.5 text-sm font-medium rounded-md transition-colors text-muted-foreground hover:text-foreground;
+  }
+
+  .filter-tab-active {
+    @apply bg-background text-foreground shadow-sm;
+  }
+}

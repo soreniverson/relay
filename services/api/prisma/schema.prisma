@@ -1,0 +1,1188 @@
+// ============================================================================
+// RELAY DATABASE SCHEMA
+// This schema is deployed per-region for data residency compliance
+// ============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// PROJECTS & API KEYS
+// ============================================================================
+
+model Project {
+  id        String   @id @default(uuid())
+  name      String
+  region    Region
+  settings  Json     @default("{}")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  apiKeys           ApiKey[]
+  users             EndUser[]
+  sessions          Session[]
+  interactions      Interaction[]
+  media             Media[]
+  logs              InteractionLog[]
+  feedbackItems     FeedbackItem[]
+  feedbackVotes     FeedbackVote[]
+  feedbackLinks     FeedbackLink[]
+  roadmapItems      RoadmapItem[]
+  roadmapLinks      RoadmapLink[]
+  surveys           Survey[]
+  surveyResponses   SurveyResponse[]
+  conversations     Conversation[]
+  messages          Message[]
+  auditLogs         AuditLog[]
+  privacyRules      PrivacyRule[]
+  integrations      Integration[]
+  integrationLinks  IntegrationLink[]
+  featureFlags      FeatureFlag[]
+  replays           Replay[]
+  // New relations
+  articles          Article[]
+  articleCategories ArticleCategory[]
+  botConfig         BotConfig?
+  workflows         Workflow[]
+  tours             Tour[]
+  checklists        Checklist[]
+  announcements     Announcement[]
+  webhooks          Webhook[]
+  emailCampaigns    EmailCampaign[]
+
+  @@map("projects")
+}
+
+model ApiKey {
+  id         String    @id @default(uuid())
+  projectId  String    @map("project_id")
+  keyHash    String    @map("key_hash")
+  keyPrefix  String    @map("key_prefix") @db.VarChar(12)
+  name       String
+  scopes     String[]
+  createdAt  DateTime  @default(now()) @map("created_at")
+  lastUsedAt DateTime? @map("last_used_at")
+  expiresAt  DateTime? @map("expires_at")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([keyHash])
+  @@index([projectId])
+  @@map("api_keys")
+}
+
+// ============================================================================
+// USERS & SESSIONS
+// ============================================================================
+
+model EndUser {
+  id             String   @id @default(uuid())
+  projectId      String   @map("project_id")
+  externalUserId String?  @map("external_user_id")
+  email          String?
+  name           String?
+  avatarUrl      String?  @map("avatar_url")
+  traits         Json     @default("{}")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  project       Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  sessions      Session[]
+  interactions  Interaction[]
+  feedbackVotes FeedbackVote[]
+  conversations Conversation[]
+
+  @@unique([projectId, externalUserId])
+  @@index([projectId])
+  @@index([email])
+  @@map("end_users")
+}
+
+model Session {
+  id               String      @id @default(uuid())
+  projectId        String      @map("project_id")
+  userId           String?     @map("user_id")
+  startedAt        DateTime    @default(now()) @map("started_at")
+  lastSeenAt       DateTime    @default(now()) @map("last_seen_at")
+  device           Json        @default("{}")
+  appVersion       String?     @map("app_version")
+  environment      Environment @default(production)
+  ipHash           String?     @map("ip_hash")
+  userAgent        String?     @map("user_agent")
+  pageViews        Int         @default(0) @map("page_views")
+  interactionCount Int         @default(0) @map("interaction_count")
+
+  project            Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user               EndUser?            @relation(fields: [userId], references: [id])
+  interactions       Interaction[]
+  feedbackVotes      FeedbackVote[]
+  conversations      Conversation[]
+  replays            Replay[]
+  tourProgress       TourProgress[]
+  checklistProgress  ChecklistProgress[]
+
+  @@index([projectId])
+  @@index([userId])
+  @@index([startedAt])
+  @@map("sessions")
+}
+
+// ============================================================================
+// INTERACTIONS (Core entity)
+// ============================================================================
+
+model Interaction {
+  id        String            @id @default(uuid())
+  projectId String            @map("project_id")
+  type      InteractionType
+  source    InteractionSource
+  userId    String?           @map("user_id")
+  sessionId String            @map("session_id")
+  createdAt DateTime          @default(now()) @map("created_at")
+  updatedAt DateTime          @updatedAt @map("updated_at")
+
+  // Content
+  contentText String? @map("content_text") @db.Text
+  contentJson Json?   @map("content_json")
+
+  // Status & Categorization
+  status     InteractionStatus @default(new)
+  severity   Severity?
+  tags       String[]
+  assigneeId String?           @map("assignee_id")
+
+  // Linked Issue
+  linkedIssueProvider IntegrationProvider? @map("linked_issue_provider")
+  linkedIssueId       String?              @map("linked_issue_id")
+  linkedIssueUrl      String?              @map("linked_issue_url")
+
+  // AI Processing
+  aiSummary          String?  @map("ai_summary") @db.Text
+  aiLabels           String[] @map("ai_labels")
+  aiDuplicateGroupId String?  @map("ai_duplicate_group_id")
+  aiConfidence       Float?   @map("ai_confidence")
+
+  // Context
+  privacyScope     Json? @map("privacy_scope")
+  technicalContext Json? @map("technical_context")
+
+  // Relations
+  project         Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user            EndUser?         @relation(fields: [userId], references: [id])
+  session         Session          @relation(fields: [sessionId], references: [id])
+  media           Media[]
+  logs            InteractionLog[]
+  feedbackLinks   FeedbackLink[]
+  roadmapLinks    RoadmapLink[]
+  surveyResponses SurveyResponse[]
+  integrationLinks IntegrationLink[]
+  replays         Replay[]
+
+  @@index([projectId])
+  @@index([projectId, type])
+  @@index([projectId, status])
+  @@index([projectId, createdAt])
+  @@index([sessionId])
+  @@index([userId])
+  @@index([aiDuplicateGroupId])
+  @@map("interactions")
+}
+
+// ============================================================================
+// MEDIA
+// ============================================================================
+
+model Media {
+  id            String    @id @default(uuid())
+  projectId     String    @map("project_id")
+  interactionId String    @map("interaction_id")
+  kind          MediaKind
+  url           String
+  storageKey    String    @map("storage_key")
+  contentType   String    @map("content_type")
+  sizeBytes     Int       @map("size_bytes")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  meta          Json?
+
+  project     Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  interaction Interaction @relation(fields: [interactionId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([interactionId])
+  @@map("media")
+}
+
+// ============================================================================
+// LOGS
+// ============================================================================
+
+model InteractionLog {
+  id            String   @id @default(uuid())
+  projectId     String   @map("project_id")
+  interactionId String   @map("interaction_id")
+  console       Json?
+  network       Json?
+  errors        Json?
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  project     Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  interaction Interaction @relation(fields: [interactionId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([interactionId])
+  @@map("interaction_logs")
+}
+
+// ============================================================================
+// REPLAY
+// ============================================================================
+
+model Replay {
+  id            String       @id @default(uuid())
+  projectId     String       @map("project_id")
+  sessionId     String       @map("session_id")
+  interactionId String?      @map("interaction_id")
+  startedAt     DateTime     @default(now()) @map("started_at")
+  endedAt       DateTime?    @map("ended_at")
+  duration      Int?
+  eventCount    Int          @default(0) @map("event_count")
+  status        ReplayStatus @default(recording)
+  chunks        Json         @default("[]")
+
+  project     Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  session     Session      @relation(fields: [sessionId], references: [id])
+  interaction Interaction? @relation(fields: [interactionId], references: [id])
+
+  @@index([projectId])
+  @@index([sessionId])
+  @@index([interactionId])
+  @@map("replays")
+}
+
+// ============================================================================
+// FEEDBACK
+// ============================================================================
+
+model FeedbackItem {
+  id                     String             @id @default(uuid())
+  projectId              String             @map("project_id")
+  title                  String
+  description            String?            @db.Text
+  status                 FeedbackItemStatus @default(under_review)
+  category               String?
+  voteCount              Int                @default(0) @map("vote_count")
+  createdAt              DateTime           @default(now()) @map("created_at")
+  updatedAt              DateTime           @updatedAt @map("updated_at")
+  createdBy              String?            @map("created_by")
+  linkedInteractionCount Int                @default(0) @map("linked_interaction_count")
+
+  project       Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  votes         FeedbackVote[]
+  feedbackLinks FeedbackLink[]
+  roadmapLinks  RoadmapLink[]
+
+  @@index([projectId])
+  @@index([projectId, status])
+  @@map("feedback_items")
+}
+
+model FeedbackVote {
+  id             String   @id @default(uuid())
+  projectId      String   @map("project_id")
+  feedbackItemId String   @map("feedback_item_id")
+  userId         String?  @map("user_id")
+  sessionId      String   @map("session_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  project      Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  feedbackItem FeedbackItem @relation(fields: [feedbackItemId], references: [id], onDelete: Cascade)
+  user         EndUser?     @relation(fields: [userId], references: [id])
+  session      Session      @relation(fields: [sessionId], references: [id])
+
+  @@unique([feedbackItemId, sessionId])
+  @@index([projectId])
+  @@index([feedbackItemId])
+  @@map("feedback_votes")
+}
+
+model FeedbackLink {
+  id             String   @id @default(uuid())
+  projectId      String   @map("project_id")
+  feedbackItemId String   @map("feedback_item_id")
+  interactionId  String   @map("interaction_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  project      Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  feedbackItem FeedbackItem @relation(fields: [feedbackItemId], references: [id], onDelete: Cascade)
+  interaction  Interaction  @relation(fields: [interactionId], references: [id], onDelete: Cascade)
+
+  @@unique([feedbackItemId, interactionId])
+  @@index([projectId])
+  @@map("feedback_links")
+}
+
+// ============================================================================
+// ROADMAP
+// ============================================================================
+
+model RoadmapItem {
+  id                  String            @id @default(uuid())
+  projectId           String            @map("project_id")
+  title               String
+  description         String?           @db.Text
+  visibility          RoadmapVisibility @default(private)
+  status              RoadmapItemStatus @default(planned)
+  sortOrder           Int               @default(0) @map("sort_order")
+  eta                 DateTime?
+  createdAt           DateTime          @default(now()) @map("created_at")
+  updatedAt           DateTime          @updatedAt @map("updated_at")
+  linkedFeedbackCount Int               @default(0) @map("linked_feedback_count")
+
+  project      Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  roadmapLinks RoadmapLink[]
+
+  @@index([projectId])
+  @@index([projectId, visibility])
+  @@map("roadmap_items")
+}
+
+model RoadmapLink {
+  id             String   @id @default(uuid())
+  projectId      String   @map("project_id")
+  roadmapItemId  String   @map("roadmap_item_id")
+  feedbackItemId String?  @map("feedback_item_id")
+  interactionId  String?  @map("interaction_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  project      Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  roadmapItem  RoadmapItem   @relation(fields: [roadmapItemId], references: [id], onDelete: Cascade)
+  feedbackItem FeedbackItem? @relation(fields: [feedbackItemId], references: [id])
+  interaction  Interaction?  @relation(fields: [interactionId], references: [id])
+
+  @@index([projectId])
+  @@index([roadmapItemId])
+  @@map("roadmap_links")
+}
+
+// ============================================================================
+// SURVEYS
+// ============================================================================
+
+model Survey {
+  id            String   @id @default(uuid())
+  projectId     String   @map("project_id")
+  name          String
+  definition    Json
+  targeting     Json
+  active        Boolean  @default(false)
+  responseCount Int      @default(0) @map("response_count")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  project   Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  responses SurveyResponse[]
+
+  @@index([projectId])
+  @@index([projectId, active])
+  @@map("surveys")
+}
+
+model SurveyResponse {
+  id            String   @id @default(uuid())
+  projectId     String   @map("project_id")
+  surveyId      String   @map("survey_id")
+  interactionId String   @map("interaction_id")
+  responses     Json     @default("{}")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  project     Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  survey      Survey      @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  interaction Interaction @relation(fields: [interactionId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([surveyId])
+  @@map("survey_responses")
+}
+
+// ============================================================================
+// CONVERSATIONS (Chat)
+// ============================================================================
+
+model Conversation {
+  id            String             @id @default(uuid())
+  projectId     String             @map("project_id")
+  userId        String?            @map("user_id")
+  sessionId     String             @map("session_id")
+  status        ConversationStatus @default(open)
+  subject       String?
+  assigneeId    String?            @map("assignee_id")
+  lastMessageAt DateTime?          @map("last_message_at")
+  messageCount  Int                @default(0) @map("message_count")
+  createdAt     DateTime           @default(now()) @map("created_at")
+  updatedAt     DateTime           @updatedAt @map("updated_at")
+
+  project     Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user        EndUser?     @relation(fields: [userId], references: [id])
+  session     Session      @relation(fields: [sessionId], references: [id])
+  messages    Message[]
+  botMessages BotMessage[]
+
+  @@index([projectId])
+  @@index([projectId, status])
+  @@index([userId])
+  @@map("conversations")
+}
+
+model Message {
+  id             String           @id @default(uuid())
+  projectId      String           @map("project_id")
+  conversationId String           @map("conversation_id")
+  direction      MessageDirection
+  body           String           @db.Text
+  authorId       String?          @map("author_id")
+  createdAt      DateTime         @default(now()) @map("created_at")
+  readAt         DateTime?        @map("read_at")
+  meta           Json?
+
+  project      Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([conversationId])
+  @@map("messages")
+}
+
+// ============================================================================
+// AUDIT LOGS
+// ============================================================================
+
+model AuditLog {
+  id         String    @id @default(uuid())
+  projectId  String    @map("project_id")
+  actorType  ActorType @map("actor_type")
+  actorId    String    @map("actor_id")
+  action     String
+  targetType String    @map("target_type")
+  targetId   String    @map("target_id")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  meta       Json?
+  ipAddress  String?   @map("ip_address")
+  userAgent  String?   @map("user_agent")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([projectId, createdAt])
+  @@index([actorId])
+  @@map("audit_logs")
+}
+
+// ============================================================================
+// PRIVACY RULES
+// ============================================================================
+
+model PrivacyRule {
+  id        String   @id @default(uuid())
+  projectId String   @map("project_id")
+  name      String
+  enabled   Boolean  @default(true)
+  rule      Json
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@map("privacy_rules")
+}
+
+// ============================================================================
+// INTEGRATIONS
+// ============================================================================
+
+model Integration {
+  id         String              @id @default(uuid())
+  projectId  String              @map("project_id")
+  provider   IntegrationProvider
+  enabled    Boolean             @default(false)
+  config     Json                @default("{}")
+  createdAt  DateTime            @default(now()) @map("created_at")
+  updatedAt  DateTime            @updatedAt @map("updated_at")
+  lastSyncAt DateTime?           @map("last_sync_at")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, provider])
+  @@index([projectId])
+  @@map("integrations")
+}
+
+model IntegrationLink {
+  id           String              @id @default(uuid())
+  projectId    String              @map("project_id")
+  provider     IntegrationProvider
+  externalId   String              @map("external_id")
+  internalType String              @map("internal_type")
+  internalId   String              @map("internal_id")
+  externalUrl  String?             @map("external_url")
+  createdAt    DateTime            @default(now()) @map("created_at")
+
+  project     Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  interaction Interaction? @relation(fields: [internalId], references: [id])
+
+  @@unique([projectId, provider, externalId])
+  @@index([projectId])
+  @@index([internalId])
+  @@map("integration_links")
+}
+
+// ============================================================================
+// FEATURE FLAGS
+// ============================================================================
+
+model FeatureFlag {
+  id        String   @id @default(uuid())
+  projectId String   @map("project_id")
+  flag      String
+  enabled   Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, flag])
+  @@index([projectId])
+  @@map("feature_flags")
+}
+
+// ============================================================================
+// ADMIN USERS (Dashboard users - global, not per-project)
+// ============================================================================
+
+model AdminUser {
+  id                 String              @id @default(uuid())
+  email              String              @unique
+  passwordHash       String?             @map("password_hash")
+  name               String?
+  avatarUrl          String?             @map("avatar_url")
+  createdAt          DateTime            @default(now()) @map("created_at")
+  lastLoginAt        DateTime?           @map("last_login_at")
+  projectMemberships ProjectMembership[]
+  magicLinks         MagicLink[]
+
+  @@map("admin_users")
+}
+
+model ProjectMembership {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  projectId String   @map("project_id")
+  role      UserRole @default(viewer)
+  joinedAt  DateTime @default(now()) @map("joined_at")
+
+  user AdminUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, projectId])
+  @@index([projectId])
+  @@map("project_memberships")
+}
+
+model MagicLink {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user AdminUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@map("magic_links")
+}
+
+// ============================================================================
+// ENUMS
+// ============================================================================
+
+enum Region {
+  us_west @map("us-west")
+  eu_west @map("eu-west")
+
+  @@map("region")
+}
+
+enum Environment {
+  production
+  staging
+  development
+
+  @@map("environment")
+}
+
+enum InteractionType {
+  bug
+  feedback
+  chat
+  survey
+  replay
+  system
+
+  @@map("interaction_type")
+}
+
+enum InteractionSource {
+  widget
+  sdk
+  api
+
+  @@map("interaction_source")
+}
+
+enum InteractionStatus {
+  new
+  triaging
+  in_progress
+  resolved
+  closed
+
+  @@map("interaction_status")
+}
+
+enum Severity {
+  low
+  med
+  high
+  critical
+
+  @@map("severity")
+}
+
+enum MediaKind {
+  screenshot
+  video
+  attachment
+  replay_blob
+
+  @@map("media_kind")
+}
+
+enum ReplayStatus {
+  recording
+  processing
+  ready
+  failed
+
+  @@map("replay_status")
+}
+
+enum FeedbackItemStatus {
+  under_review
+  planned
+  in_progress
+  shipped
+  wont_do
+
+  @@map("feedback_item_status")
+}
+
+enum RoadmapItemStatus {
+  planned
+  in_progress
+  shipped
+
+  @@map("roadmap_item_status")
+}
+
+enum RoadmapVisibility {
+  public
+  private
+
+  @@map("roadmap_visibility")
+}
+
+enum ConversationStatus {
+  open
+  closed
+
+  @@map("conversation_status")
+}
+
+enum MessageDirection {
+  inbound
+  outbound
+
+  @@map("message_direction")
+}
+
+enum IntegrationProvider {
+  linear
+  jira
+  github
+  slack
+  email
+  zapier
+  discord
+  teams
+  notion
+  asana
+  trello
+  zendesk
+  hubspot
+
+  @@map("integration_provider")
+}
+
+enum ActorType {
+  user
+  admin
+  system
+  api
+
+  @@map("actor_type")
+}
+
+enum UserRole {
+  owner
+  admin
+  agent
+  viewer
+
+  @@map("user_role")
+}
+
+// ============================================================================
+// KNOWLEDGE BASE / HELP CENTER
+// ============================================================================
+
+model Article {
+  id              String        @id @default(uuid())
+  projectId       String        @map("project_id")
+  title           String
+  slug            String
+  content         String        @db.Text
+  contentHtml     String?       @map("content_html") @db.Text
+  excerpt         String?
+  categoryId      String?       @map("category_id")
+  status          ArticleStatus @default(draft)
+  visibility      Visibility    @default(public)
+  metaTitle       String?       @map("meta_title")
+  metaDescription String?       @map("meta_description")
+  embedding       Bytes?
+  embeddingModel  String?       @map("embedding_model")
+  viewCount       Int           @default(0) @map("view_count")
+  helpfulCount    Int           @default(0) @map("helpful_count")
+  notHelpfulCount Int           @default(0) @map("not_helpful_count")
+  version         Int           @default(1)
+  publishedAt     DateTime?     @map("published_at")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+  createdBy       String?       @map("created_by")
+
+  project  Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  category ArticleCategory? @relation(fields: [categoryId], references: [id])
+
+  @@unique([projectId, slug])
+  @@index([projectId, status])
+  @@index([projectId, categoryId])
+  @@map("articles")
+}
+
+model ArticleCategory {
+  id          String   @id @default(uuid())
+  projectId   String   @map("project_id")
+  name        String
+  slug        String
+  description String?
+  icon        String?
+  sortOrder   Int      @default(0) @map("sort_order")
+  parentId    String?  @map("parent_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  project  Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  parent   ArticleCategory?   @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children ArticleCategory[]  @relation("CategoryHierarchy")
+  articles Article[]
+
+  @@unique([projectId, slug])
+  @@index([projectId])
+  @@map("article_categories")
+}
+
+enum ArticleStatus {
+  draft
+  published
+  archived
+
+  @@map("article_status")
+}
+
+enum Visibility {
+  public
+  private
+
+  @@map("visibility")
+}
+
+// ============================================================================
+// AI BOT CONFIGURATION
+// ============================================================================
+
+model BotConfig {
+  id                        String   @id @default(uuid())
+  projectId                 String   @unique @map("project_id")
+  enabled                   Boolean  @default(false)
+  name                      String   @default("Kai")
+  avatar                    String?
+  personality               String   @default("friendly")
+  escalationThreshold       Float    @default(0.7) @map("escalation_threshold")
+  maxTurnsBeforeEscalation  Int      @default(5) @map("max_turns_before_escalation")
+  model                     String   @default("gpt-4-turbo")
+  temperature               Float    @default(0.7)
+  maxTokens                 Int      @default(500) @map("max_tokens")
+  systemPrompt              String?  @map("system_prompt") @db.Text
+  availableHours            Json?    @map("available_hours")
+  timezone                  String   @default("UTC")
+  welcomeMessage            String?  @map("welcome_message")
+  fallbackMessage           String?  @map("fallback_message")
+  createdAt                 DateTime @default(now()) @map("created_at")
+  updatedAt                 DateTime @updatedAt @map("updated_at")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("bot_configs")
+}
+
+model BotMessage {
+  id                String   @id @default(uuid())
+  conversationId    String   @map("conversation_id")
+  role              String
+  content           String   @db.Text
+  retrievedArticles Json?    @map("retrieved_articles")
+  confidence        Float?
+  promptTokens      Int?     @map("prompt_tokens")
+  completionTokens  Int?     @map("completion_tokens")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@map("bot_messages")
+}
+
+// ============================================================================
+// WORKFLOWS & AUTOMATION
+// ============================================================================
+
+model Workflow {
+  id          String    @id @default(uuid())
+  projectId   String    @map("project_id")
+  name        String
+  description String?
+  enabled     Boolean   @default(false)
+  trigger     Json
+  conditions  Json?
+  actions     Json
+  runCount    Int       @default(0) @map("run_count")
+  lastRunAt   DateTime? @map("last_run_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  project Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  runs    WorkflowRun[]
+
+  @@index([projectId])
+  @@index([projectId, enabled])
+  @@map("workflows")
+}
+
+model WorkflowRun {
+  id          String            @id @default(uuid())
+  workflowId  String            @map("workflow_id")
+  triggerId   String            @map("trigger_id")
+  triggerType String            @map("trigger_type")
+  status      WorkflowRunStatus
+  steps       Json
+  error       String?
+  startedAt   DateTime          @default(now()) @map("started_at")
+  completedAt DateTime?         @map("completed_at")
+
+  workflow Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+
+  @@index([workflowId])
+  @@index([workflowId, status])
+  @@map("workflow_runs")
+}
+
+enum WorkflowRunStatus {
+  running
+  completed
+  failed
+
+  @@map("workflow_run_status")
+}
+
+// ============================================================================
+// PRODUCT TOURS
+// ============================================================================
+
+model Tour {
+  id              String   @id @default(uuid())
+  projectId       String   @map("project_id")
+  name            String
+  description     String?
+  steps           Json
+  targeting       Json?
+  showOnce        Boolean  @default(true) @map("show_once")
+  dismissible     Boolean  @default(true)
+  enabled         Boolean  @default(false)
+  viewCount       Int      @default(0) @map("view_count")
+  completionCount Int      @default(0) @map("completion_count")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  project  Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  progress TourProgress[]
+
+  @@index([projectId])
+  @@index([projectId, enabled])
+  @@map("tours")
+}
+
+model TourProgress {
+  id          String    @id @default(uuid())
+  tourId      String    @map("tour_id")
+  sessionId   String    @map("session_id")
+  userId      String?   @map("user_id")
+  currentStep Int       @default(0) @map("current_step")
+  completed   Boolean   @default(false)
+  dismissed   Boolean   @default(false)
+  startedAt   DateTime  @default(now()) @map("started_at")
+  completedAt DateTime? @map("completed_at")
+
+  tour    Tour    @relation(fields: [tourId], references: [id], onDelete: Cascade)
+  session Session @relation(fields: [sessionId], references: [id])
+
+  @@unique([tourId, sessionId])
+  @@index([tourId])
+  @@map("tour_progress")
+}
+
+// ============================================================================
+// CHECKLISTS (Onboarding)
+// ============================================================================
+
+model Checklist {
+  id          String   @id @default(uuid())
+  projectId   String   @map("project_id")
+  name        String
+  description String?
+  items       Json
+  targeting   Json?
+  position    String   @default("bottom-right")
+  style       String   @default("default")
+  enabled     Boolean  @default(false)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  project  Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  progress ChecklistProgress[]
+
+  @@index([projectId])
+  @@index([projectId, enabled])
+  @@map("checklists")
+}
+
+model ChecklistProgress {
+  id             String    @id @default(uuid())
+  checklistId    String    @map("checklist_id")
+  sessionId      String    @map("session_id")
+  userId         String?   @map("user_id")
+  completedItems String[]  @map("completed_items")
+  dismissed      Boolean   @default(false)
+  startedAt      DateTime  @default(now()) @map("started_at")
+  completedAt    DateTime? @map("completed_at")
+
+  checklist Checklist @relation(fields: [checklistId], references: [id], onDelete: Cascade)
+  session   Session   @relation(fields: [sessionId], references: [id])
+
+  @@unique([checklistId, sessionId])
+  @@index([checklistId])
+  @@map("checklist_progress")
+}
+
+// ============================================================================
+// ANNOUNCEMENTS / IN-APP NEWS
+// ============================================================================
+
+model Announcement {
+  id          String           @id @default(uuid())
+  projectId   String           @map("project_id")
+  title       String
+  content     String           @db.Text
+  type        AnnouncementType
+  style       String?
+  image       String?
+  actionLabel String?          @map("action_label")
+  actionUrl   String?          @map("action_url")
+  targeting   Json?
+  startAt     DateTime?        @map("start_at")
+  endAt       DateTime?        @map("end_at")
+  dismissible Boolean          @default(true)
+  showOnce    Boolean          @default(false) @map("show_once")
+  enabled     Boolean          @default(false)
+  viewCount   Int              @default(0) @map("view_count")
+  clickCount  Int              @default(0) @map("click_count")
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+
+  project    Project                 @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  dismissals AnnouncementDismissal[]
+
+  @@index([projectId])
+  @@index([projectId, enabled])
+  @@map("announcements")
+}
+
+model AnnouncementDismissal {
+  id             String   @id @default(uuid())
+  announcementId String   @map("announcement_id")
+  sessionId      String   @map("session_id")
+  userId         String?  @map("user_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  announcement Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+
+  @@unique([announcementId, sessionId])
+  @@index([announcementId])
+  @@map("announcement_dismissals")
+}
+
+enum AnnouncementType {
+  banner
+  modal
+  slideout
+  feed_item
+
+  @@map("announcement_type")
+}
+
+// ============================================================================
+// WEBHOOKS
+// ============================================================================
+
+model Webhook {
+  id              String    @id @default(uuid())
+  projectId       String    @map("project_id")
+  name            String
+  url             String
+  secret          String
+  events          String[]
+  enabled         Boolean   @default(true)
+  retryCount      Int       @default(3) @map("retry_count")
+  retryDelay      Int       @default(60) @map("retry_delay")
+  lastTriggeredAt DateTime? @map("last_triggered_at")
+  lastStatus      Int?      @map("last_status")
+  failureCount    Int       @default(0) @map("failure_count")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  project    Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  deliveries WebhookDelivery[]
+
+  @@index([projectId])
+  @@map("webhooks")
+}
+
+model WebhookDelivery {
+  id          String    @id @default(uuid())
+  webhookId   String    @map("webhook_id")
+  event       String
+  payload     Json
+  status      Int?
+  response    String?   @db.Text
+  duration    Int?
+  attempts    Int       @default(1)
+  nextRetryAt DateTime? @map("next_retry_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  webhook Webhook @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+
+  @@index([webhookId])
+  @@index([webhookId, createdAt])
+  @@map("webhook_deliveries")
+}
+
+// ============================================================================
+// EMAIL CAMPAIGNS
+// ============================================================================
+
+model EmailCampaign {
+  id            String              @id @default(uuid())
+  projectId     String              @map("project_id")
+  name          String
+  subject       String
+  previewText   String?             @map("preview_text")
+  content       String              @db.Text
+  contentHtml   String?             @map("content_html") @db.Text
+  fromName      String?             @map("from_name")
+  fromEmail     String?             @map("from_email")
+  replyTo       String?             @map("reply_to")
+  status        EmailCampaignStatus @default(draft)
+  segmentRules  Json?               @map("segment_rules")
+  scheduledAt   DateTime?           @map("scheduled_at")
+  sentAt        DateTime?           @map("sent_at")
+  recipientCount Int                @default(0) @map("recipient_count")
+  sentCount     Int                 @default(0) @map("sent_count")
+  openCount     Int                 @default(0) @map("open_count")
+  clickCount    Int                 @default(0) @map("click_count")
+  bounceCount   Int                 @default(0) @map("bounce_count")
+  unsubCount    Int                 @default(0) @map("unsub_count")
+  createdAt     DateTime            @default(now()) @map("created_at")
+  updatedAt     DateTime            @updatedAt @map("updated_at")
+
+  project Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  sends   EmailSend[]
+
+  @@index([projectId])
+  @@index([projectId, status])
+  @@map("email_campaigns")
+}
+
+model EmailSend {
+  id           String    @id @default(uuid())
+  campaignId   String    @map("campaign_id")
+  userId       String    @map("user_id")
+  email        String
+  status       String
+  sentAt       DateTime? @map("sent_at")
+  openedAt     DateTime? @map("opened_at")
+  clickedAt    DateTime? @map("clicked_at")
+  bouncedAt    DateTime? @map("bounced_at")
+  unsubAt      DateTime? @map("unsub_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  campaign EmailCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@unique([campaignId, userId])
+  @@index([campaignId])
+  @@map("email_sends")
+}
+
+enum EmailCampaignStatus {
+  draft
+  scheduled
+  sending
+  sent
+  cancelled
+
+  @@map("email_campaign_status")
+}
