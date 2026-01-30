@@ -3,7 +3,20 @@
 // Displays messages in a conversation thread
 // ============================================================================
 
-import { createElement, formatRelativeTime } from "../../utils/dom";
+import { createElement } from "../../utils/dom";
+
+// Format time for chat messages (just time, not date for today)
+function formatTime(date: Date): string {
+  const now = new Date();
+  const isToday = date.toDateString() === now.toDateString();
+
+  if (isToday) {
+    return date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  }
+
+  return date.toLocaleDateString([], { month: "short", day: "numeric" }) +
+    " " + date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+}
 
 export interface Message {
   id: string;
@@ -26,7 +39,7 @@ export const messageThreadStyles = `
     flex: 1;
     overflow-y: auto;
     padding: 16px;
-    gap: 12px;
+    gap: 0;
   }
 
   .relay-message-thread__load-more {
@@ -79,7 +92,7 @@ export const messageThreadStyles = `
   .relay-message {
     display: flex;
     flex-direction: column;
-    max-width: 85%;
+    max-width: 80%;
   }
 
   .relay-message--inbound {
@@ -91,30 +104,35 @@ export const messageThreadStyles = `
   }
 
   .relay-message__bubble {
-    padding: 10px 14px;
-    border-radius: 18px;
+    padding: 12px 16px;
+    border-radius: 20px;
     font-size: 14px;
-    line-height: 1.4;
+    line-height: 1.45;
     word-wrap: break-word;
   }
 
   .relay-message--inbound .relay-message__bubble {
-    background: hsl(var(--relay-bg-secondary));
+    background: hsl(var(--relay-bg-tertiary));
     color: hsl(var(--relay-text));
-    border-bottom-left-radius: 4px;
+    border-bottom-left-radius: 6px;
   }
 
   .relay-message--outbound .relay-message__bubble {
-    background: hsl(var(--relay-primary));
-    color: hsl(var(--relay-primary-text));
-    border-bottom-right-radius: 4px;
+    background: hsl(var(--relay-text));
+    color: hsl(var(--relay-bg));
+    border-bottom-right-radius: 6px;
   }
 
   .relay-message__time {
-    font-size: 11px;
+    font-size: 10px;
     color: hsl(var(--relay-text-subtle));
-    margin-top: 4px;
-    padding: 0 4px;
+    margin-top: 6px;
+    padding: 0 6px;
+    display: none;
+  }
+
+  .relay-message--show-time .relay-message__time {
+    display: block;
   }
 
   .relay-message--inbound .relay-message__time {
@@ -123,6 +141,24 @@ export const messageThreadStyles = `
 
   .relay-message--outbound .relay-message__time {
     text-align: right;
+  }
+
+  .relay-message-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .relay-message-group--inbound {
+    align-items: flex-start;
+  }
+
+  .relay-message-group--outbound {
+    align-items: flex-end;
+  }
+
+  .relay-message-group + .relay-message-group {
+    margin-top: 12px;
   }
 
   .relay-message-thread__loading {
@@ -215,22 +251,43 @@ export function createMessageThread(
       container.appendChild(loadMoreWrapper);
     }
 
-    // Messages
-    messages.forEach((msg) => {
+    // Group consecutive messages by direction
+    let currentGroup: HTMLElement | null = null;
+    let lastDirection: string | null = null;
+    let lastTime: Date | null = null;
+
+    messages.forEach((msg, idx) => {
+      const msgTime = new Date(msg.createdAt);
+      const isNewGroup = msg.direction !== lastDirection;
+      const isLastInGroup = idx === messages.length - 1 ||
+        messages[idx + 1]?.direction !== msg.direction;
+      const timeDiff = lastTime ? (msgTime.getTime() - lastTime.getTime()) / 1000 / 60 : 0;
+      const showTime = isLastInGroup || timeDiff > 5; // Show time if last in group or >5min gap
+
+      if (isNewGroup) {
+        currentGroup = createElement("div", {
+          class: `relay-message-group relay-message-group--${msg.direction}`,
+        });
+        container.appendChild(currentGroup);
+      }
+
       const messageEl = createElement("div", {
-        class: `relay-message relay-message--${msg.direction}`,
+        class: `relay-message relay-message--${msg.direction}${showTime ? " relay-message--show-time" : ""}`,
       });
 
       const bubble = createElement("div", { class: "relay-message__bubble" }, [
         msg.body,
       ]);
       const time = createElement("div", { class: "relay-message__time" }, [
-        formatRelativeTime(new Date(msg.createdAt)),
+        formatTime(msgTime),
       ]);
 
       messageEl.appendChild(bubble);
       messageEl.appendChild(time);
-      container.appendChild(messageEl);
+      currentGroup?.appendChild(messageEl);
+
+      lastDirection = msg.direction;
+      lastTime = msgTime;
     });
   };
 

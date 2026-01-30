@@ -176,6 +176,9 @@ export function generateThemeCSS(
         .map((v) => parseFloat(v.replace("%", "")));
       const hoverL = l > 50 ? l - 10 : l + 10;
       css += `--relay-primary-hover: ${h} ${s}% ${hoverL}%;\n`;
+      // Compute contrasting text color based on luminance
+      const contrastText = l > 50 ? "0 0% 0%" : "0 0% 100%";
+      css += `--relay-primary-text: ${contrastText};\n`;
     }
   }
 

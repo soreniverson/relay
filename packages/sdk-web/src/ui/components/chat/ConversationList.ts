@@ -29,6 +29,7 @@ export const conversationListStyles = `
     flex-direction: column;
     flex: 1;
     overflow-y: auto;
+    padding-bottom: 8px;
   }
 
   .relay-conversation-list__loading {
@@ -90,6 +91,7 @@ export const conversationListStyles = `
     padding: 14px 16px;
     background: none;
     border: none;
+    border-radius: 0;
     border-bottom: 1px solid hsl(var(--relay-border));
     cursor: pointer;
     text-align: left;
@@ -110,12 +112,12 @@ export const conversationListStyles = `
     width: 40px;
     height: 40px;
     flex-shrink: 0;
-    background: hsl(var(--relay-primary) / 0.1);
+    background: hsl(var(--relay-bg-tertiary));
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: hsl(var(--relay-primary));
+    color: hsl(var(--relay-text-muted));
   }
 
   .relay-conversation-item__avatar svg {

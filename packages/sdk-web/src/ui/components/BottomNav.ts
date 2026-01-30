@@ -53,8 +53,8 @@ export const bottomNavStyles = `
   }
 
   #relay-widget .relay-bottom-nav__item--active .relay-bottom-nav__icon {
-    background: hsl(var(--relay-primary));
-    color: hsl(var(--relay-primary-text));
+    background: hsl(var(--relay-text));
+    color: hsl(var(--relay-bg));
   }
 
   #relay-widget .relay-bottom-nav__icon {
