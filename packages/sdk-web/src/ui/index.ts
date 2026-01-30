@@ -86,6 +86,8 @@ export type WidgetView =
   | "home"
   | "messages"
   | "messages-thread"
+  | "help"
+  | "help-article"
   | "roadmap"
   | "bug-report"
   | "feature-request";
@@ -119,6 +121,24 @@ export interface ApiRoadmapItem {
   hasVoted: boolean;
 }
 
+export interface ApiHelpCategory {
+  id: string;
+  name: string;
+  description?: string;
+  articleCount: number;
+}
+
+export interface ApiHelpArticle {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt?: string;
+  content?: string;
+  contentHtml?: string;
+  categoryId?: string;
+  categoryName?: string;
+}
+
 export interface WidgetCallbacks {
   // Form submissions
   onBugSubmit: (
@@ -149,6 +169,12 @@ export interface WidgetCallbacks {
   onFetchRoadmap: () => Promise<ApiRoadmapItem[]>;
   onVote: (itemId: string) => Promise<void>;
   onUnvote: (itemId: string) => Promise<void>;
+
+  // Help API
+  onFetchHelpCategories: () => Promise<ApiHelpCategory[]>;
+  onFetchHelpArticles: (categoryId?: string) => Promise<ApiHelpArticle[]>;
+  onSearchHelpArticles: (query: string) => Promise<ApiHelpArticle[]>;
+  onFetchHelpArticle: (slug: string) => Promise<ApiHelpArticle | null>;
 
   // File upload
   onUploadFiles: (files: File[]) => Promise<string[]>; // returns array of mediaIds
@@ -300,6 +326,159 @@ const pageHeaderStyles = `
   #relay-widget .relay-toast--exit {
     animation: relay-slide-down 0.15s ease-in forwards;
   }
+
+  /* Help styles */
+  #relay-widget .relay-help-search {
+    padding: 12px 16px;
+    border-bottom: 1px solid hsl(var(--relay-border));
+  }
+
+  #relay-widget .relay-help-search__input {
+    width: 100%;
+    padding: 10px 12px 10px 36px;
+    border: 1px solid hsl(var(--relay-border));
+    border-radius: 8px;
+    background: hsl(var(--relay-bg-secondary));
+    color: hsl(var(--relay-text));
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.15s ease;
+  }
+
+  #relay-widget .relay-help-search__input:focus {
+    border-color: hsl(var(--relay-primary));
+  }
+
+  #relay-widget .relay-help-search__input::placeholder {
+    color: hsl(var(--relay-text-muted));
+  }
+
+  #relay-widget .relay-help-search__wrapper {
+    position: relative;
+  }
+
+  #relay-widget .relay-help-search__icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    color: hsl(var(--relay-text-muted));
+  }
+
+  #relay-widget .relay-help-categories {
+    padding: 12px 16px;
+  }
+
+  #relay-widget .relay-help-category {
+    padding: 12px;
+    margin-bottom: 8px;
+    border: 1px solid hsl(var(--relay-border));
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  #relay-widget .relay-help-category:hover {
+    border-color: hsl(var(--relay-primary));
+    background: hsl(var(--relay-bg-secondary));
+  }
+
+  #relay-widget .relay-help-category__name {
+    font-size: 14px;
+    font-weight: 600;
+    color: hsl(var(--relay-text));
+    margin: 0 0 4px;
+  }
+
+  #relay-widget .relay-help-category__count {
+    font-size: 12px;
+    color: hsl(var(--relay-text-muted));
+  }
+
+  #relay-widget .relay-help-articles {
+    padding: 0 16px 16px;
+  }
+
+  #relay-widget .relay-help-article-item {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 8px;
+    border: 1px solid hsl(var(--relay-border));
+    border-radius: 8px;
+    background: none;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.15s ease;
+    font-family: inherit;
+  }
+
+  #relay-widget .relay-help-article-item:hover {
+    border-color: hsl(var(--relay-primary));
+    background: hsl(var(--relay-bg-secondary));
+  }
+
+  #relay-widget .relay-help-article-item__title {
+    font-size: 14px;
+    font-weight: 500;
+    color: hsl(var(--relay-text));
+    margin: 0 0 4px;
+  }
+
+  #relay-widget .relay-help-article-item__excerpt {
+    font-size: 13px;
+    color: hsl(var(--relay-text-muted));
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  #relay-widget .relay-help-article-content {
+    padding: 16px;
+  }
+
+  #relay-widget .relay-help-article-content h1 {
+    font-size: 20px;
+    font-weight: 600;
+    color: hsl(var(--relay-text));
+    margin: 0 0 16px;
+  }
+
+  #relay-widget .relay-help-article-content .relay-article-body {
+    font-size: 14px;
+    line-height: 1.6;
+    color: hsl(var(--relay-text));
+  }
+
+  #relay-widget .relay-help-article-content .relay-article-body p {
+    margin: 0 0 12px;
+  }
+
+  #relay-widget .relay-help-article-content .relay-article-body a {
+    color: hsl(var(--relay-primary));
+  }
+
+  #relay-widget .relay-help-section-title {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: hsl(var(--relay-text-muted));
+    margin: 0 0 8px;
+    padding: 0 16px;
+  }
+
+  #relay-widget .relay-help-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+    color: hsl(var(--relay-text-muted));
+  }
 `;
 
 const BACK_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>`;
@@ -327,6 +506,12 @@ export class Widget {
   // Roadmap components
   private roadmapList: RoadmapListResult | null = null;
   private roadmapItems: RoadmapItemData[] = [];
+
+  // Help state
+  private helpCategories: ApiHelpCategory[] = [];
+  private helpArticles: ApiHelpArticle[] = [];
+  private currentHelpArticle: ApiHelpArticle | null = null;
+  private helpSearchQuery: string = "";
 
   // State
   private currentView: WidgetView = "home";
@@ -397,6 +582,7 @@ export class Widget {
     this.bottomNav = createBottomNav({
       activeTab: "home",
       showMessages: this.config.showChat !== false,
+      showHelp: true, // Always show help if knowledge base exists
       showRoadmap: this.config.showRoadmap !== false,
       onTabChange: (tab) => this.handleNavChange(tab),
     });
@@ -636,6 +822,9 @@ export class Widget {
       case "messages":
         this.navigateTo("messages");
         break;
+      case "help":
+        this.navigateTo("help");
+        break;
       case "roadmap":
         this.navigateTo("roadmap");
         break;
@@ -647,7 +836,12 @@ export class Widget {
     this.renderCurrentView();
 
     // Update bottom nav if on main views
-    if (view === "home" || view === "messages" || view === "roadmap") {
+    if (
+      view === "home" ||
+      view === "messages" ||
+      view === "help" ||
+      view === "roadmap"
+    ) {
       this.bottomNav?.setActiveTab(view as NavTab);
     }
 
@@ -675,6 +869,12 @@ export class Widget {
         break;
       case "roadmap":
         this.renderRoadmapView(contentEl);
+        break;
+      case "help":
+        this.renderHelpView(contentEl);
+        break;
+      case "help-article":
+        this.renderHelpArticleView(contentEl);
         break;
       case "bug-report":
         this.renderBugReportView(contentEl);
@@ -1051,6 +1251,356 @@ export class Widget {
       this.roadmapList?.setLoading(false);
       this.showError("Failed to load roadmap");
     }
+  }
+
+  // ============================================================================
+  // Help View
+  // ============================================================================
+
+  private renderHelpView(container: HTMLElement): void {
+    const wrapper = createElement("div");
+    wrapper.style.cssText =
+      "display: flex; flex-direction: column; height: 100%;";
+
+    // Header
+    const header = this.createPageHeader("Help Center", false);
+
+    // Search bar
+    const searchWrapper = createElement("div", { class: "relay-help-search" });
+    const searchInner = createElement("div", {
+      class: "relay-help-search__wrapper",
+    });
+
+    const searchIcon = createElement("span", {
+      class: "relay-help-search__icon",
+    });
+    searchIcon.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>`;
+
+    const searchInput = createElement("input", {
+      type: "text",
+      class: "relay-help-search__input",
+      placeholder: "Search articles...",
+    }) as HTMLInputElement;
+    searchInput.value = this.helpSearchQuery;
+
+    let searchTimeout: ReturnType<typeof setTimeout>;
+    searchInput.addEventListener("input", (e) => {
+      const query = (e.target as HTMLInputElement).value;
+      this.helpSearchQuery = query;
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        this.searchHelpArticles(query);
+      }, 300);
+    });
+
+    searchInner.appendChild(searchIcon);
+    searchInner.appendChild(searchInput);
+    searchWrapper.appendChild(searchInner);
+
+    // Content
+    const content = createElement("div", { class: "relay-page-content" });
+
+    // Loading state initially
+    const loading = createElement("div", { class: "relay-help-loading" }, [
+      "Loading...",
+    ]);
+    content.appendChild(loading);
+
+    wrapper.appendChild(header);
+    wrapper.appendChild(searchWrapper);
+    wrapper.appendChild(content);
+    if (this.bottomNav) {
+      wrapper.appendChild(this.bottomNav.element);
+    }
+
+    container.appendChild(wrapper);
+
+    // Fetch help data
+    this.fetchHelpData(content);
+  }
+
+  private async fetchHelpData(contentEl: HTMLElement): Promise<void> {
+    try {
+      if (this.useMockData) {
+        // Mock data for testing
+        this.helpCategories = [
+          { id: "1", name: "Getting Started", articleCount: 3 },
+          { id: "2", name: "Account & Billing", articleCount: 5 },
+          { id: "3", name: "Troubleshooting", articleCount: 4 },
+        ];
+        this.helpArticles = [
+          {
+            id: "1",
+            slug: "quick-start",
+            title: "Quick Start Guide",
+            excerpt: "Get up and running in minutes",
+          },
+          {
+            id: "2",
+            slug: "installation",
+            title: "Installation",
+            excerpt: "How to install the SDK",
+          },
+          {
+            id: "3",
+            slug: "configuration",
+            title: "Configuration Options",
+            excerpt: "Customize your setup",
+          },
+        ];
+      } else {
+        // Fetch from API
+        const [categories, articles] = await Promise.all([
+          this.callbacks.onFetchHelpCategories(),
+          this.callbacks.onFetchHelpArticles(),
+        ]);
+        this.helpCategories = categories;
+        this.helpArticles = articles;
+      }
+
+      this.renderHelpContent(contentEl);
+    } catch (error) {
+      console.error("[Relay] Failed to fetch help data:", error);
+      contentEl.innerHTML = "";
+      const errorEl = createElement("div", { class: "relay-empty-state" });
+      errorEl.innerHTML = `
+        <div class="relay-empty-state__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg></div>
+        <h3 class="relay-empty-state__title">Unable to load help</h3>
+        <p class="relay-empty-state__text">Please try again later</p>
+      `;
+      contentEl.appendChild(errorEl);
+    }
+  }
+
+  private renderHelpContent(contentEl: HTMLElement): void {
+    contentEl.innerHTML = "";
+
+    // If searching, show search results
+    if (this.helpSearchQuery) {
+      const articlesSection = createElement("div", {
+        class: "relay-help-articles",
+      });
+      const title = createElement("h3", { class: "relay-help-section-title" }, [
+        "Search Results",
+      ]);
+      contentEl.appendChild(title);
+
+      if (this.helpArticles.length === 0) {
+        const empty = createElement("div", { class: "relay-empty-state" });
+        empty.innerHTML = `
+          <div class="relay-empty-state__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg></div>
+          <h3 class="relay-empty-state__title">No results found</h3>
+          <p class="relay-empty-state__text">Try a different search term</p>
+        `;
+        articlesSection.appendChild(empty);
+      } else {
+        this.helpArticles.forEach((article) => {
+          const item = this.createArticleItem(article);
+          articlesSection.appendChild(item);
+        });
+      }
+
+      contentEl.appendChild(articlesSection);
+      return;
+    }
+
+    // Show categories if any
+    if (this.helpCategories.length > 0) {
+      const categoriesSection = createElement("div", {
+        class: "relay-help-categories",
+      });
+      const title = createElement("h3", { class: "relay-help-section-title" }, [
+        "Categories",
+      ]);
+      contentEl.appendChild(title);
+
+      this.helpCategories.forEach((category) => {
+        const item = createElement("div", { class: "relay-help-category" });
+        item.innerHTML = `
+          <h4 class="relay-help-category__name">${this.escapeHtml(category.name)}</h4>
+          <span class="relay-help-category__count">${category.articleCount} articles</span>
+        `;
+        item.addEventListener("click", () => {
+          this.filterArticlesByCategory(category.id, contentEl);
+        });
+        categoriesSection.appendChild(item);
+      });
+
+      contentEl.appendChild(categoriesSection);
+    }
+
+    // Show popular/recent articles
+    if (this.helpArticles.length > 0) {
+      const articlesSection = createElement("div", {
+        class: "relay-help-articles",
+      });
+      const title = createElement("h3", { class: "relay-help-section-title" }, [
+        "Popular Articles",
+      ]);
+      contentEl.appendChild(title);
+
+      this.helpArticles.slice(0, 5).forEach((article) => {
+        const item = this.createArticleItem(article);
+        articlesSection.appendChild(item);
+      });
+
+      contentEl.appendChild(articlesSection);
+    }
+
+    // Empty state if no content
+    if (this.helpCategories.length === 0 && this.helpArticles.length === 0) {
+      const empty = createElement("div", { class: "relay-empty-state" });
+      empty.innerHTML = `
+        <div class="relay-empty-state__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></div>
+        <h3 class="relay-empty-state__title">No help articles yet</h3>
+        <p class="relay-empty-state__text">Check back soon</p>
+      `;
+      contentEl.appendChild(empty);
+    }
+  }
+
+  private createArticleItem(article: ApiHelpArticle): HTMLElement {
+    const item = createElement("button", {
+      type: "button",
+      class: "relay-help-article-item",
+    });
+    item.innerHTML = `
+      <h4 class="relay-help-article-item__title">${this.escapeHtml(article.title)}</h4>
+      ${article.excerpt ? `<p class="relay-help-article-item__excerpt">${this.escapeHtml(article.excerpt)}</p>` : ""}
+    `;
+    item.addEventListener("click", () => {
+      this.openHelpArticle(article.slug);
+    });
+    return item;
+  }
+
+  private async searchHelpArticles(query: string): Promise<void> {
+    if (!query.trim()) {
+      // Reset to default view
+      const contentEl = this.modal?.contentEl.querySelector(
+        ".relay-page-content",
+      ) as HTMLElement;
+      if (contentEl) {
+        await this.fetchHelpData(contentEl);
+      }
+      return;
+    }
+
+    try {
+      if (this.useMockData) {
+        // Filter mock articles
+        this.helpArticles = [
+          {
+            id: "1",
+            slug: "quick-start",
+            title: "Quick Start Guide",
+            excerpt: "Get up and running in minutes",
+          },
+        ].filter((a) => a.title.toLowerCase().includes(query.toLowerCase()));
+      } else {
+        this.helpArticles = await this.callbacks.onSearchHelpArticles(query);
+      }
+
+      const contentEl = this.modal?.contentEl.querySelector(
+        ".relay-page-content",
+      ) as HTMLElement;
+      if (contentEl) {
+        this.renderHelpContent(contentEl);
+      }
+    } catch (error) {
+      console.error("[Relay] Help search failed:", error);
+    }
+  }
+
+  private async filterArticlesByCategory(
+    categoryId: string,
+    contentEl: HTMLElement,
+  ): Promise<void> {
+    try {
+      if (!this.useMockData) {
+        this.helpArticles =
+          await this.callbacks.onFetchHelpArticles(categoryId);
+      }
+      this.renderHelpContent(contentEl);
+    } catch (error) {
+      console.error("[Relay] Failed to filter articles:", error);
+    }
+  }
+
+  private async openHelpArticle(slug: string): Promise<void> {
+    try {
+      if (this.useMockData) {
+        this.currentHelpArticle = {
+          id: "1",
+          slug: slug,
+          title: "Sample Article",
+          content:
+            "This is a sample help article content.\n\nIt can have multiple paragraphs.",
+        };
+      } else {
+        const article = await this.callbacks.onFetchHelpArticle(slug);
+        if (!article) {
+          this.showError("Article not found");
+          return;
+        }
+        this.currentHelpArticle = article;
+      }
+
+      this.navigateTo("help-article");
+    } catch (error) {
+      console.error("[Relay] Failed to load article:", error);
+      this.showError("Failed to load article");
+    }
+  }
+
+  private renderHelpArticleView(container: HTMLElement): void {
+    if (!this.currentHelpArticle) {
+      this.navigateTo("help");
+      return;
+    }
+
+    const wrapper = createElement("div");
+    wrapper.style.cssText =
+      "display: flex; flex-direction: column; height: 100%;";
+
+    // Header with back button
+    const header = this.createPageHeader("Help", true, () => {
+      this.currentHelpArticle = null;
+      this.navigateTo("help");
+    });
+
+    // Article content
+    const content = createElement("div", { class: "relay-page-content" });
+    const articleContent = createElement("div", {
+      class: "relay-help-article-content",
+    });
+
+    const title = createElement("h1", {}, [this.currentHelpArticle.title]);
+    articleContent.appendChild(title);
+
+    const body = createElement("div", { class: "relay-article-body" });
+    if (this.currentHelpArticle.contentHtml) {
+      body.innerHTML = this.currentHelpArticle.contentHtml;
+    } else if (this.currentHelpArticle.content) {
+      // Convert plain text to HTML paragraphs
+      body.innerHTML = this.currentHelpArticle.content
+        .split("\n\n")
+        .map((p) => `<p>${this.escapeHtml(p).replace(/\n/g, "<br>")}</p>`)
+        .join("");
+    }
+    articleContent.appendChild(body);
+
+    content.appendChild(articleContent);
+    wrapper.appendChild(header);
+    wrapper.appendChild(content);
+
+    container.appendChild(wrapper);
+  }
+
+  private escapeHtml(text: string): string {
+    const div = document.createElement("div");
+    div.textContent = text;
+    return div.innerHTML;
   }
 
   private createPageHeader(

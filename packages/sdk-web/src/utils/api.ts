@@ -279,4 +279,24 @@ export class ApiClient {
   async getPublicRoadmap(): Promise<{ data: unknown[] }> {
     return this.query("roadmap.publicList", {});
   }
+
+  // Help / Knowledge Base
+  async getHelpCategories(): Promise<unknown[]> {
+    return this.query("knowledge.getPublicCategories", {});
+  }
+
+  async getHelpArticles(categoryId?: string): Promise<unknown[]> {
+    return this.query(
+      "knowledge.getPublicArticles",
+      categoryId ? { categoryId } : {},
+    );
+  }
+
+  async searchHelpArticles(query: string): Promise<unknown[]> {
+    return this.query("knowledge.sdkSearchArticles", { query, limit: 20 });
+  }
+
+  async getHelpArticle(slug: string): Promise<unknown> {
+    return this.query("knowledge.sdkGetArticle", { slug });
+  }
 }

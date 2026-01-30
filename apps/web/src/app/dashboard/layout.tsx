@@ -38,7 +38,11 @@ import { ErrorBoundary } from "@/components/error-boundary";
 
 const navigation = [
   { name: "Inbox", href: "/dashboard/inbox", icon: Inbox, count: 12 },
-  { name: "Conversations", href: "/dashboard/conversations", icon: MessageSquare },
+  {
+    name: "Conversations",
+    href: "/dashboard/conversations",
+    icon: MessageSquare,
+  },
   { name: "Feedback", href: "/dashboard/feedback", icon: Lightbulb },
   { name: "Roadmap", href: "/dashboard/roadmap", icon: Map },
   { name: "Surveys", href: "/dashboard/surveys", icon: ClipboardList },

@@ -1,5 +1,10 @@
 import { z } from "zod";
-import { router, projectProcedure, publicProcedure } from "../lib/trpc";
+import {
+  router,
+  projectProcedure,
+  publicProcedure,
+  sdkProcedure,
+} from "../lib/trpc";
 import { TRPCError } from "@trpc/server";
 import { Prisma } from "@prisma/client";
 
@@ -374,5 +379,142 @@ export const knowledgeRouter = router({
       ]);
 
       return { categories, popularArticles };
+    }),
+
+  // ============================================================================
+  // SDK ENDPOINTS (resolve project from API key)
+  // ============================================================================
+
+  getPublicCategories: sdkProcedure.query(async ({ ctx }) => {
+    const categories = await ctx.prisma.articleCategory.findMany({
+      where: { projectId: ctx.projectId },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        _count: {
+          select: {
+            articles: { where: { status: "published", visibility: "public" } },
+          },
+        },
+      },
+      orderBy: { sortOrder: "asc" },
+    });
+
+    return categories.map((c) => ({
+      id: c.id,
+      name: c.name,
+      description: c.description,
+      articleCount: c._count.articles,
+    }));
+  }),
+
+  getPublicArticles: sdkProcedure
+    .input(z.object({ categoryId: z.string().optional() }).optional())
+    .query(async ({ ctx, input }) => {
+      const articles = await ctx.prisma.article.findMany({
+        where: {
+          projectId: ctx.projectId,
+          status: "published",
+          visibility: "public",
+          ...(input?.categoryId && { categoryId: input.categoryId }),
+        },
+        select: {
+          id: true,
+          slug: true,
+          title: true,
+          excerpt: true,
+          category: { select: { id: true, name: true } },
+        },
+        orderBy: { viewCount: "desc" },
+        take: 20,
+      });
+
+      return articles.map((a) => ({
+        id: a.id,
+        slug: a.slug,
+        title: a.title,
+        excerpt: a.excerpt,
+        categoryId: a.category?.id,
+        categoryName: a.category?.name,
+      }));
+    }),
+
+  sdkSearchArticles: sdkProcedure
+    .input(
+      z.object({ query: z.string().min(1), limit: z.number().default(10) }),
+    )
+    .query(async ({ ctx, input }) => {
+      const articles = await ctx.prisma.article.findMany({
+        where: {
+          projectId: ctx.projectId,
+          status: "published",
+          visibility: "public",
+          OR: [
+            { title: { contains: input.query, mode: "insensitive" } },
+            { content: { contains: input.query, mode: "insensitive" } },
+            { excerpt: { contains: input.query, mode: "insensitive" } },
+          ],
+        },
+        select: {
+          id: true,
+          slug: true,
+          title: true,
+          excerpt: true,
+          category: { select: { id: true, name: true } },
+        },
+        take: input.limit,
+      });
+
+      return articles.map((a) => ({
+        id: a.id,
+        slug: a.slug,
+        title: a.title,
+        excerpt: a.excerpt,
+        categoryId: a.category?.id,
+        categoryName: a.category?.name,
+      }));
+    }),
+
+  sdkGetArticle: sdkProcedure
+    .input(z.object({ slug: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const article = await ctx.prisma.article.findUnique({
+        where: {
+          projectId_slug: {
+            projectId: ctx.projectId,
+            slug: input.slug,
+          },
+        },
+        include: { category: true },
+      });
+
+      if (
+        !article ||
+        article.status !== "published" ||
+        article.visibility !== "public"
+      ) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Article not found",
+        });
+      }
+
+      // Increment view count
+      await ctx.prisma.article.update({
+        where: { id: article.id },
+        data: { viewCount: { increment: 1 } },
+      });
+
+      return {
+        id: article.id,
+        slug: article.slug,
+        title: article.title,
+        content: article.content,
+        contentHtml: article.contentHtml,
+        excerpt: article.excerpt,
+        categoryId: article.category?.id,
+        categoryName: article.category?.name,
+      };
     }),
 });

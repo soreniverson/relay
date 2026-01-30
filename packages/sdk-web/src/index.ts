@@ -1137,6 +1137,48 @@ class RelaySDK implements RelayInstance {
           await this.api.unvoteFeedback(itemId, this.sessionId);
         },
 
+        // Help API
+        onFetchHelpCategories: async () => {
+          if (!this.api) return [];
+          try {
+            const result = await this.api.getHelpCategories();
+            return (result || []) as any[];
+          } catch (error) {
+            console.warn("[Relay] Failed to fetch help categories:", error);
+            return [];
+          }
+        },
+        onFetchHelpArticles: async (categoryId?: string) => {
+          if (!this.api) return [];
+          try {
+            const result = await this.api.getHelpArticles(categoryId);
+            return (result || []) as any[];
+          } catch (error) {
+            console.warn("[Relay] Failed to fetch help articles:", error);
+            return [];
+          }
+        },
+        onSearchHelpArticles: async (query: string) => {
+          if (!this.api) return [];
+          try {
+            const result = await this.api.searchHelpArticles(query);
+            return (result || []) as any[];
+          } catch (error) {
+            console.warn("[Relay] Failed to search help articles:", error);
+            return [];
+          }
+        },
+        onFetchHelpArticle: async (slug: string) => {
+          if (!this.api) return null;
+          try {
+            const result = await this.api.getHelpArticle(slug);
+            return (result || null) as any;
+          } catch (error) {
+            console.warn("[Relay] Failed to fetch help article:", error);
+            return null;
+          }
+        },
+
         // File upload
         onUploadFiles: async (files: File[]) => {
           if (!this.api) throw new Error("API not initialized");

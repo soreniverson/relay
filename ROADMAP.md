@@ -139,7 +139,7 @@ _Differentiation through intelligence._
 - [x] Public help center page (`/help/[slug]`)
 - [x] Full-text search (Postgres ILIKE)
 - [x] Article feedback (helpful/not helpful)
-- [ ] SDK widget integration (deferred - help center is public page)
+- [x] SDK widget integration (Help tab with search, categories, articles)
 
 ### 3.3 AI Copilot - Basic
 
