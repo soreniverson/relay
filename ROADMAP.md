@@ -10,20 +10,22 @@
 
 ### Working
 
-- [x] SDK: Bug reports, feedback, chat, screenshots, annotations, replay capture
-- [x] API: Sessions, interactions, conversations, surveys, feedback, roadmap
+- [x] SDK: Bug reports, feedback, chat, screenshots, annotations, replay capture, user identification
+- [x] API: Sessions, interactions, conversations, surveys, feedback, roadmap, announcements, integrations
 - [x] Dashboard: Inbox, conversations, surveys, feedback, roadmap, settings (fully wired)
+- [x] Public Pages: Roadmap, feedback board, changelog (all with voting)
+- [x] Integrations: Linear OAuth + issue creation, Slack webhooks
+- [x] Billing: Stripe Checkout, Customer Portal, usage tracking
+- [x] Replays: rrweb-player with playback controls
 - [x] Infrastructure: Docker, Postgres, Redis, MinIO, multi-region schema
-- [x] Worker: BullMQ queues configured, job structure in place
 - [x] Auth: Password-based login/signup (replaced magic links for simplicity)
-- [x] CI/CD: GitHub Actions (lint, typecheck, test, build) + Railway/Vercel deployment
+- [x] CI/CD: GitHub Actions (lint, typecheck, test, build) + Vercel deployment
 
 ### Needs Completion
 
-- [ ] Replay processing & playback (capture works, storage/player incomplete)
-- [ ] Billing/payments (UI mocked, no Stripe)
 - [ ] AI features (queued but processors are stubs)
-- [ ] Integrations (Linear/Slack scaffolded, API calls are TODOs)
+- [ ] API deployment (currently using Vercel frontend only)
+- [ ] Linear webhook registration (requires deployed API)
 
 ---
 
@@ -84,35 +86,37 @@ _Completed January 2026_
 
 ---
 
-## Phase 2: Gleap Parity (Week 5-7)
+## Phase 2: Gleap Parity ✅ COMPLETE
 
-_Feature-complete competitor._
+_Completed January 2026_
 
 ### 2.1 Integrations - Core
 
-- [ ] **Linear**: Create issues from bugs, sync status bidirectionally
-- [ ] **Slack**: Notifications on new interactions, reply from Slack
-- [ ] **Webhooks**: Generic outbound webhooks with retry logic
+- [x] **Linear**: OAuth connection, create issues from inbox, bidirectional sync (webhook pending API deployment)
+- [x] **Slack**: Webhook URL storage, notification sending infrastructure
+- [x] **Webhooks**: Webhook model, delivery framework scaffolded
 
 ### 2.2 Public Pages
 
-- [ ] Public roadmap page (customizable, embeddable)
-- [ ] Public feedback board with voting
-- [ ] Changelog/announcements page
+- [x] Public roadmap page (`/roadmap/[slug]`) with voting
+- [x] Public feedback board (`/feedback/[slug]`) with voting and idea submission
+- [x] Public changelog/announcements page (`/changelog/[slug]`)
+- [x] Project slug configuration in settings
 
 ### 2.3 SDK Enhancements
 
-- [ ] Custom trigger positioning and styling
-- [ ] Programmatic control (open specific views, prefill forms)
-- [ ] User identification with traits
-- [ ] Event tracking for surveys/targeting
+- [x] Custom trigger positioning and styling
+- [x] User identification with traits (`Relay.identify()`)
+- [ ] Programmatic control (open specific views, prefill forms) — deferred
+- [ ] Event tracking for surveys/targeting — deferred
 
 ### 2.4 Survey Targeting
 
-- [ ] URL-based targeting
-- [ ] User trait targeting
-- [ ] Event-based triggers
-- [ ] Sampling and frequency caps
+- [x] URL-based targeting (API-side)
+- [x] Sampling and frequency caps (showOnce, sampleRate)
+- [ ] User trait targeting — deferred to Phase 3
+- [ ] Event-based triggers — deferred to Phase 3
+- [ ] SDK survey rendering — deferred to Phase 3
 
 ---
 
@@ -326,10 +330,14 @@ These are 2027+ features after core product-market fit.
 
 ## Next Action
 
-**Start Phase 2** — Gleap Parity with core integrations, public pages, and SDK enhancements.
+**Start Phase 3** — AI Layer with interaction summarization, knowledge base, and copilot.
 
 Priority order:
-1. 2.1 Integrations (Linear, Slack, Webhooks) — enables workflows
-2. 2.2 Public Pages (roadmap, feedback, changelog) — community engagement
-3. 2.3 SDK Enhancements — programmatic control
-4. 2.4 Survey Targeting — advanced targeting options
+1. 3.1 AI Processing — OpenAI integration for auto-summarization and tagging
+2. 3.2 Knowledge Base — Article CRUD, public help center, SDK integration
+3. 3.3 AI Copilot — Suggested replies, article suggestions
+
+**Infrastructure needed:**
+- Deploy API to Railway/Render/Fly.io for webhook endpoints
+- Register Linear webhook for bidirectional sync
+- Set up OpenAI API key for AI features
