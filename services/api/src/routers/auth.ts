@@ -247,6 +247,7 @@ export const authRouter = router({
         id: true,
         name: true,
         region: true,
+        slug: true,
         createdAt: true,
       },
     });
@@ -351,6 +352,74 @@ export const authRouter = router({
           createdAt: project.createdAt,
         },
         apiKey: key,
+      };
+    }),
+
+  // Update project
+  updateProject: authedProcedure
+    .input(
+      z.object({
+        projectId: z.string().uuid(),
+        name: z.string().min(1).max(100).optional(),
+        slug: z.string().min(1).max(50).regex(/^[a-z0-9-]+$/).optional(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      // Verify project access
+      const membership = await ctx.prisma.projectMembership.findUnique({
+        where: {
+          userId_projectId: {
+            userId: ctx.adminUser.id,
+            projectId: input.projectId,
+          },
+        },
+      });
+
+      if (!membership || !["owner", "admin"].includes(membership.role)) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only project owners and admins can update project settings",
+        });
+      }
+
+      // Check if slug is already taken
+      if (input.slug) {
+        const existingProject = await ctx.prisma.project.findUnique({
+          where: { slug: input.slug },
+        });
+        if (existingProject && existingProject.id !== input.projectId) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: "This slug is already in use by another project",
+          });
+        }
+      }
+
+      const project = await ctx.prisma.project.update({
+        where: { id: input.projectId },
+        data: {
+          name: input.name,
+          slug: input.slug,
+        },
+      });
+
+      await ctx.prisma.auditLog.create({
+        data: {
+          projectId: project.id,
+          actorType: "admin",
+          actorId: ctx.adminUser.id,
+          action: "project.updated",
+          targetType: "project",
+          targetId: project.id,
+          meta: { name: input.name, slug: input.slug },
+        },
+      });
+
+      return {
+        id: project.id,
+        name: project.name,
+        slug: project.slug,
+        region: project.region,
       };
     }),
 

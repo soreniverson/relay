@@ -25,7 +25,10 @@ import {
   Megaphone,
   MoreHorizontal,
   ChevronDown,
+  ExternalLink,
+  Check,
 } from "lucide-react";
+import { useAuthStore } from "@/stores/auth";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -106,6 +109,7 @@ const typeLabels: Record<string, string> = {
 };
 
 export default function AnnouncementsPage() {
+  const { currentProject } = useAuthStore();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"active" | "paused" | null>(
     null,
@@ -113,11 +117,24 @@ export default function AnnouncementsPage() {
   const [typeFilter, setTypeFilter] = useState<string | null>(null);
   const [announcements, setAnnouncements] = useState(mockAnnouncements);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
   const [newAnnouncement, setNewAnnouncement] = useState({
     title: "",
     content: "",
     type: "banner" as Announcement["type"],
   });
+
+  const handleViewChangelog = () => {
+    const slug = currentProject?.slug;
+    if (slug) {
+      window.open(`/changelog/${slug}`, "_blank");
+    } else {
+      // Show a message that slug needs to be configured
+      alert("Please configure a project slug in Settings > General first");
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const filteredAnnouncements = announcements.filter((announcement) => {
     if (statusFilter === "active" && !announcement.enabled) return false;
@@ -186,14 +203,29 @@ export default function AnnouncementsPage() {
       {/* Header */}
       <div className="page-header">
         <h1 className="page-title">Announcements</h1>
-        <Button
-          size="sm"
-          variant="ghost"
-          className="h-7 w-7 p-0"
-          onClick={() => setIsCreateOpen(true)}
-        >
-          <Plus className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleViewChangelog}
+            className="h-7 w-7 p-0 text-muted-foreground"
+            title="View public changelog"
+          >
+            {copied ? (
+              <Check className="h-4 w-4" />
+            ) : (
+              <ExternalLink className="h-4 w-4" />
+            )}
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-7 w-7 p-0"
+            onClick={() => setIsCreateOpen(true)}
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
       {/* Search and Filters */}

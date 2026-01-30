@@ -5,6 +5,7 @@ interface Project {
   id: string;
   name: string;
   region: string;
+  slug?: string;
   role?: string;
 }
 

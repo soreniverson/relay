@@ -342,6 +342,7 @@ export const surveysRouter = router({
         userId: z.string().optional(),
         url: z.string().url().optional(),
         traits: z.record(z.unknown()).optional(),
+        triggerEvent: z.string().optional(),
       }),
     )
     .query(async ({ input, ctx }) => {
@@ -353,6 +354,39 @@ export const surveysRouter = router({
         },
       });
 
+      // Get user traits if we have a user
+      let userTraits: Record<string, unknown> = input.traits || {};
+      if (input.userId) {
+        const user = await ctx.prisma.endUser.findUnique({
+          where: {
+            projectId_externalUserId: {
+              projectId: ctx.projectId,
+              externalUserId: input.userId,
+            },
+          },
+          select: { traits: true },
+        });
+        if (user?.traits) {
+          userTraits = {
+            ...((user.traits as Record<string, unknown>) || {}),
+            ...userTraits,
+          };
+        }
+      }
+
+      // Get event counts if needed for event-based triggers
+      const eventCounts: Record<string, number> = {};
+      if (input.triggerEvent) {
+        const count = await (ctx.prisma as any).userEvent.count({
+          where: {
+            projectId: ctx.projectId,
+            sessionId: input.sessionId,
+            name: input.triggerEvent,
+          },
+        });
+        eventCounts[input.triggerEvent] = count;
+      }
+
       // Filter by targeting
       const now = new Date();
       const eligibleSurveys = surveys.filter((survey) => {
@@ -362,6 +396,9 @@ export const surveysRouter = router({
           showOnPages?: string[];
           excludePages?: string[];
           sampleRate?: number;
+          userTraits?: Record<string, unknown>;
+          triggerEvent?: string;
+          triggerEventCount?: number;
         };
 
         // Date range
@@ -388,6 +425,58 @@ export const surveysRouter = router({
           }
         }
 
+        // User trait targeting
+        if (targeting.userTraits && Object.keys(targeting.userTraits).length > 0) {
+          for (const [key, condition] of Object.entries(targeting.userTraits)) {
+            const userValue = userTraits[key];
+
+            if (typeof condition === "object" && condition !== null) {
+              // Complex condition: { $gt, $lt, $contains, $in }
+              const cond = condition as Record<string, unknown>;
+              if (cond.$gt !== undefined && cond.$gt !== null) {
+                if (userValue === undefined || userValue === null || (userValue as number) <= (cond.$gt as number)) return false;
+              }
+              if (cond.$lt !== undefined && cond.$lt !== null) {
+                if (userValue === undefined || userValue === null || (userValue as number) >= (cond.$lt as number)) return false;
+              }
+              if (cond.$gte !== undefined && cond.$gte !== null) {
+                if (userValue === undefined || userValue === null || (userValue as number) < (cond.$gte as number)) return false;
+              }
+              if (cond.$lte !== undefined && cond.$lte !== null) {
+                if (userValue === undefined || userValue === null || (userValue as number) > (cond.$lte as number)) return false;
+              }
+              if (cond.$contains !== undefined) {
+                if (
+                  typeof userValue !== "string" ||
+                  !userValue.includes(String(cond.$contains))
+                )
+                  return false;
+              }
+              if (cond.$in !== undefined && Array.isArray(cond.$in)) {
+                if (!cond.$in.includes(userValue)) return false;
+              }
+              if (cond.$nin !== undefined && Array.isArray(cond.$nin)) {
+                if (cond.$nin.includes(userValue)) return false;
+              }
+            } else {
+              // Simple equality
+              if (userValue !== condition) return false;
+            }
+          }
+        }
+
+        // Event-based trigger
+        if (targeting.triggerEvent) {
+          // If this is an event-triggered request, check if event matches
+          if (input.triggerEvent !== targeting.triggerEvent) {
+            return false;
+          }
+          // Check event count threshold
+          const requiredCount = targeting.triggerEventCount || 1;
+          const actualCount = eventCounts[targeting.triggerEvent] || 0;
+          if (actualCount < requiredCount) return false;
+        }
+
         // Sample rate
         if (targeting.sampleRate !== undefined && targeting.sampleRate < 1) {
           if (Math.random() > targeting.sampleRate) return false;
@@ -402,14 +491,52 @@ export const surveysRouter = router({
           projectId: ctx.projectId,
           interaction: { sessionId: input.sessionId },
         },
-        select: { surveyId: true },
+        select: { surveyId: true, createdAt: true },
       });
-      const respondedSet = new Set(respondedSurveyIds.map((r) => r.surveyId));
+      const respondedMap = new Map(
+        respondedSurveyIds.map((r) => [r.surveyId, r.createdAt]),
+      );
 
-      // Filter out surveys the session has already responded to (if showOnce)
+      // Count shows per survey for frequency caps (using response count as proxy)
+      const showCountsResult = await ctx.prisma.surveyResponse.groupBy({
+        by: ["surveyId"],
+        where: {
+          projectId: ctx.projectId,
+          interaction: { sessionId: input.sessionId },
+        },
+        _count: true,
+      });
+      const showCounts = new Map(
+        showCountsResult.map((r) => [r.surveyId, r._count]),
+      );
+
+      // Filter based on showOnce and frequency caps
       const finalSurveys = eligibleSurveys.filter((survey) => {
-        const targeting = survey.targeting as { showOnce?: boolean };
-        if (targeting.showOnce && respondedSet.has(survey.id)) return false;
+        const targeting = survey.targeting as {
+          showOnce?: boolean;
+          maxShowsPerUser?: number;
+          minDaysBetweenShows?: number;
+        };
+
+        // Show once check
+        if (targeting.showOnce && respondedMap.has(survey.id)) return false;
+
+        // Max shows check
+        if (targeting.maxShowsPerUser !== undefined) {
+          const currentShows = showCounts.get(survey.id) || 0;
+          if (currentShows >= targeting.maxShowsPerUser) return false;
+        }
+
+        // Min days between shows check
+        if (targeting.minDaysBetweenShows !== undefined) {
+          const lastShowDate = respondedMap.get(survey.id);
+          if (lastShowDate) {
+            const daysSinceLastShow =
+              (now.getTime() - lastShowDate.getTime()) / (1000 * 60 * 60 * 24);
+            if (daysSinceLastShow < targeting.minDaysBetweenShows) return false;
+          }
+        }
+
         return true;
       });
 
@@ -417,6 +544,7 @@ export const surveysRouter = router({
         id: s.id,
         name: s.name,
         definition: s.definition,
+        targeting: s.targeting,
       }));
     }),
 

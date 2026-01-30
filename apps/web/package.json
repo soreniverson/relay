@@ -37,7 +37,7 @@
     "next-themes": "^0.2.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "rrweb-player": "^2.0.0-alpha.11",
+    "rrweb-player": "2.0.0-alpha.18",
     "superjson": "^2.2.0",
     "tailwind-merge": "^2.2.0",
     "tailwindcss-animate": "^1.0.7",

@@ -16,6 +16,7 @@ import { checklistsRouter } from "./checklists";
 import { announcementsRouter } from "./announcements";
 import { webhooksRouter } from "./webhooks";
 import { campaignsRouter } from "./campaigns";
+import { billingRouter } from "./billing";
 
 export const appRouter = router({
   auth: authRouter,
@@ -35,6 +36,7 @@ export const appRouter = router({
   announcements: announcementsRouter,
   webhooks: webhooksRouter,
   campaigns: campaignsRouter,
+  billing: billingRouter,
 });
 
 export type AppRouter = typeof appRouter;

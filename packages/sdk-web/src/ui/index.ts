@@ -340,6 +340,15 @@ export class Widget {
   // Error state
   private lastError: string | null = null;
 
+  // Prefill data
+  private prefillData: {
+    title?: string;
+    description?: string;
+    email?: string;
+    category?: string;
+    tags?: string[];
+  } = {};
+
   private config: WidgetConfig;
   private callbacks: WidgetCallbacks;
   private themeMode: ThemeMode;
@@ -536,6 +545,42 @@ export class Widget {
     if (config.primaryColor) {
       this.updateTheme();
     }
+  }
+
+  /**
+   * Set prefill data for forms
+   */
+  setPrefillData(data: {
+    title?: string;
+    description?: string;
+    email?: string;
+    category?: string;
+    tags?: string[];
+  }): void {
+    this.prefillData = data;
+    // Apply to existing forms if they're mounted
+    if (this.bugReportForm) {
+      this.bugReportForm.setPrefillData({
+        title: data.title,
+        description: data.description,
+      });
+    }
+    if (this.featureRequestForm) {
+      this.featureRequestForm.setPrefillData({
+        title: data.title,
+        description: data.description,
+        category: data.category,
+      });
+    }
+  }
+
+  /**
+   * Show a specific survey by ID
+   */
+  showSurvey(surveyId: string): void {
+    // Survey rendering will be handled by a separate Survey component
+    // For now, emit an event that can be handled by the SDK
+    console.log("[Relay Widget] Survey requested:", surveyId);
   }
 
   // ============================================================================

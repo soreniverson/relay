@@ -86,6 +86,11 @@ export interface FeatureRequestFormResult {
   element: HTMLFormElement;
   reset: () => void;
   showSuccess: () => void;
+  setPrefillData: (data: {
+    title?: string;
+    description?: string;
+    category?: string;
+  }) => void;
 }
 
 export function createFeatureRequestForm(
@@ -234,9 +239,27 @@ export function createFeatureRequestForm(
     form.appendChild(successEl);
   };
 
+  // Set prefill data
+  const setPrefillData = (data: {
+    title?: string;
+    description?: string;
+    category?: string;
+  }) => {
+    if (data.title) {
+      titleInput.setValue(data.title);
+    }
+    if (data.description) {
+      descriptionTextarea.setValue(data.description);
+    }
+    if (data.category) {
+      categorySelect.setValue(data.category);
+    }
+  };
+
   return {
     element: form,
     reset,
     showSuccess,
+    setPrefillData,
   };
 }

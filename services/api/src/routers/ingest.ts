@@ -20,6 +20,8 @@ import {
   replayChunkSchema,
   endReplaySchema,
 } from "@relay/shared";
+import { triggerWebhooks } from "../lib/webhook-delivery";
+import { SlackClient } from "../lib/slack";
 
 export const ingestRouter = router({
   // Create or update session
@@ -171,6 +173,29 @@ export const ingestRouter = router({
         data: { interactionCount: { increment: 1 } },
       });
 
+      // Update usage metrics for billing
+      const now = new Date();
+      const periodStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const periodEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+      await ctx.prisma.usageMetrics.upsert({
+        where: {
+          projectId_periodStart: {
+            projectId: ctx.projectId,
+            periodStart,
+          },
+        },
+        update: {
+          interactions: { increment: 1 },
+        },
+        create: {
+          projectId: ctx.projectId,
+          periodStart,
+          periodEnd,
+          interactions: 1,
+        },
+      });
+
       // Publish realtime event
       await pubsub.publish(`project:${ctx.projectId}`, {
         type: "interaction.created",
@@ -182,6 +207,115 @@ export const ingestRouter = router({
           createdAt: interaction.createdAt,
         },
       });
+
+      // Get user info for notifications
+      let userInfo: { email?: string; name?: string } = {};
+      if (internalUserId) {
+        const user = await ctx.prisma.endUser.findUnique({
+          where: { id: internalUserId },
+          select: { email: true, name: true },
+        });
+        userInfo = { email: user?.email || undefined, name: user?.name || undefined };
+      }
+
+      const content = input.content as Record<string, unknown> | undefined;
+      const technicalContext = input.technicalContext as Record<string, unknown> | undefined;
+      const dashboardUrl = process.env.DASHBOARD_URL || "https://app.relay.dev";
+      const relayUrl = `${dashboardUrl}/dashboard/inbox?id=${interaction.id}`;
+
+      // Trigger webhooks
+      const webhookEvent =
+        input.type === "bug"
+          ? "bug.reported"
+          : input.type === "feedback"
+            ? "feedback.received"
+            : "interaction.created";
+
+      triggerWebhooks(ctx.prisma, ctx.projectId, webhookEvent, {
+        id: interaction.id,
+        type: interaction.type,
+        status: interaction.status,
+        severity: interaction.severity,
+        userId: internalUserId,
+        sessionId: input.sessionId,
+        contentText: input.contentText,
+        createdAt: interaction.createdAt.toISOString(),
+        url: technicalContext?.url as string | undefined,
+      }).catch((err) => {
+        ctx.logger.error({ err }, "Failed to trigger webhooks");
+      });
+
+      // Send Slack notification if configured
+      const slackIntegration = await ctx.prisma.integration.findUnique({
+        where: {
+          projectId_provider: {
+            projectId: ctx.projectId,
+            provider: "slack",
+          },
+        },
+      });
+
+      if (slackIntegration?.enabled) {
+        const slackConfig = slackIntegration.config as {
+          webhookUrl?: string;
+          notifyOn?: {
+            newBug?: boolean;
+            highSeverity?: boolean;
+            newFeedback?: boolean;
+            newChat?: boolean;
+          };
+        };
+
+        if (slackConfig.webhookUrl) {
+          const notifyOn = slackConfig.notifyOn || {};
+          const shouldNotify =
+            (input.type === "bug" && notifyOn.newBug) ||
+            (input.type === "feedback" && notifyOn.newFeedback) ||
+            (input.type === "chat" && notifyOn.newChat) ||
+            ((severity === "critical" || severity === "high") &&
+              notifyOn.highSeverity);
+
+          if (shouldNotify) {
+            const slackClient = new SlackClient({
+              webhookUrl: slackConfig.webhookUrl,
+            });
+
+            if (
+              (severity === "critical" || severity === "high") &&
+              notifyOn.highSeverity
+            ) {
+              slackClient
+                .sendHighSeverityAlert({
+                  title: content?.title as string | undefined,
+                  description: input.contentText,
+                  severity: severity!,
+                  userName: userInfo.name,
+                  userEmail: userInfo.email,
+                  url: (technicalContext?.url as string) || "",
+                  relayUrl,
+                })
+                .catch((err) => {
+                  ctx.logger.error({ err }, "Failed to send Slack notification");
+                });
+            } else if (input.type === "bug" || input.type === "feedback") {
+              slackClient
+                .sendInteractionNotification({
+                  type: input.type as "bug" | "feedback",
+                  title: content?.title as string | undefined,
+                  description: input.contentText,
+                  severity,
+                  userName: userInfo.name,
+                  userEmail: userInfo.email,
+                  url: (technicalContext?.url as string) || "",
+                  relayUrl,
+                })
+                .catch((err) => {
+                  ctx.logger.error({ err }, "Failed to send Slack notification");
+                });
+            }
+          }
+        }
+      }
 
       ctx.logger.info(
         { interactionId, type: input.type },
@@ -548,27 +682,71 @@ export const ingestRouter = router({
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      // For now, just log the event
-      // In production, this would go to ClickHouse or event store
+      // Get user ID from session
+      const session = await ctx.prisma.session.findUnique({
+        where: { id: input.sessionId, projectId: ctx.projectId },
+        select: { userId: true },
+      });
+
+      // Store event in UserEvent table
+      await (ctx.prisma as any).userEvent.create({
+        data: {
+          projectId: ctx.projectId,
+          sessionId: input.sessionId,
+          userId: session?.userId,
+          name: input.event,
+          properties: (input.properties || {}) as Prisma.InputJsonValue,
+        },
+      });
+
       ctx.logger.debug(
         { sessionId: input.sessionId, event: input.event },
         "Event tracked",
       );
 
-      // Store as system interaction for now
-      await ctx.prisma.interaction.create({
-        data: {
-          projectId: ctx.projectId,
-          type: "system",
-          source: "sdk",
-          sessionId: input.sessionId,
-          contentJson: {
-            event: input.event,
-            properties: input.properties,
-          } as Prisma.InputJsonValue,
-        },
+      return { success: true };
+    }),
+
+  // Batch track events (for efficiency)
+  trackBatch: sdkProcedureWithRateLimit(20, 60)
+    .input(
+      z.object({
+        sessionId: z.string().uuid(),
+        events: z
+          .array(
+            z.object({
+              event: z.string().max(200),
+              properties: z.record(z.unknown()).optional(),
+              timestamp: z.number().optional(),
+            }),
+          )
+          .max(100),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      // Get user ID from session
+      const session = await ctx.prisma.session.findUnique({
+        where: { id: input.sessionId, projectId: ctx.projectId },
+        select: { userId: true },
       });
 
-      return { success: true };
+      // Batch insert events
+      await (ctx.prisma as any).userEvent.createMany({
+        data: input.events.map((e) => ({
+          projectId: ctx.projectId,
+          sessionId: input.sessionId,
+          userId: session?.userId,
+          name: e.event,
+          properties: (e.properties || {}) as Prisma.InputJsonValue,
+          createdAt: e.timestamp ? new Date(e.timestamp) : new Date(),
+        })),
+      });
+
+      ctx.logger.debug(
+        { sessionId: input.sessionId, eventCount: input.events.length },
+        "Events batch tracked",
+      );
+
+      return { success: true, count: input.events.length };
     }),
 });

@@ -57,30 +57,30 @@ _Completed January 29, 2026_
 
 ---
 
-## Phase 1: Paid Beta (Week 3-4)
+## Phase 1: Paid Beta ✅ COMPLETE
 
-_Minimum to charge money and onboard real users._
+_Completed January 2026_
 
 ### 1.1 Billing & Subscriptions
 
-- [ ] Stripe integration (Checkout, Customer Portal, Webhooks)
-- [ ] Plan tiers: Free, Pro ($29/mo), Team ($79/mo)
-- [ ] Usage limits enforcement (sessions, interactions, team members)
-- [ ] Billing settings page functional
+- [x] Stripe integration (Checkout, Customer Portal, Webhooks)
+- [x] Plan tiers: Free, Pro ($29/mo) — Team tier deferred to Phase 2
+- [x] Usage limits enforcement (sessions, interactions)
+- [x] Billing settings page functional
 
 ### 1.2 Replay System Complete
 
-- [ ] Replay chunk processing in worker
-- [ ] MinIO storage with proper retention
-- [ ] rrweb-player integration in dashboard
-- [ ] Replay scrubbing, speed controls, event markers
+- [x] Replay chunk processing in worker
+- [x] MinIO storage with proper retention
+- [x] rrweb-player integration in dashboard
+- [x] Replay scrubbing, speed controls, event markers
 
 ### 1.3 Onboarding Flow
 
-- [ ] Project creation wizard
-- [ ] SDK installation guide with copy-paste snippets
-- [ ] First interaction celebration/confirmation
-- [ ] Quick start checklist in dashboard
+- [x] Project creation wizard
+- [x] SDK installation guide with copy-paste snippets
+- [x] First interaction celebration/confirmation
+- [x] Quick start checklist in dashboard
 
 ---
 
@@ -326,9 +326,10 @@ These are 2027+ features after core product-market fit.
 
 ## Next Action
 
-**Start Phase 1** — Billing, Replay System, and Onboarding Flow.
+**Start Phase 2** — Gleap Parity with core integrations, public pages, and SDK enhancements.
 
 Priority order:
-1. 1.1 Billing & Subscriptions (Stripe) — enables revenue
-2. 1.3 Onboarding Flow — improves conversion
-3. 1.2 Replay System — completes core feature set
+1. 2.1 Integrations (Linear, Slack, Webhooks) — enables workflows
+2. 2.2 Public Pages (roadmap, feedback, changelog) — community engagement
+3. 2.3 SDK Enhancements — programmatic control
+4. 2.4 Survey Targeting — advanced targeting options

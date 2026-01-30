@@ -84,7 +84,7 @@ const categoryLabels: Record<string, string> = {
 export default function FeedbackPage() {
   const { currentProject } = useAuthStore();
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
   const [sortBy, setSortBy] = useState<"votes" | "createdAt">("votes");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [newItem, setNewItem] = useState({
@@ -100,7 +100,7 @@ export default function FeedbackPage() {
   const { data, isLoading, error, refetch } = trpc.feedback.list.useQuery(
     {
       projectId: currentProject?.id || "",
-      status: statusFilter as FeedbackStatus | undefined,
+      status: statusFilter as FeedbackStatus,
       sortBy,
       sortDir: "desc",
     },
@@ -349,7 +349,7 @@ export default function FeedbackPage() {
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setStatusFilter(null)}>
+              <DropdownMenuItem onClick={() => setStatusFilter(undefined)}>
                 All
                 {!statusFilter && (
                   <span className="ml-auto text-foreground">✓</span>

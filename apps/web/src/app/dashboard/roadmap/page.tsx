@@ -105,7 +105,14 @@ export default function RoadmapPage() {
   };
 
   const handleCopyLink = () => {
-    window.open("/roadmap/public", "_blank");
+    // Open public roadmap using project slug
+    const slug = currentProject?.slug;
+    if (slug) {
+      window.open(`/roadmap/${slug}`, "_blank");
+    } else {
+      // Fallback to demo page if no slug configured
+      window.open("/roadmap/public", "_blank");
+    }
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };

@@ -42,6 +42,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ApiError, EmptyState } from "@/components/api-error";
+import { ReplayModal } from "@/components/replay-modal";
+import { OnboardingBanner } from "@/components/onboarding-banner";
 
 type InteractionType =
   | "bug"
@@ -289,211 +291,216 @@ export default function InboxPage() {
   }
 
   return (
-    <div className="flex h-full">
-      {/* List Panel */}
-      <div
-        className="w-1/2 border-r border-border flex flex-col"
-        style={{ borderRightWidth: "0.5px" }}
-      >
-        {/* Header */}
-        <div className="page-header">
-          <h1 className="page-title">Inbox</h1>
-          <button
-            className="p-1.5 text-muted-foreground hover:text-foreground transition-colors"
-            onClick={() => refetch()}
-          >
-            <RefreshCw
-              className={cn("h-3.5 w-3.5", isLoading && "animate-spin")}
-            />
-          </button>
-        </div>
+    <div className="flex flex-col h-full">
+      {/* Onboarding Banner */}
+      <OnboardingBanner />
 
-        {/* Search and Filters */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* List Panel */}
         <div
-          className="flex items-center gap-3 px-4 py-2 border-b border-border"
-          style={{ borderBottomWidth: "0.5px" }}
+          className="w-1/2 border-r border-border flex flex-col"
+          style={{ borderRightWidth: "0.5px" }}
         >
-          <div className="relative flex-1">
-            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/50" />
-            <Input
-              placeholder="Search..."
-              className="pl-8 h-7 text-xs bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground/50"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
+          {/* Header */}
+          <div className="page-header">
+            <h1 className="page-title">Inbox</h1>
+            <button
+              className="p-1.5 text-muted-foreground hover:text-foreground transition-colors"
+              onClick={() => refetch()}
+            >
+              <RefreshCw
+                className={cn("h-3.5 w-3.5", isLoading && "animate-spin")}
+              />
+            </button>
           </div>
-          <div className="flex items-center gap-4">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
-                  {typeFilters.find((t) => t.key === typeFilter)?.label}
-                  <ChevronDown className="h-3 w-3" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                {typeFilters.map((filter) => (
-                  <DropdownMenuItem
-                    key={filter.key}
-                    onClick={() => setTypeFilter(filter.key)}
-                  >
-                    {filter.label}
-                    {filter.key === typeFilter && (
-                      <span className="ml-auto text-foreground">✓</span>
-                    )}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
-                  {statusFilters.find((s) => s.key === statusFilter)?.label}
-                  <ChevronDown className="h-3 w-3" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                {statusFilters.map((filter) => (
-                  <DropdownMenuItem
-                    key={filter.key}
-                    onClick={() => setStatusFilter(filter.key)}
-                  >
-                    {filter.label}
-                    {filter.key === statusFilter && (
-                      <span className="ml-auto text-foreground">✓</span>
-                    )}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
 
-        {/* List */}
-        <div className="flex-1 overflow-auto">
-          {mappedInteractions.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-              <Search className="h-12 w-12 mb-4 opacity-50" />
-              <p>No interactions found</p>
-              <p className="text-sm">Try adjusting your filters</p>
+          {/* Search and Filters */}
+          <div
+            className="flex items-center gap-3 px-4 py-2 border-b border-border"
+            style={{ borderBottomWidth: "0.5px" }}
+          >
+            <div className="relative flex-1">
+              <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/50" />
+              <Input
+                placeholder="Search..."
+                className="pl-8 h-7 text-xs bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground/50"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
             </div>
-          ) : (
-            mappedInteractions.map((interaction) => {
-              const TypeIcon = typeConfig[interaction.type].icon;
-              const isUnread = interaction.status === "new";
-              const showSeverity = interaction.severity === "critical";
+            <div className="flex items-center gap-4">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
+                    {typeFilters.find((t) => t.key === typeFilter)?.label}
+                    <ChevronDown className="h-3 w-3" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {typeFilters.map((filter) => (
+                    <DropdownMenuItem
+                      key={filter.key}
+                      onClick={() => setTypeFilter(filter.key)}
+                    >
+                      {filter.label}
+                      {filter.key === typeFilter && (
+                        <span className="ml-auto text-foreground">✓</span>
+                      )}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
+                    {statusFilters.find((s) => s.key === statusFilter)?.label}
+                    <ChevronDown className="h-3 w-3" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {statusFilters.map((filter) => (
+                    <DropdownMenuItem
+                      key={filter.key}
+                      onClick={() => setStatusFilter(filter.key)}
+                    >
+                      {filter.label}
+                      {filter.key === statusFilter && (
+                        <span className="ml-auto text-foreground">✓</span>
+                      )}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
 
-              return (
-                <div
-                  key={interaction.id}
-                  className={cn(
-                    "border-b border-border px-4 py-3 cursor-pointer transition-colors hover:bg-accent/30",
-                    selectedId === interaction.id && "bg-accent/40",
-                  )}
-                  style={{ borderBottomWidth: "0.5px" }}
-                  onClick={() => setSelectedId(interaction.id)}
-                >
-                  <div className="flex gap-3">
-                    <div className="shrink-0 h-8 w-8 rounded-md bg-muted/50 border border-border/50 flex items-center justify-center text-muted-foreground">
-                      <TypeIcon className="h-4 w-4" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      {/* Row 1: Title */}
-                      <p
-                        className={cn(
-                          "text-sm truncate",
-                          isUnread
-                            ? "text-foreground"
-                            : "text-muted-foreground",
-                        )}
-                      >
-                        {interaction.content?.title ||
-                          interaction.contentText?.slice(0, 50)}
-                      </p>
-                      {/* Row 2: User + Timestamp + Severity (if critical) */}
-                      <div className="flex items-center justify-between mt-0.5">
-                        <div className="flex items-center gap-1.5">
-                          <span
-                            className={cn(
-                              "text-xs",
-                              isUnread
-                                ? "text-muted-foreground"
-                                : "text-muted-foreground/70",
-                            )}
-                          >
-                            {interaction.user?.name ||
-                              interaction.user?.email ||
-                              "Anonymous"}
-                          </span>
-                          <span className="text-muted-foreground/40">·</span>
-                          <span className="text-xs text-muted-foreground/50">
-                            {formatRelativeTime(interaction.createdAt)}
-                          </span>
+          {/* List */}
+          <div className="flex-1 overflow-auto">
+            {mappedInteractions.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+                <Search className="h-12 w-12 mb-4 opacity-50" />
+                <p>No interactions found</p>
+                <p className="text-sm">Try adjusting your filters</p>
+              </div>
+            ) : (
+              mappedInteractions.map((interaction) => {
+                const TypeIcon = typeConfig[interaction.type].icon;
+                const isUnread = interaction.status === "new";
+                const showSeverity = interaction.severity === "critical";
+
+                return (
+                  <div
+                    key={interaction.id}
+                    className={cn(
+                      "border-b border-border px-4 py-3 cursor-pointer transition-colors hover:bg-accent/30",
+                      selectedId === interaction.id && "bg-accent/40",
+                    )}
+                    style={{ borderBottomWidth: "0.5px" }}
+                    onClick={() => setSelectedId(interaction.id)}
+                  >
+                    <div className="flex gap-3">
+                      <div className="shrink-0 h-8 w-8 rounded-md bg-muted/50 border border-border/50 flex items-center justify-center text-muted-foreground">
+                        <TypeIcon className="h-4 w-4" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        {/* Row 1: Title */}
+                        <p
+                          className={cn(
+                            "text-sm truncate",
+                            isUnread
+                              ? "text-foreground"
+                              : "text-muted-foreground",
+                          )}
+                        >
+                          {interaction.content?.title ||
+                            interaction.contentText?.slice(0, 50)}
+                        </p>
+                        {/* Row 2: User + Timestamp + Severity (if critical) */}
+                        <div className="flex items-center justify-between mt-0.5">
+                          <div className="flex items-center gap-1.5">
+                            <span
+                              className={cn(
+                                "text-xs",
+                                isUnread
+                                  ? "text-muted-foreground"
+                                  : "text-muted-foreground/70",
+                              )}
+                            >
+                              {interaction.user?.name ||
+                                interaction.user?.email ||
+                                "Anonymous"}
+                            </span>
+                            <span className="text-muted-foreground/40">·</span>
+                            <span className="text-xs text-muted-foreground/50">
+                              {formatRelativeTime(interaction.createdAt)}
+                            </span>
+                          </div>
+                          {showSeverity && (
+                            <span
+                              className={cn(
+                                "text-[11px] leading-none px-1.5 py-1 rounded",
+                                severityColors[interaction.severity!],
+                              )}
+                            >
+                              {interaction.severity}
+                            </span>
+                          )}
                         </div>
-                        {showSeverity && (
-                          <span
-                            className={cn(
-                              "text-[11px] leading-none px-1.5 py-1 rounded",
-                              severityColors[interaction.severity!],
-                            )}
-                          >
-                            {interaction.severity}
-                          </span>
-                        )}
                       </div>
                     </div>
                   </div>
-                </div>
-              );
-            })
-          )}
-        </div>
-
-        {/* Pagination */}
-        <div className="px-4 py-2 flex items-center justify-between">
-          <span className="text-xs text-muted-foreground/70">
-            {mappedInteractions.length} of {pagination?.total || 0}
-          </span>
-          <div className="flex items-center gap-1">
-            <button
-              disabled={page === 1}
-              onClick={() => setPage(page - 1)}
-              className="p-1 text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:hover:text-muted-foreground transition-colors"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <span className="text-xs text-muted-foreground tabular-nums px-1">
-              {page} / {pagination?.totalPages || 1}
-            </span>
-            <button
-              disabled={!pagination?.hasMore}
-              onClick={() => setPage(page + 1)}
-              className="p-1 text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:hover:text-muted-foreground transition-colors"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
+                );
+              })
+            )}
           </div>
-        </div>
-      </div>
 
-      {/* Detail Panel */}
-      <div className="w-1/2 flex flex-col bg-background">
-        {selectedInteraction ? (
-          <InteractionDetail
-            interaction={selectedInteraction}
-            onStatusChange={handleStatusChange}
-            onDelete={handleDelete}
-            onAssign={handleAssign}
-            onAddTags={handleAddTags}
-            onSendMessage={handleSendMessage}
-          />
-        ) : (
-          <div className="flex-1 flex items-center justify-center text-muted-foreground">
-            <div className="text-center">
-              <Eye className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>Select an interaction to view details</p>
+          {/* Pagination */}
+          <div className="px-4 py-2 flex items-center justify-between">
+            <span className="text-xs text-muted-foreground/70">
+              {mappedInteractions.length} of {pagination?.total || 0}
+            </span>
+            <div className="flex items-center gap-1">
+              <button
+                disabled={page === 1}
+                onClick={() => setPage(page - 1)}
+                className="p-1 text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:hover:text-muted-foreground transition-colors"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <span className="text-xs text-muted-foreground tabular-nums px-1">
+                {page} / {pagination?.totalPages || 1}
+              </span>
+              <button
+                disabled={!pagination?.hasMore}
+                onClick={() => setPage(page + 1)}
+                className="p-1 text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:hover:text-muted-foreground transition-colors"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
             </div>
           </div>
-        )}
+        </div>
+
+        {/* Detail Panel */}
+        <div className="w-1/2 flex flex-col bg-background">
+          {selectedInteraction ? (
+            <InteractionDetail
+              interaction={selectedInteraction}
+              onStatusChange={handleStatusChange}
+              onDelete={handleDelete}
+              onAssign={handleAssign}
+              onAddTags={handleAddTags}
+              onSendMessage={handleSendMessage}
+            />
+          ) : (
+            <div className="flex-1 flex items-center justify-center text-muted-foreground">
+              <div className="text-center">
+                <Eye className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>Select an interaction to view details</p>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -817,35 +824,10 @@ function InteractionDetail({
 
       {/* Replay Modal */}
       {showReplayModal && (
-        <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
-          onClick={() => setShowReplayModal(false)}
-        >
-          <div
-            className="bg-card border border-border rounded-lg overflow-hidden max-w-2xl w-full mx-4"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-              <h3 className="text-sm font-medium text-foreground">
-                Session Replay
-              </h3>
-              <button
-                onClick={() => setShowReplayModal(false)}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <span className="text-lg leading-none">×</span>
-              </button>
-            </div>
-            <div className="bg-muted aspect-video flex items-center justify-center">
-              <div className="text-center text-muted-foreground">
-                <Play className="h-10 w-10 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">
-                  Recording from {interaction.metadata?.url || "unknown page"}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
+        <ReplayModal
+          interactionId={interaction.id}
+          onClose={() => setShowReplayModal(false)}
+        />
       )}
 
       {/* Console Logs Modal */}

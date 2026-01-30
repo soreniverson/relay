@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { router, projectProcedure, sdkProcedure } from "../lib/trpc";
+import { router, projectProcedure, sdkProcedure, publicProcedure } from "../lib/trpc";
 import {
   createFeedbackItemSchema,
   updateFeedbackItemSchema,
@@ -482,5 +482,203 @@ export const feedbackRouter = router({
       });
 
       return items.map((i) => i.category).filter(Boolean) as string[];
+    }),
+
+  // Public submit feedback (for public feedback boards)
+  publicSubmit: publicProcedure
+    .input(
+      z.object({
+        slug: z.string().min(1),
+        title: z.string().min(1).max(500),
+        description: z.string().max(10000).optional(),
+        category: z.string().max(100).optional(),
+        email: z.string().email().optional(),
+        sessionId: z.string().uuid().optional(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      // Find project by slug
+      const project = await ctx.prisma.project.findUnique({
+        where: { slug: input.slug },
+      });
+
+      if (!project) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Project not found",
+        });
+      }
+
+      // Create feedback item
+      const item = await ctx.prisma.feedbackItem.create({
+        data: {
+          projectId: project.id,
+          title: input.title,
+          description: input.description,
+          category: input.category,
+          status: "under_review",
+        },
+      });
+
+      // If email provided, create or find user
+      if (input.email) {
+        let user = await ctx.prisma.endUser.findFirst({
+          where: {
+            projectId: project.id,
+            email: input.email,
+          },
+        });
+
+        if (!user) {
+          user = await ctx.prisma.endUser.create({
+            data: {
+              projectId: project.id,
+              email: input.email,
+            },
+          });
+        }
+      }
+
+      return {
+        id: item.id,
+        title: item.title,
+        status: item.status,
+      };
+    }),
+
+  // Public vote (for public feedback boards by slug)
+  publicVote: publicProcedure
+    .input(
+      z.object({
+        slug: z.string().min(1),
+        feedbackItemId: z.string().uuid(),
+        sessionId: z.string().uuid(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      // Find project by slug
+      const project = await ctx.prisma.project.findUnique({
+        where: { slug: input.slug },
+      });
+
+      if (!project) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Project not found",
+        });
+      }
+
+      // Check if already voted
+      const existingVote = await ctx.prisma.feedbackVote.findUnique({
+        where: {
+          feedbackItemId_sessionId: {
+            feedbackItemId: input.feedbackItemId,
+            sessionId: input.sessionId,
+          },
+        },
+      });
+
+      if (existingVote) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Already voted on this item",
+        });
+      }
+
+      await ctx.prisma.feedbackVote.create({
+        data: {
+          projectId: project.id,
+          feedbackItemId: input.feedbackItemId,
+          sessionId: input.sessionId,
+        },
+      });
+
+      await ctx.prisma.feedbackItem.update({
+        where: { id: input.feedbackItemId },
+        data: { voteCount: { increment: 1 } },
+      });
+
+      return { success: true };
+    }),
+
+  // Public list by slug (for public feedback boards)
+  publicListBySlug: publicProcedure
+    .input(
+      z.object({
+        slug: z.string().min(1),
+        sessionId: z.string().uuid().optional(),
+        status: feedbackItemStatusSchema.optional(),
+        page: z.number().int().positive().default(1),
+        pageSize: z.number().int().positive().max(50).default(20),
+      }),
+    )
+    .query(async ({ input, ctx }) => {
+      const { slug, page, pageSize, sessionId, status } = input;
+
+      // Find project by slug
+      const project = await ctx.prisma.project.findUnique({
+        where: { slug },
+      });
+
+      if (!project) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Project not found",
+        });
+      }
+
+      const where: Record<string, unknown> = {
+        projectId: project.id,
+        status: status || { in: ["under_review", "planned", "in_progress", "shipped"] },
+      };
+
+      const [items, total] = await Promise.all([
+        ctx.prisma.feedbackItem.findMany({
+          where,
+          orderBy: { voteCount: "desc" },
+          skip: (page - 1) * pageSize,
+          take: pageSize,
+          select: {
+            id: true,
+            title: true,
+            description: true,
+            status: true,
+            category: true,
+            voteCount: true,
+            createdAt: true,
+          },
+        }),
+        ctx.prisma.feedbackItem.count({ where }),
+      ]);
+
+      // Check which items the session has voted on
+      let votedItemIds: string[] = [];
+      if (sessionId) {
+        const votes = await ctx.prisma.feedbackVote.findMany({
+          where: {
+            projectId: project.id,
+            sessionId,
+            feedbackItemId: { in: items.map((i) => i.id) },
+          },
+          select: { feedbackItemId: true },
+        });
+        votedItemIds = votes.map((v) => v.feedbackItemId);
+      }
+
+      return {
+        project: {
+          name: project.name,
+        },
+        data: items.map((item) => ({
+          ...item,
+          hasVoted: votedItemIds.includes(item.id),
+        })),
+        pagination: {
+          page,
+          pageSize,
+          total,
+          totalPages: Math.ceil(total / pageSize),
+        },
+      };
     }),
 });

@@ -18,6 +18,106 @@ import { Loader2, CheckCircle, Copy, Check, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Step = "project" | "setup" | "complete";
+type Framework = "react" | "nextjs" | "vue" | "vanilla";
+
+const FRAMEWORK_OPTIONS: {
+  id: Framework;
+  name: string;
+  icon: string;
+}[] = [
+  { id: "react", name: "React", icon: "⚛️" },
+  { id: "nextjs", name: "Next.js", icon: "▲" },
+  { id: "vue", name: "Vue", icon: "💚" },
+  { id: "vanilla", name: "Vanilla JS", icon: "🟨" },
+];
+
+function getInstallCommand(framework: Framework): string {
+  switch (framework) {
+    case "nextjs":
+    case "react":
+      return "npm install @relay/sdk";
+    case "vue":
+      return "npm install @relay/sdk";
+    case "vanilla":
+      return '<script src="https://cdn.relay.dev/sdk/v1/relay.min.js"></script>';
+  }
+}
+
+function getInitSnippet(framework: Framework, apiKey: string): string {
+  switch (framework) {
+    case "react":
+      return `// App.tsx or index.tsx
+import Relay from '@relay/sdk';
+
+// Initialize at app start
+Relay.init({
+  apiKey: '${apiKey}',
+});
+
+// Identify users (optional but recommended)
+Relay.identify({
+  userId: user.id,
+  email: user.email,
+  name: user.name,
+});`;
+
+    case "nextjs":
+      return `// app/providers.tsx (App Router)
+'use client';
+import { useEffect } from 'react';
+import Relay from '@relay/sdk';
+
+export function Providers({ children }: { children: React.ReactNode }) {
+  useEffect(() => {
+    Relay.init({
+      apiKey: '${apiKey}',
+    });
+  }, []);
+
+  return <>{children}</>;
+}
+
+// Or for Pages Router (pages/_app.tsx)
+import Relay from '@relay/sdk';
+
+Relay.init({
+  apiKey: '${apiKey}',
+});`;
+
+    case "vue":
+      return `// main.ts
+import { createApp } from 'vue';
+import Relay from '@relay/sdk';
+import App from './App.vue';
+
+Relay.init({
+  apiKey: '${apiKey}',
+});
+
+createApp(App).mount('#app');
+
+// Identify users (optional but recommended)
+Relay.identify({
+  userId: user.id,
+  email: user.email,
+});`;
+
+    case "vanilla":
+      return `<!-- Add before closing </body> tag -->
+<script src="https://cdn.relay.dev/sdk/v1/relay.min.js"></script>
+<script>
+  Relay.init({
+    apiKey: '${apiKey}',
+  });
+
+  // Identify users (optional but recommended)
+  Relay.identify({
+    userId: 'user-123',
+    email: 'user@example.com',
+  });
+</script>`;
+  }
+}
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -31,6 +131,7 @@ export default function OnboardingPage() {
     apiKey: string;
   } | null>(null);
   const [copied, setCopied] = useState(false);
+  const [framework, setFramework] = useState<Framework>("react");
 
   const createProjectMutation = trpc.auth.createProject.useMutation({
     onSuccess: (data) => {
@@ -250,13 +351,39 @@ export default function OnboardingPage() {
                 </p>
               </div>
 
+              {/* Framework Selector */}
+              <div>
+                <Label className="text-xs text-muted-foreground mb-2 block">
+                  Select your framework
+                </Label>
+                <div className="grid grid-cols-4 gap-2">
+                  {FRAMEWORK_OPTIONS.map((fw) => (
+                    <button
+                      key={fw.id}
+                      onClick={() => setFramework(fw.id)}
+                      className={cn(
+                        "p-2 rounded-md border text-center transition-colors",
+                        framework === fw.id
+                          ? "border-foreground bg-foreground/5"
+                          : "border-border hover:border-foreground/50"
+                      )}
+                    >
+                      <span className="text-lg">{fw.icon}</span>
+                      <div className="text-xs mt-0.5 text-foreground">
+                        {fw.name}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* Install SDK */}
               <div>
                 <Label className="text-xs text-muted-foreground">
-                  1. Install the SDK
+                  1. {framework === "vanilla" ? "Add the script" : "Install the SDK"}
                 </Label>
-                <div className="mt-1.5 p-3 bg-zinc-900 rounded-md font-mono text-sm text-zinc-100">
-                  <code>npm install @relay/sdk</code>
+                <div className="mt-1.5 p-3 bg-zinc-900 rounded-md font-mono text-sm text-zinc-100 overflow-x-auto">
+                  <code>{getInstallCommand(framework)}</code>
                 </div>
               </div>
 
@@ -266,11 +393,9 @@ export default function OnboardingPage() {
                   2. Initialize Relay
                 </Label>
                 <div className="mt-1.5 p-3 bg-zinc-900 rounded-md font-mono text-sm text-zinc-100 overflow-x-auto">
-                  <pre>{`import Relay from '@relay/sdk';
-
-Relay.init({
-  apiKey: '${createdProject.apiKey}',
-});`}</pre>
+                  <pre className="whitespace-pre-wrap">
+                    {getInitSnippet(framework, createdProject.apiKey)}
+                  </pre>
                 </div>
               </div>
 

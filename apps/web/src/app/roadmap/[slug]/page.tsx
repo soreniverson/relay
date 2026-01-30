@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ChevronUp, Loader2 } from "lucide-react";
+import { useParams } from "next/navigation";
+import { ChevronUp, Loader2, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { trpc } from "@/lib/trpc";
 
 interface RoadmapItem {
   id: string;
@@ -13,6 +13,17 @@ interface RoadmapItem {
   eta?: string | null;
   voteCount: number;
   hasVoted?: boolean;
+}
+
+interface RoadmapData {
+  project: { name: string };
+  data: RoadmapItem[];
+  pagination: {
+    page: number;
+    pageSize: number;
+    total: number;
+    totalPages: number;
+  };
 }
 
 const columns = [
@@ -32,88 +43,140 @@ function getSessionId(): string {
   return sessionId;
 }
 
-export default function PublicRoadmapPage() {
+export default function PublicRoadmapBySlugPage() {
+  const params = useParams();
+  const slug = params.slug as string;
+
   const [sessionId, setSessionId] = useState<string>("");
+  const [data, setData] = useState<RoadmapData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [votingItemId, setVotingItemId] = useState<string | null>(null);
-
-  // This is the demo page without a slug - use SDK procedure
-  // For production use the slug-based page at /roadmap/[slug]
-  const { data, isLoading, error, refetch } = trpc.roadmap.publicList.useQuery(
-    { page: 1, pageSize: 50 },
-    { enabled: false } // Disabled since this is the demo page
-  );
-
-  // Use mock data for the demo public page
-  const [items, setItems] = useState<RoadmapItem[]>([
-    {
-      id: "1",
-      title: "Mobile SDK (iOS & Android)",
-      description:
-        "Native SDKs for iOS and Android applications with full feature parity.",
-      status: "in_progress",
-      eta: "2024-Q2",
-      voteCount: 23,
-      hasVoted: false,
-    },
-    {
-      id: "2",
-      title: "GitHub Integration",
-      description:
-        "Create GitHub issues directly from bug reports with bidirectional sync.",
-      status: "planned",
-      eta: "2024-Q2",
-      voteCount: 15,
-      hasVoted: false,
-    },
-    {
-      id: "3",
-      title: "Advanced Analytics Dashboard",
-      description:
-        "Comprehensive analytics with trends, user segments, and custom reports.",
-      status: "planned",
-      eta: "2024-Q3",
-      voteCount: 31,
-      hasVoted: false,
-    },
-    {
-      id: "4",
-      title: "Session Replay",
-      description: "Full DOM replay of user sessions with privacy controls.",
-      status: "shipped",
-      voteCount: 45,
-      hasVoted: false,
-    },
-    {
-      id: "5",
-      title: "AI Auto-Labeling",
-      description:
-        "Automatically categorize and label incoming bug reports using AI.",
-      status: "shipped",
-      voteCount: 12,
-      hasVoted: false,
-    },
-  ]);
 
   useEffect(() => {
     setSessionId(getSessionId());
   }, []);
 
-  const handleVote = async (id: string) => {
+  useEffect(() => {
+    async function fetchRoadmap() {
+      try {
+        setLoading(true);
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/trpc/roadmap.publicListBySlug?input=${encodeURIComponent(
+            JSON.stringify({ json: { slug, sessionId: sessionId || undefined, page: 1, pageSize: 50 } }),
+          )}`,
+        );
+
+        if (!response.ok) {
+          if (response.status === 404) {
+            setError("Project not found");
+          } else {
+            setError("Failed to load roadmap");
+          }
+          return;
+        }
+
+        const result = await response.json();
+        setData(result.result?.data?.json);
+      } catch (err) {
+        setError("Failed to load roadmap");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    if (slug) {
+      fetchRoadmap();
+    }
+  }, [slug, sessionId]);
+
+  const handleVote = async (itemId: string) => {
+    if (!sessionId || votingItemId) return;
+
+    setVotingItemId(itemId);
+
     // Optimistic update
-    setItems((prev) =>
-      prev.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              hasVoted: !item.hasVoted,
-              voteCount: item.hasVoted
-                ? item.voteCount - 1
-                : item.voteCount + 1,
-            }
-          : item,
-      ),
+    setData((prev) =>
+      prev
+        ? {
+            ...prev,
+            data: prev.data.map((item) =>
+              item.id === itemId
+                ? {
+                    ...item,
+                    hasVoted: !item.hasVoted,
+                    voteCount: item.hasVoted
+                      ? item.voteCount - 1
+                      : item.voteCount + 1,
+                  }
+                : item,
+            ),
+          }
+        : prev,
     );
+
+    try {
+      await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/trpc/roadmap.publicVote`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            json: { slug, roadmapItemId: itemId, sessionId },
+          }),
+        },
+      );
+    } catch (err) {
+      // Revert on error
+      setData((prev) =>
+        prev
+          ? {
+              ...prev,
+              data: prev.data.map((item) =>
+                item.id === itemId
+                  ? {
+                      ...item,
+                      hasVoted: !item.hasVoted,
+                      voteCount: item.hasVoted
+                        ? item.voteCount + 1
+                        : item.voteCount - 1,
+                    }
+                  : item,
+              ),
+            }
+          : prev,
+      );
+    } finally {
+      setVotingItemId(null);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
+        <AlertCircle className="h-12 w-12 text-muted-foreground" />
+        <h1 className="text-xl font-semibold text-foreground">{error}</h1>
+        <p className="text-muted-foreground">
+          The roadmap you're looking for doesn't exist or has been removed.
+        </p>
+      </div>
+    );
+  }
+
+  if (!data) {
+    return null;
+  }
+
+  const items = data.data;
+  const projectName = data.project.name;
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -121,7 +184,7 @@ export default function PublicRoadmapPage() {
       <header className="border-b border-border/50 bg-card/30">
         <div className="max-w-6xl mx-auto px-6 py-4">
           <span className="text-base font-medium text-foreground/90">
-            Product Roadmap
+            {projectName} Roadmap
           </span>
         </div>
       </header>
@@ -166,9 +229,11 @@ export default function PublicRoadmapPage() {
                       <h3 className="text-sm font-medium text-foreground/90 mb-1.5">
                         {item.title}
                       </h3>
-                      <p className="text-xs text-muted-foreground/70 mb-3 leading-relaxed">
-                        {item.description}
-                      </p>
+                      {item.description && (
+                        <p className="text-xs text-muted-foreground/70 mb-3 leading-relaxed">
+                          {item.description}
+                        </p>
+                      )}
                       <div className="flex items-center justify-between">
                         <button
                           onClick={() => handleVote(item.id)}
@@ -190,7 +255,10 @@ export default function PublicRoadmapPage() {
                         </button>
                         {item.eta && (
                           <span className="text-xs text-muted-foreground/50">
-                            {item.eta}
+                            {new Date(item.eta).toLocaleDateString("en-US", {
+                              month: "short",
+                              year: "numeric",
+                            })}
                           </span>
                         )}
                       </div>

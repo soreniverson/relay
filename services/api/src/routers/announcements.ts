@@ -347,4 +347,79 @@ export const announcementsRouter = router({
         },
       };
     }),
+
+  // Public changelog list (by project slug)
+  publicList: publicProcedure
+    .input(
+      z.object({
+        slug: z.string().min(1),
+        page: z.number().default(1),
+        pageSize: z.number().default(20),
+        category: z.string().optional(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      // Find project by slug
+      const project = await ctx.prisma.project.findUnique({
+        where: { slug: input.slug },
+      });
+
+      if (!project) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Project not found",
+        });
+      }
+
+      const now = new Date();
+
+      const where: Prisma.AnnouncementWhereInput = {
+        projectId: project.id,
+        enabled: true,
+        type: "feed_item",
+        OR: [{ startAt: null }, { startAt: { lte: now } }],
+        AND: [
+          {
+            OR: [{ endAt: null }, { endAt: { gte: now } }],
+          },
+        ],
+      };
+
+      // Add category filter if provided (stored in style field)
+      if (input.category) {
+        where.style = input.category;
+      }
+
+      const [items, total] = await Promise.all([
+        ctx.prisma.announcement.findMany({
+          where,
+          orderBy: { createdAt: "desc" },
+          skip: (input.page - 1) * input.pageSize,
+          take: input.pageSize,
+        }),
+        ctx.prisma.announcement.count({ where }),
+      ]);
+
+      return {
+        project: {
+          name: project.name,
+        },
+        items: items.map((item) => ({
+          id: item.id,
+          title: item.title,
+          content: item.content,
+          style: item.style,
+          image: item.image,
+          actionLabel: item.actionLabel,
+          actionUrl: item.actionUrl,
+          createdAt: item.createdAt,
+        })),
+        pagination: {
+          page: input.page,
+          pageSize: input.pageSize,
+          total,
+          totalPages: Math.ceil(total / input.pageSize),
+        },
+      };
+    }),
 });

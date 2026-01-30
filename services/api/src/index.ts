@@ -10,6 +10,7 @@ import { initializeBuckets } from "./lib/storage";
 import { WebSocketServer } from "ws";
 import http from "http";
 import { pubsub, redis } from "./lib/redis";
+import { handleStripeWebhook } from "./webhooks/stripe";
 
 const PORT = process.env.PORT || 3001;
 const REGION = process.env.REGION || "us-west";
@@ -43,6 +44,13 @@ async function main() {
       timestamp: new Date().toISOString(),
     });
   });
+
+  // Stripe webhook endpoint (needs raw body)
+  app.post(
+    "/webhooks/stripe",
+    express.raw({ type: "application/json" }),
+    handleStripeWebhook
+  );
 
   // tRPC middleware
   app.use(

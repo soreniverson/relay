@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { router, projectProcedure, sdkProcedure } from "../lib/trpc";
+import { router, projectProcedure, sdkProcedure, publicProcedure } from "../lib/trpc";
 import {
   createRoadmapItemSchema,
   updateRoadmapItemSchema,
@@ -352,5 +352,157 @@ export const roadmapRouter = router({
         page,
         pageSize,
       };
+    }),
+
+  // Public roadmap by slug (for public roadmap pages)
+  publicListBySlug: publicProcedure
+    .input(
+      z.object({
+        slug: z.string().min(1),
+        page: z.number().int().positive().default(1),
+        pageSize: z.number().int().positive().max(50).default(50),
+        sessionId: z.string().uuid().optional(),
+      }),
+    )
+    .query(async ({ input, ctx }) => {
+      const { slug, page, pageSize, sessionId } = input;
+
+      // Find project by slug
+      const project = await ctx.prisma.project.findUnique({
+        where: { slug },
+      });
+
+      if (!project) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Project not found",
+        });
+      }
+
+      const [items, total] = await Promise.all([
+        ctx.prisma.roadmapItem.findMany({
+          where: {
+            projectId: project.id,
+            visibility: "public",
+          },
+          orderBy: [{ status: "asc" }, { sortOrder: "asc" }],
+          skip: (page - 1) * pageSize,
+          take: pageSize,
+          select: {
+            id: true,
+            title: true,
+            description: true,
+            status: true,
+            eta: true,
+            linkedFeedbackCount: true,
+            createdAt: true,
+          },
+        }),
+        ctx.prisma.roadmapItem.count({
+          where: {
+            projectId: project.id,
+            visibility: "public",
+          },
+        }),
+      ]);
+
+      return {
+        project: {
+          name: project.name,
+        },
+        data: items.map((item) => ({
+          id: item.id,
+          title: item.title,
+          description: item.description,
+          status: item.status,
+          eta: item.eta,
+          voteCount: item.linkedFeedbackCount,
+          createdAt: item.createdAt,
+        })),
+        pagination: {
+          page,
+          pageSize,
+          total,
+          totalPages: Math.ceil(total / pageSize),
+        },
+      };
+    }),
+
+  // Public vote on roadmap item (votes on linked feedback)
+  publicVote: publicProcedure
+    .input(
+      z.object({
+        slug: z.string().min(1),
+        roadmapItemId: z.string().uuid(),
+        sessionId: z.string().uuid(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      // Find project by slug
+      const project = await ctx.prisma.project.findUnique({
+        where: { slug: input.slug },
+      });
+
+      if (!project) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Project not found",
+        });
+      }
+
+      // Find roadmap item
+      const roadmapItem = await ctx.prisma.roadmapItem.findUnique({
+        where: { id: input.roadmapItemId, projectId: project.id },
+        include: {
+          roadmapLinks: {
+            where: { feedbackItemId: { not: null } },
+            take: 1,
+          },
+        },
+      });
+
+      if (!roadmapItem) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Roadmap item not found",
+        });
+      }
+
+      // If there's a linked feedback item, vote on it
+      const feedbackItemId = roadmapItem.roadmapLinks[0]?.feedbackItemId;
+      if (feedbackItemId) {
+        // Check if already voted
+        const existingVote = await ctx.prisma.feedbackVote.findUnique({
+          where: {
+            feedbackItemId_sessionId: {
+              feedbackItemId,
+              sessionId: input.sessionId,
+            },
+          },
+        });
+
+        if (!existingVote) {
+          await ctx.prisma.feedbackVote.create({
+            data: {
+              projectId: project.id,
+              feedbackItemId,
+              sessionId: input.sessionId,
+            },
+          });
+
+          await ctx.prisma.feedbackItem.update({
+            where: { id: feedbackItemId },
+            data: { voteCount: { increment: 1 } },
+          });
+        }
+      }
+
+      // Update linked feedback count on roadmap item
+      await ctx.prisma.roadmapItem.update({
+        where: { id: input.roadmapItemId },
+        data: { linkedFeedbackCount: { increment: 1 } },
+      });
+
+      return { success: true };
     }),
 });

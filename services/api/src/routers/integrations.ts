@@ -7,6 +7,12 @@ import {
   connectSlackSchema,
   syncLinearIssueSchema,
 } from "@relay/shared";
+import {
+  LinearClient,
+  exchangeLinearOAuthCode,
+  mapLinearStateToRelayStatus,
+} from "../lib/linear";
+import { SlackClient } from "../lib/slack";
 
 // Feature flag check
 async function checkIntegrationEnabled(
@@ -99,14 +105,35 @@ export const integrationsRouter = router({
       z.object({ projectId: z.string().uuid() }).merge(connectLinearSchema),
     )
     .mutation(async ({ input, ctx }) => {
-      // In production, exchange OAuth code for access token
-      // For now, simulate OAuth flow
-      // const tokenResponse = await exchangeLinearCode(input.code, input.redirectUri);
+      // Exchange OAuth code for access token
+      let accessToken: string;
+      try {
+        const tokenResponse = await exchangeLinearOAuthCode(
+          input.code,
+          input.redirectUri,
+        );
+        accessToken = tokenResponse.accessToken;
+      } catch (error) {
+        ctx.logger.error({ error }, "Linear OAuth exchange failed");
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Failed to exchange Linear OAuth code",
+        });
+      }
 
-      // TODO: Implement real OAuth exchange
-      ctx.logger.info("Linear OAuth code exchange would happen here");
+      // Verify the token works by fetching teams
+      const linearClient = new LinearClient({ accessToken });
+      let teams;
+      try {
+        teams = await linearClient.getTeams();
+      } catch (error) {
+        ctx.logger.error({ error }, "Failed to verify Linear token");
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Failed to verify Linear access token",
+        });
+      }
 
-      // For demo purposes, create a placeholder integration
       const integration = await ctx.prisma.integration.upsert({
         where: {
           projectId_provider: {
@@ -118,9 +145,9 @@ export const integrationsRouter = router({
           enabled: true,
           config: {
             provider: "linear",
-            // accessToken would be stored encrypted in production
-            accessToken: "placeholder_token",
+            accessToken,
             autoCreateIssues: false,
+            teams: teams.map((t) => ({ id: t.id, name: t.name, key: t.key })),
           },
         },
         create: {
@@ -129,8 +156,9 @@ export const integrationsRouter = router({
           enabled: true,
           config: {
             provider: "linear",
-            accessToken: "placeholder_token",
+            accessToken,
             autoCreateIssues: false,
+            teams: teams.map((t) => ({ id: t.id, name: t.name, key: t.key })),
           },
         },
       });
@@ -147,7 +175,12 @@ export const integrationsRouter = router({
         },
       });
 
-      return { success: true };
+      ctx.logger.info(
+        { projectId: ctx.projectId, teamCount: teams.length },
+        "Linear integration connected",
+      );
+
+      return { success: true, teams };
     }),
 
   // Connect Slack
@@ -320,7 +353,14 @@ export const integrationsRouter = router({
   // Sync issue to Linear
   syncLinearIssue: projectProcedure
     .input(
-      z.object({ projectId: z.string().uuid() }).merge(syncLinearIssueSchema),
+      z
+        .object({
+          projectId: z.string().uuid(),
+          teamId: z.string().optional(),
+          labelIds: z.array(z.string()).optional(),
+          priority: z.number().int().min(0).max(4).optional(),
+        })
+        .merge(syncLinearIssueSchema),
     )
     .mutation(async ({ input, ctx }) => {
       const integration = await ctx.prisma.integration.findUnique({
@@ -339,9 +379,21 @@ export const integrationsRouter = router({
         });
       }
 
+      const config = integration.config as {
+        accessToken?: string;
+        teams?: Array<{ id: string; name: string; key: string }>;
+      };
+
+      if (!config.accessToken) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Linear access token not configured",
+        });
+      }
+
       const interaction = await ctx.prisma.interaction.findUnique({
         where: { id: input.interactionId, projectId: ctx.projectId },
-        include: { user: true, media: true },
+        include: { user: true, media: true, session: true },
       });
 
       if (!interaction) {
@@ -351,23 +403,84 @@ export const integrationsRouter = router({
         });
       }
 
-      // TODO: Implement actual Linear API call
-      // const linearClient = new LinearClient({ accessToken: config.accessToken });
-      // const issue = await linearClient.createIssue({ ... });
+      // Determine team ID
+      const teamId = input.teamId || config.teams?.[0]?.id;
+      if (!teamId) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "No Linear team specified and no default team available",
+        });
+      }
 
-      // For now, create a mock link
-      const mockIssueId = `LIN-${Date.now()}`;
-      const mockIssueUrl = `https://linear.app/team/issue/${mockIssueId}`;
+      // Build issue title and description
+      const content = interaction.contentJson as Record<string, unknown> | null;
+      const title =
+        input.title ||
+        (content?.title as string) ||
+        interaction.contentText?.slice(0, 100) ||
+        `Bug report from ${interaction.user?.email || "anonymous user"}`;
+
+      const technicalContext = interaction.technicalContext as Record<
+        string,
+        unknown
+      > | null;
+      const descriptionParts: string[] = [];
+
+      if (input.description || interaction.contentText) {
+        descriptionParts.push(input.description || interaction.contentText!);
+      }
+      if (content?.description) {
+        descriptionParts.push(content.description as string);
+      }
+
+      // Add technical context
+      descriptionParts.push("\n---\n**Technical Details**");
+      if (technicalContext?.url) {
+        descriptionParts.push(`- **Page:** ${technicalContext.url}`);
+      }
+      if (interaction.user?.email) {
+        descriptionParts.push(`- **User:** ${interaction.user.email}`);
+      }
+      if (interaction.severity) {
+        descriptionParts.push(`- **Severity:** ${interaction.severity}`);
+      }
+
+      // Add Relay link
+      const dashboardUrl =
+        process.env.DASHBOARD_URL || "https://app.relay.dev";
+      const relayUrl = `${dashboardUrl}/dashboard/inbox?id=${interaction.id}`;
+      descriptionParts.push(`\n[View in Relay](${relayUrl})`);
+
+      const description = descriptionParts.join("\n");
+
+      // Create issue in Linear
+      const linearClient = new LinearClient({ accessToken: config.accessToken });
+      let issue;
+      try {
+        issue = await linearClient.createIssue({
+          teamId,
+          title,
+          description,
+          labelIds: input.labelIds,
+          priority: input.priority,
+        });
+      } catch (error) {
+        ctx.logger.error({ error }, "Failed to create Linear issue");
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to create Linear issue",
+        });
+      }
 
       // Create integration link
       await ctx.prisma.integrationLink.create({
         data: {
           projectId: ctx.projectId,
           provider: "linear",
-          externalId: mockIssueId,
+          externalId: issue.id,
           internalType: "interaction",
           internalId: input.interactionId,
-          externalUrl: mockIssueUrl,
+          externalUrl: issue.url,
         },
       });
 
@@ -376,8 +489,8 @@ export const integrationsRouter = router({
         where: { id: input.interactionId },
         data: {
           linkedIssueProvider: "linear",
-          linkedIssueId: mockIssueId,
-          linkedIssueUrl: mockIssueUrl,
+          linkedIssueId: issue.identifier,
+          linkedIssueUrl: issue.url,
         },
       });
 
@@ -389,18 +502,26 @@ export const integrationsRouter = router({
           action: "integration.issue_synced",
           targetType: "interaction",
           targetId: input.interactionId,
-          meta: { provider: "linear", issueId: mockIssueId },
+          meta: {
+            provider: "linear",
+            issueId: issue.id,
+            issueIdentifier: issue.identifier,
+          },
         },
       });
 
       ctx.logger.info(
-        { interactionId: input.interactionId, issueId: mockIssueId },
-        "Issue synced to Linear",
+        {
+          interactionId: input.interactionId,
+          issueId: issue.id,
+          issueIdentifier: issue.identifier,
+        },
+        "Issue created in Linear",
       );
 
       return {
-        issueId: mockIssueId,
-        issueUrl: mockIssueUrl,
+        issueId: issue.identifier,
+        issueUrl: issue.url,
       };
     }),
 
@@ -439,19 +560,120 @@ export const integrationsRouter = router({
         });
       }
 
-      // TODO: Implement actual Slack webhook call
-      // await fetch(config.webhookUrl, {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ text: input.message }),
-      // });
+      const slackClient = new SlackClient({ webhookUrl: config.webhookUrl });
+
+      try {
+        await slackClient.sendText(input.message);
+      } catch (error) {
+        ctx.logger.error({ error }, "Failed to send Slack notification");
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to send Slack notification",
+        });
+      }
 
       ctx.logger.info(
         { projectId: ctx.projectId },
-        "Slack notification would be sent",
+        "Slack notification sent",
       );
 
       return { success: true };
+    }),
+
+  // Get Linear teams
+  getLinearTeams: projectProcedure
+    .input(z.object({ projectId: z.string().uuid() }))
+    .query(async ({ ctx }) => {
+      const integration = await ctx.prisma.integration.findUnique({
+        where: {
+          projectId_provider: {
+            projectId: ctx.projectId,
+            provider: "linear",
+          },
+        },
+      });
+
+      if (!integration || !integration.enabled) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Linear integration is not enabled",
+        });
+      }
+
+      const config = integration.config as { accessToken?: string };
+      if (!config.accessToken) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Linear access token not configured",
+        });
+      }
+
+      const linearClient = new LinearClient({ accessToken: config.accessToken });
+      return await linearClient.getTeams();
+    }),
+
+  // Get Linear labels for a team
+  getLinearLabels: projectProcedure
+    .input(z.object({ projectId: z.string().uuid(), teamId: z.string() }))
+    .query(async ({ input, ctx }) => {
+      const integration = await ctx.prisma.integration.findUnique({
+        where: {
+          projectId_provider: {
+            projectId: ctx.projectId,
+            provider: "linear",
+          },
+        },
+      });
+
+      if (!integration || !integration.enabled) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Linear integration is not enabled",
+        });
+      }
+
+      const config = integration.config as { accessToken?: string };
+      if (!config.accessToken) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Linear access token not configured",
+        });
+      }
+
+      const linearClient = new LinearClient({ accessToken: config.accessToken });
+      return await linearClient.getLabels(input.teamId);
+    }),
+
+  // Get Linear workflow states for a team
+  getLinearWorkflowStates: projectProcedure
+    .input(z.object({ projectId: z.string().uuid(), teamId: z.string() }))
+    .query(async ({ input, ctx }) => {
+      const integration = await ctx.prisma.integration.findUnique({
+        where: {
+          projectId_provider: {
+            projectId: ctx.projectId,
+            provider: "linear",
+          },
+        },
+      });
+
+      if (!integration || !integration.enabled) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Linear integration is not enabled",
+        });
+      }
+
+      const config = integration.config as { accessToken?: string };
+      if (!config.accessToken) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Linear access token not configured",
+        });
+      }
+
+      const linearClient = new LinearClient({ accessToken: config.accessToken });
+      return await linearClient.getWorkflowStates(input.teamId);
     }),
 
   // Get linked issues for interaction

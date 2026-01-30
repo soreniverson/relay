@@ -83,6 +83,38 @@ export default function SettingsPage() {
 }
 
 function GeneralSettings() {
+  const { currentProject, setCurrentProject } = useAuthStore();
+  const [projectName, setProjectName] = useState(currentProject?.name || "");
+  const [projectSlug, setProjectSlug] = useState(currentProject?.slug || "");
+  const [saving, setSaving] = useState(false);
+
+  const updateMutation = trpc.auth.updateProject.useMutation({
+    onSuccess: (data) => {
+      // Update the current project in auth store
+      if (currentProject) {
+        setCurrentProject({
+          ...currentProject,
+          name: data.name,
+          slug: data.slug ?? undefined,
+        });
+      }
+      setSaving(false);
+    },
+    onError: () => {
+      setSaving(false);
+    },
+  });
+
+  const handleSave = () => {
+    if (!currentProject?.id) return;
+    setSaving(true);
+    updateMutation.mutate({
+      projectId: currentProject.id,
+      name: projectName,
+      slug: projectSlug || undefined,
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div
@@ -100,16 +132,28 @@ function GeneralSettings() {
             >
               Project Name
             </Label>
-            <Input id="project-name" defaultValue="My Project" />
+            <Input
+              id="project-name"
+              value={projectName}
+              onChange={(e) => setProjectName(e.target.value)}
+            />
           </div>
           <div className="grid gap-1.5">
             <Label
-              htmlFor="project-url"
+              htmlFor="project-slug"
               className="text-xs text-muted-foreground"
             >
-              Project URL
+              Public URL Slug
             </Label>
-            <Input id="project-url" defaultValue="https://myapp.com" />
+            <Input
+              id="project-slug"
+              placeholder="my-project"
+              value={projectSlug}
+              onChange={(e) => setProjectSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
+            />
+            <p className="text-xs text-muted-foreground">
+              Used for public pages: /roadmap/{projectSlug || "slug"}, /feedback/{projectSlug || "slug"}, /changelog/{projectSlug || "slug"}
+            </p>
           </div>
           <div className="grid gap-1.5">
             <Label
@@ -130,8 +174,8 @@ function GeneralSettings() {
             </Select>
           </div>
         </div>
-        <Button size="sm" className="mt-4">
-          Save Changes
+        <Button size="sm" className="mt-4" onClick={handleSave} disabled={saving}>
+          {saving ? "Saving..." : "Save Changes"}
         </Button>
       </div>
 
@@ -494,33 +538,49 @@ function ApiKeysSettings() {
   );
 }
 
+const integrationMeta: Record<string, { icon: string; description: string; displayName: string }> = {
+  linear: {
+    icon: "📋",
+    description: "Create Linear issues from bug reports",
+    displayName: "Linear",
+  },
+  slack: {
+    icon: "💬",
+    description: "Get notifications in Slack",
+    displayName: "Slack",
+  },
+  jira: {
+    icon: "🎫",
+    description: "Create Jira tickets from bug reports",
+    displayName: "Jira",
+  },
+  github: {
+    icon: "🐙",
+    description: "Create GitHub issues from bug reports",
+    displayName: "GitHub",
+  },
+  email: {
+    icon: "📧",
+    description: "Send email notifications",
+    displayName: "Email",
+  },
+};
+
 function IntegrationsSettings() {
-  const integrations = [
-    {
-      name: "Linear",
-      description: "Create Linear issues from bug reports",
-      connected: true,
-      icon: "📋",
-    },
-    {
-      name: "Slack",
-      description: "Get notifications in Slack",
-      connected: true,
-      icon: "💬",
-    },
-    {
-      name: "Jira",
-      description: "Create Jira tickets from bug reports",
-      connected: false,
-      icon: "🎫",
-    },
-    {
-      name: "GitHub",
-      description: "Create GitHub issues from bug reports",
-      connected: false,
-      icon: "🐙",
-    },
-  ];
+  const { currentProject } = useAuthStore();
+
+  const { data: integrations, isLoading } = trpc.integrations.list.useQuery(
+    { projectId: currentProject?.id || "" },
+    { enabled: !!currentProject?.id }
+  );
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -532,36 +592,47 @@ function IntegrationsSettings() {
           Integrations
         </h3>
         <div className="space-y-1">
-          {integrations.map((integration) => (
-            <div
-              key={integration.name}
-              className="flex items-center justify-between p-2.5 rounded-md hover:bg-accent/30 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <span className="text-lg">{integration.icon}</span>
-                <div>
-                  <div className="text-sm text-foreground">
-                    {integration.name}
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    {integration.description}
+          {integrations?.map((integration) => {
+            const meta = integrationMeta[integration.provider] || {
+              icon: "🔗",
+              description: "Third-party integration",
+              displayName: integration.provider,
+            };
+            const isAvailable = ["linear", "slack"].includes(integration.provider);
+
+            return (
+              <div
+                key={integration.provider}
+                className="flex items-center justify-between p-2.5 rounded-md hover:bg-accent/30 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-lg">{meta.icon}</span>
+                  <div>
+                    <div className="text-sm text-foreground">
+                      {meta.displayName}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {meta.description}
+                    </div>
                   </div>
                 </div>
-              </div>
-              {integration.connected ? (
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-emerald-400">Connected</span>
+                {integration.configured && integration.enabled ? (
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-emerald-400">Connected</span>
+                    <Button variant="outline" size="sm" className="h-7 text-xs">
+                      Configure
+                    </Button>
+                  </div>
+                ) : isAvailable ? (
                   <Button variant="outline" size="sm" className="h-7 text-xs">
-                    Configure
+                    Connect
                   </Button>
-                </div>
-              ) : (
-                <Button variant="outline" size="sm" className="h-7 text-xs">
-                  Connect
-                </Button>
-              )}
-            </div>
-          ))}
+                ) : (
+                  <span className="text-xs text-muted-foreground">Coming soon</span>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -717,8 +788,81 @@ function PrivacySettings() {
 }
 
 function BillingSettings() {
+  const { currentProject } = useAuthStore();
+
+  const { data: billing, isLoading } = trpc.billing.getSubscription.useQuery(
+    { projectId: currentProject?.id || "" },
+    { enabled: !!currentProject?.id }
+  );
+
+  const { data: invoices } = trpc.billing.getInvoices.useQuery(
+    { projectId: currentProject?.id || "", limit: 5 },
+    { enabled: !!currentProject?.id }
+  );
+
+  const checkoutMutation = trpc.billing.createCheckoutSession.useMutation({
+    onSuccess: (data) => {
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    },
+  });
+
+  const portalMutation = trpc.billing.createPortalSession.useMutation({
+    onSuccess: (data) => {
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    },
+  });
+
+  const handleUpgrade = (interval: "monthly" | "yearly") => {
+    if (!currentProject?.id) return;
+    const baseUrl = window.location.origin;
+    checkoutMutation.mutate({
+      projectId: currentProject.id,
+      plan: "pro",
+      interval,
+      successUrl: `${baseUrl}/dashboard/settings?success=true`,
+      cancelUrl: `${baseUrl}/dashboard/settings?canceled=true`,
+    });
+  };
+
+  const handleManageBilling = () => {
+    if (!currentProject?.id) return;
+    const returnUrl = `${window.location.origin}/dashboard/settings`;
+    portalMutation.mutate({
+      projectId: currentProject.id,
+      returnUrl,
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  const isPro = billing?.subscription.plan === "pro";
+  const usage = billing?.usage;
+  const limits = billing?.limits;
+
+  const formatUsage = (current: number, limit: number) =>
+    `${current.toLocaleString()} / ${limit.toLocaleString()}`;
+
+  const formatStorage = (bytes: number, limitGb: number) => {
+    const gb = bytes / (1024 * 1024 * 1024);
+    return `${gb.toFixed(1)} GB / ${limitGb} GB`;
+  };
+
+  const getUsagePercent = (current: number, limit: number) =>
+    Math.min(100, (current / limit) * 100);
+
   return (
     <div className="space-y-6">
+      {/* Current Plan */}
       <div
         className="border border-border rounded-md p-4"
         style={{ borderWidth: "0.5px" }}
@@ -728,48 +872,192 @@ function BillingSettings() {
         </h3>
         <div className="flex items-center justify-between p-2.5 bg-muted/30 rounded-md">
           <div>
-            <div className="text-sm font-medium text-foreground">Pro Plan</div>
-            <div className="text-xs text-muted-foreground">$49/month</div>
+            <div className="text-sm font-medium text-foreground">
+              {billing?.planDetails.name} Plan
+            </div>
+            <div className="text-xs text-muted-foreground">
+              {isPro ? `$${billing?.planDetails.price}/month` : "Free"}
+            </div>
           </div>
-          <Button variant="outline" size="sm">
-            Change Plan
+          {isPro ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleManageBilling}
+              disabled={portalMutation.isPending}
+            >
+              {portalMutation.isPending ? "Loading..." : "Manage"}
+            </Button>
+          ) : billing?.stripeConfigured ? (
+            <Button
+              size="sm"
+              onClick={() => handleUpgrade("monthly")}
+              disabled={checkoutMutation.isPending}
+            >
+              {checkoutMutation.isPending ? "Loading..." : "Upgrade to Pro"}
+            </Button>
+          ) : (
+            <span className="text-xs text-muted-foreground">
+              Billing not configured
+            </span>
+          )}
+        </div>
+
+        {/* Usage Metrics */}
+        {usage && limits && (
+          <div className="mt-4 space-y-3">
+            {[
+              {
+                label: "Monthly interactions",
+                current: usage.interactions,
+                limit: limits.interactions,
+              },
+              {
+                label: "Session replays",
+                current: usage.replays,
+                limit: limits.replays,
+              },
+              {
+                label: "Team members",
+                current: usage.teamMembers,
+                limit: limits.teamMembers,
+              },
+            ].map((item) => (
+              <div key={item.label}>
+                <div className="flex items-center justify-between text-xs mb-1">
+                  <span className="text-muted-foreground">{item.label}</span>
+                  <span className="text-foreground">
+                    {formatUsage(item.current, item.limit)}
+                  </span>
+                </div>
+                <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                  <div
+                    className={cn(
+                      "h-full rounded-full transition-all",
+                      getUsagePercent(item.current, item.limit) > 90
+                        ? "bg-red-500"
+                        : getUsagePercent(item.current, item.limit) > 75
+                          ? "bg-amber-500"
+                          : "bg-emerald-500"
+                    )}
+                    style={{
+                      width: `${getUsagePercent(item.current, item.limit)}%`,
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+            <div>
+              <div className="flex items-center justify-between text-xs mb-1">
+                <span className="text-muted-foreground">Storage used</span>
+                <span className="text-foreground">
+                  {formatStorage(usage.storageBytes, limits.storageGb)}
+                </span>
+              </div>
+              <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                <div
+                  className={cn(
+                    "h-full rounded-full transition-all",
+                    getUsagePercent(
+                      usage.storageBytes / (1024 * 1024 * 1024),
+                      limits.storageGb
+                    ) > 90
+                      ? "bg-red-500"
+                      : getUsagePercent(
+                            usage.storageBytes / (1024 * 1024 * 1024),
+                            limits.storageGb
+                          ) > 75
+                        ? "bg-amber-500"
+                        : "bg-emerald-500"
+                  )}
+                  style={{
+                    width: `${getUsagePercent(usage.storageBytes / (1024 * 1024 * 1024), limits.storageGb)}%`,
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Upgrade Options (only for free plan) */}
+      {!isPro && billing?.stripeConfigured && (
+        <div
+          className="border border-border rounded-md p-4"
+          style={{ borderWidth: "0.5px" }}
+        >
+          <h3 className="text-sm font-medium text-foreground mb-3">
+            Upgrade to Pro
+          </h3>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="p-3 border border-border rounded-md">
+              <div className="text-sm font-medium text-foreground">Monthly</div>
+              <div className="text-lg font-bold text-foreground">$49/mo</div>
+              <Button
+                size="sm"
+                className="w-full mt-2"
+                onClick={() => handleUpgrade("monthly")}
+                disabled={checkoutMutation.isPending}
+              >
+                Select
+              </Button>
+            </div>
+            <div className="p-3 border border-primary/50 rounded-md bg-primary/5">
+              <div className="flex items-center gap-1.5">
+                <span className="text-sm font-medium text-foreground">
+                  Yearly
+                </span>
+                <span className="text-[10px] bg-primary/20 text-primary px-1.5 py-0.5 rounded">
+                  Save 20%
+                </span>
+              </div>
+              <div className="text-lg font-bold text-foreground">$39/mo</div>
+              <Button
+                size="sm"
+                className="w-full mt-2"
+                onClick={() => handleUpgrade("yearly")}
+                disabled={checkoutMutation.isPending}
+              >
+                Select
+              </Button>
+            </div>
+          </div>
+          <ul className="mt-4 space-y-1.5 text-xs text-muted-foreground">
+            {billing?.planDetails.features.slice(0, 4).map((feature, i) => (
+              <li key={i} className="flex items-center gap-1.5">
+                <Check className="h-3 w-3 text-emerald-500" />
+                {feature}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Payment Management (only for pro plan) */}
+      {isPro && billing?.stripeConfigured && (
+        <div
+          className="border border-border rounded-md p-4"
+          style={{ borderWidth: "0.5px" }}
+        >
+          <h3 className="text-sm font-medium text-foreground mb-3">
+            Payment Method
+          </h3>
+          <p className="text-xs text-muted-foreground mb-3">
+            Manage your payment method and billing details in the Stripe
+            Customer Portal.
+          </p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleManageBilling}
+            disabled={portalMutation.isPending}
+          >
+            {portalMutation.isPending ? "Loading..." : "Manage Payment Method"}
           </Button>
         </div>
+      )}
 
-        <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-          {[
-            { label: "Monthly interactions", value: "2,450 / 10,000" },
-            { label: "Session replays", value: "156 / 1,000" },
-            { label: "Team members", value: "4 / 10" },
-            { label: "Storage used", value: "2.3 GB / 10 GB" },
-          ].map((item) => (
-            <div key={item.label}>
-              <div className="text-xs text-muted-foreground">{item.label}</div>
-              <div className="text-foreground">{item.value}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div
-        className="border border-border rounded-md p-4"
-        style={{ borderWidth: "0.5px" }}
-      >
-        <h3 className="text-sm font-medium text-foreground mb-3">
-          Payment Method
-        </h3>
-        <div className="flex items-center gap-3 p-2.5 bg-muted/30 rounded-md">
-          <span className="text-lg">💳</span>
-          <div className="flex-1">
-            <div className="text-sm text-foreground">•••• •••• •••• 4242</div>
-            <div className="text-xs text-muted-foreground">Expires 12/25</div>
-          </div>
-          <button className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-            Update
-          </button>
-        </div>
-      </div>
-
+      {/* Billing History */}
       <div
         className="border border-border rounded-md p-4"
         style={{ borderWidth: "0.5px" }}
@@ -777,25 +1065,50 @@ function BillingSettings() {
         <h3 className="text-sm font-medium text-foreground mb-3">
           Billing History
         </h3>
-        <div className="text-sm">
-          {[
-            { date: "Jan 1, 2024", amount: "$49.00", status: "Paid" },
-            { date: "Dec 1, 2023", amount: "$49.00", status: "Paid" },
-          ].map((item, i) => (
-            <div
-              key={i}
-              className="flex items-center justify-between py-2 border-b border-border last:border-0"
-              style={{ borderBottomWidth: "0.5px" }}
-            >
-              <span className="text-foreground">{item.date}</span>
-              <span className="text-foreground">{item.amount}</span>
-              <span className="text-xs text-emerald-400">{item.status}</span>
-              <button className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-                Invoice
-              </button>
-            </div>
-          ))}
-        </div>
+        {invoices && invoices.length > 0 ? (
+          <div className="text-sm">
+            {invoices.map((invoice) => (
+              <div
+                key={invoice.id}
+                className="flex items-center justify-between py-2 border-b border-border last:border-0"
+                style={{ borderBottomWidth: "0.5px" }}
+              >
+                <span className="text-foreground">
+                  {invoice.createdAt
+                    ? new Date(invoice.createdAt).toLocaleDateString()
+                    : "—"}
+                </span>
+                <span className="text-foreground">
+                  ${(invoice.amountDue / 100).toFixed(2)}
+                </span>
+                <span
+                  className={cn(
+                    "text-xs",
+                    invoice.status === "paid"
+                      ? "text-emerald-400"
+                      : invoice.status === "open"
+                        ? "text-amber-400"
+                        : "text-muted-foreground"
+                  )}
+                >
+                  {invoice.status}
+                </span>
+                {invoice.invoiceUrl && (
+                  <a
+                    href={invoice.invoiceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Invoice
+                  </a>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-xs text-muted-foreground">No invoices yet.</p>
+        )}
       </div>
     </div>
   );

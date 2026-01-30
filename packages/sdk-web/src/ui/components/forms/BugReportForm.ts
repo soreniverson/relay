@@ -189,6 +189,7 @@ export interface BugReportFormResult {
   getScreenshotBlob: () => Blob | null;
   reset: () => void;
   showSuccess: () => void;
+  setPrefillData: (data: { title?: string; description?: string }) => void;
 }
 
 export function createBugReportForm(
@@ -461,11 +462,22 @@ export function createBugReportForm(
     form.appendChild(successEl);
   };
 
+  // Set prefill data
+  const setPrefillData = (data: { title?: string; description?: string }) => {
+    if (data.title) {
+      titleInput.setValue(data.title);
+    }
+    if (data.description) {
+      descriptionTextarea.setValue(data.description);
+    }
+  };
+
   return {
     element: form,
     setScreenshotPreview,
     getScreenshotBlob: () => screenshotBlob,
     reset,
     showSuccess,
+    setPrefillData,
   };
 }

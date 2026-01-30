@@ -25,6 +25,15 @@ import { Widget, type WidgetView } from "./ui";
 // Re-export types
 export * from "./types";
 
+// Prefill data interface
+interface PrefillData {
+  title?: string;
+  description?: string;
+  email?: string;
+  category?: string;
+  tags?: string[];
+}
+
 class RelaySDK implements RelayInstance {
   private config: RelayConfig | null = null;
   private api: ApiClient | null = null;
@@ -50,6 +59,12 @@ class RelaySDK implements RelayInstance {
   private widgetOpen = false;
   private widgetContainer: HTMLElement | null = null;
   private widget: Widget | null = null;
+
+  // Prefill data
+  private prefillData: PrefillData = {};
+
+  // Custom data
+  private customData: Record<string, unknown> = {};
 
   async init(config: RelayConfig): Promise<void> {
     if (this.initialized) {
@@ -166,6 +181,493 @@ class RelaySDK implements RelayInstance {
   close(): void {
     this.closeWidget();
     this.emit("close");
+  }
+
+  /**
+   * Prefill form data for the next submission
+   * Data is cleared after a successful submission
+   */
+  prefill(data: PrefillData): void {
+    this.prefillData = { ...this.prefillData, ...data };
+    if (this.widget) {
+      this.widget.setPrefillData(this.prefillData);
+    }
+  }
+
+  /**
+   * Clear prefill data
+   */
+  clearPrefill(): void {
+    this.prefillData = {};
+    if (this.widget) {
+      this.widget.setPrefillData({});
+    }
+  }
+
+  /**
+   * Set custom data that will be attached to all interactions
+   */
+  setCustomData(key: string, value: unknown): void {
+    this.customData[key] = value;
+  }
+
+  /**
+   * Get all custom data
+   */
+  getCustomData(): Record<string, unknown> {
+    return { ...this.customData };
+  }
+
+  /**
+   * Clear a specific custom data key
+   */
+  clearCustomData(key: string): void {
+    delete this.customData[key];
+  }
+
+  /**
+   * Clear all custom data
+   */
+  clearAllCustomData(): void {
+    this.customData = {};
+  }
+
+  /**
+   * Show a specific survey by ID
+   */
+  async showSurvey(surveyId: string): Promise<void> {
+    if (!this.api || !this.sessionId) return;
+
+    try {
+      const surveys = (await this.api.getActiveSurveys({
+        sessionId: this.sessionId,
+        userId: this.userId || undefined,
+        url: window.location.href,
+      })) as any[];
+
+      const survey = surveys.find((s: any) => s.id === surveyId);
+      if (survey) {
+        this.renderSurvey(survey);
+      }
+    } catch (error) {
+      console.error("[Relay] Failed to show survey:", error);
+    }
+  }
+
+  /**
+   * Check and show eligible surveys (called after page load or events)
+   */
+  async checkForSurveys(triggerEvent?: string): Promise<void> {
+    if (!this.api || !this.sessionId) return;
+
+    try {
+      const surveys = (await this.api.getActiveSurveys({
+        sessionId: this.sessionId,
+        userId: this.userId || undefined,
+        url: window.location.href,
+        traits: this.customData,
+      } as any)) as any[];
+
+      // Show the first eligible survey
+      if (surveys.length > 0) {
+        // Check localStorage for shown surveys
+        const shownSurveys = this.getShownSurveys();
+        const survey = surveys.find((s: any) => {
+          const targeting = s.targeting as any;
+          if (targeting?.showOnce && shownSurveys.includes(s.id)) {
+            return false;
+          }
+          return true;
+        });
+
+        if (survey) {
+          // Apply showAfterSeconds delay if configured
+          const targeting = survey.targeting as any;
+          const delay = (targeting?.showAfterSeconds || 0) * 1000;
+
+          setTimeout(() => {
+            this.renderSurvey(survey);
+          }, delay);
+        }
+      }
+    } catch (error) {
+      console.warn("[Relay] Failed to check for surveys:", error);
+    }
+  }
+
+  private getShownSurveys(): string[] {
+    try {
+      const stored = localStorage.getItem("relay_shown_surveys");
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  private markSurveyShown(surveyId: string): void {
+    try {
+      const shown = this.getShownSurveys();
+      if (!shown.includes(surveyId)) {
+        shown.push(surveyId);
+        localStorage.setItem("relay_shown_surveys", JSON.stringify(shown));
+      }
+    } catch {
+      // Ignore localStorage errors
+    }
+  }
+
+  private renderSurvey(survey: any): void {
+    // Mark as shown
+    this.markSurveyShown(survey.id);
+
+    // Create overlay
+    const overlay = document.createElement("div");
+    overlay.id = "relay-survey-overlay";
+    overlay.style.cssText = `
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 999999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    `;
+
+    const modal = document.createElement("div");
+    modal.style.cssText = `
+      width: 100%;
+      max-width: 480px;
+      max-height: 90vh;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    `;
+
+    const definition = survey.definition as any;
+    let currentQuestion = 0;
+    const responses: Record<string, unknown> = {};
+
+    const renderContent = () => {
+      modal.innerHTML = "";
+
+      const header = document.createElement("div");
+      header.style.cssText = `
+        padding: 20px 24px;
+        border-bottom: 1px solid #e5e7eb;
+        position: relative;
+      `;
+
+      const closeBtn = document.createElement("button");
+      closeBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>`;
+      closeBtn.style.cssText = `
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        background: none;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        color: #6b7280;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      `;
+      closeBtn.onclick = () => overlay.remove();
+
+      const title = document.createElement("h2");
+      title.textContent = definition.title;
+      title.style.cssText = `
+        font-size: 18px;
+        font-weight: 600;
+        color: #111827;
+        margin: 0 0 4px;
+        padding-right: 32px;
+      `;
+
+      header.appendChild(closeBtn);
+      header.appendChild(title);
+      modal.appendChild(header);
+
+      // Question content
+      const content = document.createElement("div");
+      content.style.cssText = `padding: 24px;`;
+
+      const question = definition.questions[currentQuestion];
+      if (question) {
+        const questionText = document.createElement("p");
+        questionText.textContent = question.text;
+        questionText.style.cssText = `
+          font-size: 15px;
+          font-weight: 500;
+          color: #111827;
+          margin: 0 0 16px;
+        `;
+        content.appendChild(questionText);
+
+        // Render based on question type
+        if (question.type === "nps") {
+          const scale = document.createElement("div");
+          scale.style.cssText = `display: flex; gap: 4px;`;
+
+          for (let i = 0; i <= 10; i++) {
+            const btn = document.createElement("button");
+            btn.textContent = String(i);
+            btn.style.cssText = `
+              flex: 1;
+              padding: 12px 0;
+              background: ${responses[question.id] === i ? "#3b82f6" : "#f3f4f6"};
+              border: 1px solid ${responses[question.id] === i ? "#3b82f6" : "#e5e7eb"};
+              border-radius: 8px;
+              font-family: inherit;
+              font-size: 14px;
+              font-weight: 500;
+              color: ${responses[question.id] === i ? "white" : "#111827"};
+              cursor: pointer;
+            `;
+            btn.onclick = () => {
+              responses[question.id] = i;
+              renderContent();
+            };
+            scale.appendChild(btn);
+          }
+          content.appendChild(scale);
+
+          const labels = document.createElement("div");
+          labels.style.cssText = `display: flex; justify-content: space-between; margin-top: 8px;`;
+          const minLabel = document.createElement("span");
+          minLabel.textContent = question.minLabel || "Not likely";
+          minLabel.style.cssText = `font-size: 12px; color: #6b7280;`;
+          const maxLabel = document.createElement("span");
+          maxLabel.textContent = question.maxLabel || "Very likely";
+          maxLabel.style.cssText = `font-size: 12px; color: #6b7280;`;
+          labels.appendChild(minLabel);
+          labels.appendChild(maxLabel);
+          content.appendChild(labels);
+        } else if (question.type === "text") {
+          const textarea = document.createElement("textarea");
+          textarea.placeholder = question.placeholder || "Your answer...";
+          textarea.value = (responses[question.id] as string) || "";
+          textarea.style.cssText = `
+            width: 100%;
+            padding: 12px 14px;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 14px;
+            color: #111827;
+            resize: vertical;
+            min-height: 100px;
+            box-sizing: border-box;
+          `;
+          textarea.oninput = () => {
+            responses[question.id] = textarea.value;
+          };
+          content.appendChild(textarea);
+        } else if (question.type === "rating") {
+          const ratingContainer = document.createElement("div");
+          ratingContainer.style.cssText = `display: flex; gap: 8px;`;
+          const max = question.max || 5;
+          for (let i = 1; i <= max; i++) {
+            const star = document.createElement("button");
+            star.innerHTML = `<svg width="32" height="32" viewBox="0 0 24 24" fill="${i <= (responses[question.id] as number || 0) ? "#f59e0b" : "#e5e7eb"}"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`;
+            star.style.cssText = `
+              padding: 8px;
+              background: none;
+              border: none;
+              cursor: pointer;
+            `;
+            star.onclick = () => {
+              responses[question.id] = i;
+              renderContent();
+            };
+            ratingContainer.appendChild(star);
+          }
+          content.appendChild(ratingContainer);
+        } else if (question.type === "single_choice" || question.type === "multi_choice") {
+          const choices = document.createElement("div");
+          choices.style.cssText = `display: flex; flex-direction: column; gap: 8px;`;
+
+          (question.options || []).forEach((option: string) => {
+            const isMulti = question.type === "multi_choice";
+            const selected = isMulti
+              ? ((responses[question.id] as string[]) || []).includes(option)
+              : responses[question.id] === option;
+
+            const choice = document.createElement("div");
+            choice.style.cssText = `
+              display: flex;
+              align-items: center;
+              gap: 12px;
+              padding: 12px 14px;
+              background: ${selected ? "rgba(59, 130, 246, 0.05)" : "#f9fafb"};
+              border: 1px solid ${selected ? "#3b82f6" : "#e5e7eb"};
+              border-radius: 10px;
+              cursor: pointer;
+            `;
+
+            const indicator = document.createElement("div");
+            indicator.style.cssText = `
+              width: 18px;
+              height: 18px;
+              border: 2px solid ${selected ? "#3b82f6" : "#e5e7eb"};
+              border-radius: ${isMulti ? "4px" : "50%"};
+              background: ${selected ? "#3b82f6" : "transparent"};
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              color: white;
+              font-size: 12px;
+            `;
+            if (selected) {
+              indicator.textContent = isMulti ? "\u2713" : "";
+            }
+
+            const text = document.createElement("span");
+            text.textContent = option;
+            text.style.cssText = `font-size: 14px; color: #111827;`;
+
+            choice.appendChild(indicator);
+            choice.appendChild(text);
+
+            choice.onclick = () => {
+              if (isMulti) {
+                const current = ((responses[question.id] as string[]) || []).slice();
+                const idx = current.indexOf(option);
+                if (idx >= 0) {
+                  current.splice(idx, 1);
+                } else {
+                  current.push(option);
+                }
+                responses[question.id] = current;
+              } else {
+                responses[question.id] = option;
+              }
+              renderContent();
+            };
+
+            choices.appendChild(choice);
+          });
+
+          content.appendChild(choices);
+        }
+      }
+
+      modal.appendChild(content);
+
+      // Footer
+      const footer = document.createElement("div");
+      footer.style.cssText = `padding: 16px 24px 24px; display: flex; gap: 12px;`;
+
+      if (currentQuestion > 0) {
+        const backBtn = document.createElement("button");
+        backBtn.textContent = "Back";
+        backBtn.style.cssText = `
+          flex: 1;
+          padding: 12px 20px;
+          background: #f3f4f6;
+          border: 1px solid #e5e7eb;
+          border-radius: 10px;
+          font-family: inherit;
+          font-size: 14px;
+          font-weight: 500;
+          color: #111827;
+          cursor: pointer;
+        `;
+        backBtn.onclick = () => {
+          currentQuestion--;
+          renderContent();
+        };
+        footer.appendChild(backBtn);
+      }
+
+      const isLast = currentQuestion === definition.questions.length - 1;
+      const nextBtn = document.createElement("button");
+      nextBtn.textContent = isLast ? "Submit" : "Next";
+      nextBtn.style.cssText = `
+        flex: 1;
+        padding: 12px 20px;
+        background: #3b82f6;
+        border: none;
+        border-radius: 10px;
+        font-family: inherit;
+        font-size: 14px;
+        font-weight: 500;
+        color: white;
+        cursor: pointer;
+      `;
+      nextBtn.onclick = async () => {
+        if (isLast) {
+          nextBtn.disabled = true;
+          nextBtn.textContent = "Submitting...";
+          try {
+            await this.api?.submitSurveyResponse({
+              surveyId: survey.id,
+              sessionId: this.sessionId!,
+              responses,
+            });
+            // Show thank you
+            modal.innerHTML = `
+              <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 48px 24px; text-align: center;">
+                <div style="width: 56px; height: 56px; margin-bottom: 16px; color: #10b981; background: rgba(16, 185, 129, 0.1); border-radius: 50%; padding: 12px;">
+                  <svg viewBox="0 0 24 24" fill="currentColor" style="width: 100%; height: 100%;"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                </div>
+                <h4 style="font-size: 18px; font-weight: 600; color: #111827; margin: 0 0 6px;">Thank you!</h4>
+                <p style="font-size: 14px; color: #6b7280; margin: 0;">${definition.thankYouMessage || "Your feedback has been submitted."}</p>
+              </div>
+            `;
+            setTimeout(() => overlay.remove(), 2000);
+          } catch (error) {
+            nextBtn.disabled = false;
+            nextBtn.textContent = "Submit";
+            console.error("[Relay] Survey submission failed:", error);
+          }
+        } else {
+          currentQuestion++;
+          renderContent();
+        }
+      };
+      footer.appendChild(nextBtn);
+
+      modal.appendChild(footer);
+    };
+
+    renderContent();
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+
+    // Close on overlay click
+    overlay.onclick = (e) => {
+      if (e.target === overlay) {
+        overlay.remove();
+      }
+    };
+  }
+
+  /**
+   * Get the current session ID
+   */
+  getSessionId(): string | null {
+    return this.sessionId;
+  }
+
+  /**
+   * Get the current user ID
+   */
+  getUserId(): string | null {
+    return this.userId;
+  }
+
+  /**
+   * Check if the SDK is initialized
+   */
+  isInitialized(): boolean {
+    return this.initialized;
   }
 
   async captureBug(data: BugReportData): Promise<string> {
