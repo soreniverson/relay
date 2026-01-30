@@ -90,6 +90,9 @@ interface Interaction {
     name: string;
     email: string;
   } | null;
+  linkedIssueProvider?: string | null;
+  linkedIssueId?: string | null;
+  linkedIssueUrl?: string | null;
 }
 
 const typeConfig: Record<
@@ -239,6 +242,9 @@ export default function InboxPage() {
     hasLogs: i.hasLogs,
     aiSummary: i.aiSummary,
     metadata: i.session?.device as Interaction["metadata"],
+    linkedIssueProvider: i.linkedIssueProvider,
+    linkedIssueId: i.linkedIssueId,
+    linkedIssueUrl: i.linkedIssueUrl,
   }));
 
   // Auto-select first item if nothing selected
@@ -545,6 +551,7 @@ function InteractionDetail({
   onAddTags: (id: string, tags: string[]) => void;
   onSendMessage: (id: string, message: string) => void;
 }) {
+  const { currentProject } = useAuthStore();
   const TypeIcon = typeConfig[interaction.type].icon;
   const [showReplayModal, setShowReplayModal] = useState(false);
   const [showLogsModal, setShowLogsModal] = useState(false);
@@ -553,6 +560,47 @@ function InteractionDetail({
   const [selectedTags, setSelectedTags] = useState<string[]>(interaction.tags);
   const [chatMessage, setChatMessage] = useState("");
   const [showTechnical, setShowTechnical] = useState(false);
+  const [showLinearModal, setShowLinearModal] = useState(false);
+  const [selectedTeamId, setSelectedTeamId] = useState<string>("");
+  const [selectedLabelIds, setSelectedLabelIds] = useState<string[]>([]);
+  const [linearPriority, setLinearPriority] = useState<number>(3);
+
+  const utils = trpc.useUtils();
+
+  // Check if Linear is connected
+  const { data: integrations } = trpc.integrations.list.useQuery(
+    { projectId: currentProject?.id || "" },
+    { enabled: !!currentProject?.id }
+  );
+  const linearConnected = integrations?.find(i => i.provider === "linear")?.configured &&
+                          integrations?.find(i => i.provider === "linear")?.enabled;
+
+  // Fetch Linear teams when modal opens
+  const { data: linearTeams, isLoading: teamsLoading } = trpc.integrations.getLinearTeams.useQuery(
+    { projectId: currentProject?.id || "" },
+    { enabled: !!currentProject?.id && showLinearModal && !!linearConnected }
+  );
+
+  // Fetch labels for selected team
+  const { data: linearLabels } = trpc.integrations.getLinearLabels.useQuery(
+    { projectId: currentProject?.id || "", teamId: selectedTeamId },
+    { enabled: !!currentProject?.id && !!selectedTeamId && showLinearModal }
+  );
+
+  // Auto-select first team when teams load
+  useEffect(() => {
+    if (linearTeams && linearTeams.length > 0 && !selectedTeamId) {
+      setSelectedTeamId(linearTeams[0].id);
+    }
+  }, [linearTeams, selectedTeamId]);
+
+  // Create Linear issue mutation
+  const createLinearIssueMutation = trpc.integrations.syncLinearIssue.useMutation({
+    onSuccess: () => {
+      setShowLinearModal(false);
+      utils.interactions.inbox.invalidate();
+    },
+  });
 
   const statuses: InteractionStatus[] = [
     "new",
@@ -579,7 +627,7 @@ function InteractionDetail({
               <h2 className="text-sm font-medium text-foreground leading-snug">
                 {interaction.content?.title || "Untitled"}
               </h2>
-              {/* Row 2: User + Timestamp */}
+              {/* Row 2: User + Timestamp + Linked Issue */}
               <div className="flex items-center gap-1.5 mt-0.5">
                 <span className="text-xs text-muted-foreground">
                   {interaction.user?.name ||
@@ -590,6 +638,20 @@ function InteractionDetail({
                 <span className="text-xs text-muted-foreground/70">
                   {formatRelativeTime(interaction.createdAt)}
                 </span>
+                {interaction.linkedIssueId && interaction.linkedIssueUrl && (
+                  <>
+                    <span className="text-muted-foreground/40">·</span>
+                    <a
+                      href={interaction.linkedIssueUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-violet-400 hover:text-violet-300 transition-colors flex items-center gap-1"
+                    >
+                      <span>📋</span>
+                      {interaction.linkedIssueId}
+                    </a>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -616,10 +678,20 @@ function InteractionDetail({
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem>
-                  <ExternalLink className="mr-2 h-4 w-4" />
-                  Create Linear Issue
-                </DropdownMenuItem>
+                {linearConnected && !interaction.linkedIssueId && (
+                  <DropdownMenuItem onClick={() => setShowLinearModal(true)}>
+                    <ExternalLink className="mr-2 h-4 w-4" />
+                    Create Linear Issue
+                  </DropdownMenuItem>
+                )}
+                {interaction.linkedIssueUrl && (
+                  <DropdownMenuItem asChild>
+                    <a href={interaction.linkedIssueUrl} target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="mr-2 h-4 w-4" />
+                      View in Linear ({interaction.linkedIssueId})
+                    </a>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={() => onDelete(interaction.id)}
@@ -1004,6 +1076,156 @@ function InteractionDetail({
                 Save
               </Button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create Linear Issue Modal */}
+      {showLinearModal && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+          onClick={() => setShowLinearModal(false)}
+        >
+          <div
+            className="bg-card border border-border rounded-lg p-4 max-w-md w-full mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-medium text-foreground">Create Linear Issue</h3>
+              <button
+                onClick={() => setShowLinearModal(false)}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <span className="text-lg leading-none">×</span>
+              </button>
+            </div>
+
+            {teamsLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {/* Team Selection */}
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1.5 block">Team</label>
+                  <select
+                    value={selectedTeamId}
+                    onChange={(e) => {
+                      setSelectedTeamId(e.target.value);
+                      setSelectedLabelIds([]);
+                    }}
+                    className="w-full px-3 py-2 bg-background border border-border rounded-md text-sm"
+                  >
+                    {linearTeams?.map((team) => (
+                      <option key={team.id} value={team.id}>
+                        {team.name} ({team.key})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Priority Selection */}
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1.5 block">Priority</label>
+                  <select
+                    value={linearPriority}
+                    onChange={(e) => setLinearPriority(Number(e.target.value))}
+                    className="w-full px-3 py-2 bg-background border border-border rounded-md text-sm"
+                  >
+                    <option value={0}>No priority</option>
+                    <option value={1}>Urgent</option>
+                    <option value={2}>High</option>
+                    <option value={3}>Normal</option>
+                    <option value={4}>Low</option>
+                  </select>
+                </div>
+
+                {/* Labels Selection */}
+                {linearLabels && linearLabels.length > 0 && (
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1.5 block">Labels</label>
+                    <div className="flex flex-wrap gap-1.5">
+                      {linearLabels.map((label) => (
+                        <button
+                          key={label.id}
+                          onClick={() => {
+                            setSelectedLabelIds((prev) =>
+                              prev.includes(label.id)
+                                ? prev.filter((id) => id !== label.id)
+                                : [...prev, label.id]
+                            );
+                          }}
+                          className={cn(
+                            "px-2 py-1 rounded text-xs transition-colors",
+                            selectedLabelIds.includes(label.id)
+                              ? "bg-foreground text-background"
+                              : "bg-muted text-muted-foreground hover:bg-accent"
+                          )}
+                          style={{
+                            borderLeft: `3px solid ${label.color}`,
+                          }}
+                        >
+                          {label.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Issue Preview */}
+                <div className="p-3 bg-muted/30 rounded-md">
+                  <div className="text-xs text-muted-foreground mb-1">Preview</div>
+                  <div className="text-sm font-medium text-foreground">
+                    {interaction.content?.title || interaction.contentText?.slice(0, 100) || "Untitled"}
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                    {interaction.content?.description || interaction.contentText || "No description"}
+                  </div>
+                </div>
+
+                {/* Error Message */}
+                {createLinearIssueMutation.error && (
+                  <div className="text-xs text-red-400">
+                    {createLinearIssueMutation.error.message}
+                  </div>
+                )}
+
+                {/* Actions */}
+                <div className="flex justify-end gap-2 pt-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowLinearModal(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      if (!currentProject?.id || !selectedTeamId) return;
+                      createLinearIssueMutation.mutate({
+                        projectId: currentProject.id,
+                        interactionId: interaction.id,
+                        teamId: selectedTeamId,
+                        labelIds: selectedLabelIds.length > 0 ? selectedLabelIds : undefined,
+                        priority: linearPriority,
+                      });
+                    }}
+                    disabled={!selectedTeamId || createLinearIssueMutation.isPending}
+                  >
+                    {createLinearIssueMutation.isPending ? (
+                      <>
+                        <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                        Creating...
+                      </>
+                    ) : (
+                      "Create Issue"
+                    )}
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -142,6 +142,9 @@ export const interactionsRouter = router({
           hasLogs: i._count.logs > 0,
           aiSummary: i.aiSummary,
           aiLabels: i.aiLabels,
+          linkedIssueProvider: i.linkedIssueProvider,
+          linkedIssueId: i.linkedIssueId,
+          linkedIssueUrl: i.linkedIssueUrl,
         })),
         pagination: {
           page,

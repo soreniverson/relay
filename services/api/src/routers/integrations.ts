@@ -702,6 +702,112 @@ export const integrationsRouter = router({
       }));
     }),
 
+  // Sync status from Linear (manual refresh)
+  syncLinearStatus: projectProcedure
+    .input(
+      z.object({
+        projectId: z.string().uuid(),
+        interactionId: z.string().uuid(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      const integration = await ctx.prisma.integration.findUnique({
+        where: {
+          projectId_provider: {
+            projectId: ctx.projectId,
+            provider: "linear",
+          },
+        },
+      });
+
+      if (!integration || !integration.enabled) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Linear integration is not enabled",
+        });
+      }
+
+      const config = integration.config as { accessToken?: string };
+      if (!config.accessToken) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Linear access token not configured",
+        });
+      }
+
+      // Find the integration link
+      const link = await ctx.prisma.integrationLink.findFirst({
+        where: {
+          projectId: ctx.projectId,
+          internalId: input.interactionId,
+          internalType: "interaction",
+          provider: "linear",
+        },
+      });
+
+      if (!link) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "No linked Linear issue found for this interaction",
+        });
+      }
+
+      // Fetch current issue state from Linear
+      const linearClient = new LinearClient({ accessToken: config.accessToken });
+      const issue = await linearClient.getIssue(link.externalId);
+
+      if (!issue) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Linear issue not found - it may have been deleted",
+        });
+      }
+
+      // Map Linear state to Relay status
+      const newStatus = mapLinearStateToRelayStatus(issue.state.type);
+
+      // Get current interaction
+      const interaction = await ctx.prisma.interaction.findUnique({
+        where: { id: input.interactionId },
+      });
+
+      if (!interaction) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Interaction not found",
+        });
+      }
+
+      // Update interaction status if changed
+      if (interaction.status !== newStatus) {
+        await ctx.prisma.interaction.update({
+          where: { id: input.interactionId },
+          data: { status: newStatus },
+        });
+
+        ctx.logger.info(
+          {
+            interactionId: input.interactionId,
+            oldStatus: interaction.status,
+            newStatus,
+            linearIssueId: issue.identifier,
+          },
+          "Interaction status synced from Linear (manual)",
+        );
+      }
+
+      return {
+        synced: interaction.status !== newStatus,
+        previousStatus: interaction.status,
+        currentStatus: newStatus,
+        linearIssue: {
+          identifier: issue.identifier,
+          state: issue.state.name,
+          url: issue.url,
+        },
+      };
+    }),
+
   // Jira integration stub
   connectJira: projectProcedure
     .input(
