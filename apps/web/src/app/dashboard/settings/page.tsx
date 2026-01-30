@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuthStore } from "@/stores/auth";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
@@ -568,11 +568,56 @@ const integrationMeta: Record<string, { icon: string; description: string; displ
 
 function IntegrationsSettings() {
   const { currentProject } = useAuthStore();
+  const [connectingProvider, setConnectingProvider] = useState<string | null>(null);
 
-  const { data: integrations, isLoading } = trpc.integrations.list.useQuery(
+  const { data: integrations, isLoading, refetch } = trpc.integrations.list.useQuery(
     { projectId: currentProject?.id || "" },
     { enabled: !!currentProject?.id }
   );
+
+  const connectLinearMutation = trpc.integrations.connectLinear.useMutation({
+    onSuccess: () => {
+      refetch();
+      setConnectingProvider(null);
+    },
+    onError: (error) => {
+      console.error("Failed to connect Linear:", error);
+      setConnectingProvider(null);
+    },
+  });
+
+  // Handle OAuth callback from URL params
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code");
+    const state = params.get("state");
+
+    if (code && state === "linear" && currentProject?.id && !connectingProvider) {
+      setConnectingProvider("linear");
+      // Clean URL
+      window.history.replaceState({}, "", window.location.pathname);
+      // Exchange code for token
+      connectLinearMutation.mutate({
+        projectId: currentProject.id,
+        code,
+        redirectUri: `${window.location.origin}/dashboard/settings`,
+      });
+    }
+  }, [currentProject?.id]);
+
+  const handleConnectLinear = () => {
+    const clientId = process.env.NEXT_PUBLIC_LINEAR_CLIENT_ID;
+    if (!clientId) {
+      // Fallback: try to initiate OAuth anyway, the env var might be server-side only
+      const redirectUri = encodeURIComponent(`${window.location.origin}/dashboard/settings`);
+      const linearAuthUrl = `https://linear.app/oauth/authorize?client_id=7e171e7a28cb2487d9773452b6ded3bc&redirect_uri=${redirectUri}&response_type=code&scope=read,write&state=linear`;
+      window.location.href = linearAuthUrl;
+      return;
+    }
+    const redirectUri = encodeURIComponent(`${window.location.origin}/dashboard/settings`);
+    const linearAuthUrl = `https://linear.app/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=read,write&state=linear`;
+    window.location.href = linearAuthUrl;
+  };
 
   if (isLoading) {
     return (
@@ -624,8 +669,22 @@ function IntegrationsSettings() {
                     </Button>
                   </div>
                 ) : isAvailable ? (
-                  <Button variant="outline" size="sm" className="h-7 text-xs">
-                    Connect
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs"
+                    onClick={() => {
+                      if (integration.provider === "linear") {
+                        handleConnectLinear();
+                      }
+                    }}
+                    disabled={connectingProvider === integration.provider}
+                  >
+                    {connectingProvider === integration.provider ? (
+                      <><Loader2 className="h-3 w-3 animate-spin mr-1" /> Connecting...</>
+                    ) : (
+                      "Connect"
+                    )}
                   </Button>
                 ) : (
                   <span className="text-xs text-muted-foreground">Coming soon</span>
