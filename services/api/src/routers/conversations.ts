@@ -2,6 +2,7 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { router, projectProcedure, sdkProcedure } from "../lib/trpc";
 import { pubsub } from "../lib/redis";
+import { openai } from "../lib/openai";
 import {
   paginationSchema,
   conversationStatusSchema,
@@ -493,5 +494,187 @@ export const conversationsRouter = router({
       });
 
       return { success: true };
+    }),
+
+  // ============================================================================
+  // AI COPILOT FEATURES
+  // ============================================================================
+
+  // Get AI status
+  aiStatus: projectProcedure
+    .input(z.object({ projectId: z.string().uuid() }))
+    .query(() => ({
+      available: openai.isConfigured,
+      features: {
+        suggestReplies: openai.isConfigured,
+        articleSuggestions: true,
+      },
+    })),
+
+  // Get suggested replies for a conversation
+  suggestReplies: projectProcedure
+    .input(
+      z.object({
+        projectId: z.string().uuid(),
+        conversationId: z.string().uuid(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      if (!openai.isConfigured) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message:
+            "OpenAI is not configured. Add OPENAI_API_KEY to enable AI features.",
+        });
+      }
+
+      // Get conversation with messages
+      const conversation = await ctx.prisma.conversation.findUnique({
+        where: { id: input.conversationId, projectId: ctx.projectId },
+        include: {
+          messages: {
+            orderBy: { createdAt: "asc" },
+            take: 20, // Last 20 messages for context
+          },
+        },
+      });
+
+      if (!conversation) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Conversation not found",
+        });
+      }
+
+      // Get project name
+      const project = await ctx.prisma.project.findUnique({
+        where: { id: ctx.projectId },
+        select: { name: true },
+      });
+
+      // Get relevant articles for context
+      const lastUserMessage = [...conversation.messages]
+        .reverse()
+        .find((m) => m.direction === "inbound");
+
+      let relevantArticles: Array<{ title: string; excerpt: string }> = [];
+      if (lastUserMessage) {
+        const articles = await ctx.prisma.article.findMany({
+          where: {
+            projectId: ctx.projectId,
+            status: "published",
+            OR: [
+              {
+                title: {
+                  contains: lastUserMessage.body.slice(0, 50),
+                  mode: "insensitive",
+                },
+              },
+              {
+                content: {
+                  contains: lastUserMessage.body.slice(0, 50),
+                  mode: "insensitive",
+                },
+              },
+            ],
+          },
+          select: { title: true, excerpt: true },
+          take: 3,
+        });
+        relevantArticles = articles.map((a) => ({
+          title: a.title,
+          excerpt: a.excerpt || a.title,
+        }));
+      }
+
+      // Format conversation history
+      const conversationHistory = conversation.messages.map((m) => ({
+        role:
+          m.direction === "inbound" ? ("user" as const) : ("agent" as const),
+        content: m.body,
+      }));
+
+      // Generate suggestions
+      const result = await openai.suggestReplies({
+        projectName: project?.name || "this product",
+        conversationHistory,
+        relevantArticles,
+      });
+
+      ctx.logger.info(
+        {
+          conversationId: input.conversationId,
+          suggestionsCount: result.suggestions.length,
+        },
+        "Generated reply suggestions",
+      );
+
+      return result;
+    }),
+
+  // Get relevant articles for a conversation
+  getRelevantArticles: projectProcedure
+    .input(
+      z.object({
+        projectId: z.string().uuid(),
+        conversationId: z.string().uuid(),
+      }),
+    )
+    .query(async ({ input, ctx }) => {
+      // Get conversation with last few messages
+      const conversation = await ctx.prisma.conversation.findUnique({
+        where: { id: input.conversationId, projectId: ctx.projectId },
+        include: {
+          messages: {
+            where: { direction: "inbound" },
+            orderBy: { createdAt: "desc" },
+            take: 3,
+          },
+        },
+      });
+
+      if (!conversation) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Conversation not found",
+        });
+      }
+
+      // Extract keywords from user messages
+      const userMessages = conversation.messages.map((m) => m.body).join(" ");
+
+      // Simple keyword extraction: take significant words
+      const keywords = userMessages
+        .toLowerCase()
+        .split(/\s+/)
+        .filter((word) => word.length > 3)
+        .slice(0, 10);
+
+      if (keywords.length === 0) {
+        return { articles: [] };
+      }
+
+      // Search articles matching any keyword
+      const articles = await ctx.prisma.article.findMany({
+        where: {
+          projectId: ctx.projectId,
+          status: "published",
+          OR: keywords.map((keyword) => ({
+            OR: [
+              { title: { contains: keyword, mode: "insensitive" as const } },
+              { content: { contains: keyword, mode: "insensitive" as const } },
+            ],
+          })),
+        },
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          excerpt: true,
+        },
+        take: 5,
+      });
+
+      return { articles };
     }),
 });

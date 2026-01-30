@@ -66,7 +66,7 @@ export function getPlanLimits(plan: BillingPlanKey): PlanLimits {
 export function isWithinLimit(
   usage: UsageData,
   plan: BillingPlanKey,
-  metric: keyof PlanLimits
+  metric: keyof PlanLimits,
 ): boolean {
   const limits = getPlanLimits(plan);
   switch (metric) {
@@ -86,7 +86,7 @@ export function isWithinLimit(
 export function getUsagePercentage(
   usage: UsageData,
   plan: BillingPlanKey,
-  metric: keyof PlanLimits
+  metric: keyof PlanLimits,
 ): number {
   const limits = getPlanLimits(plan);
   switch (metric) {
@@ -107,7 +107,7 @@ export function getUsagePercentage(
 export function formatUsage(
   usage: UsageData,
   plan: BillingPlanKey,
-  metric: keyof PlanLimits
+  metric: keyof PlanLimits,
 ): string {
   const limits = getPlanLimits(plan);
   switch (metric) {

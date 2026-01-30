@@ -446,15 +446,16 @@ export const integrationsRouter = router({
       }
 
       // Add Relay link
-      const dashboardUrl =
-        process.env.DASHBOARD_URL || "https://app.relay.dev";
+      const dashboardUrl = process.env.DASHBOARD_URL || "https://app.relay.dev";
       const relayUrl = `${dashboardUrl}/dashboard/inbox?id=${interaction.id}`;
       descriptionParts.push(`\n[View in Relay](${relayUrl})`);
 
       const description = descriptionParts.join("\n");
 
       // Create issue in Linear
-      const linearClient = new LinearClient({ accessToken: config.accessToken });
+      const linearClient = new LinearClient({
+        accessToken: config.accessToken,
+      });
       let issue;
       try {
         issue = await linearClient.createIssue({
@@ -572,10 +573,7 @@ export const integrationsRouter = router({
         });
       }
 
-      ctx.logger.info(
-        { projectId: ctx.projectId },
-        "Slack notification sent",
-      );
+      ctx.logger.info({ projectId: ctx.projectId }, "Slack notification sent");
 
       return { success: true };
     }),
@@ -608,7 +606,9 @@ export const integrationsRouter = router({
         });
       }
 
-      const linearClient = new LinearClient({ accessToken: config.accessToken });
+      const linearClient = new LinearClient({
+        accessToken: config.accessToken,
+      });
       return await linearClient.getTeams();
     }),
 
@@ -640,7 +640,9 @@ export const integrationsRouter = router({
         });
       }
 
-      const linearClient = new LinearClient({ accessToken: config.accessToken });
+      const linearClient = new LinearClient({
+        accessToken: config.accessToken,
+      });
       return await linearClient.getLabels(input.teamId);
     }),
 
@@ -672,7 +674,9 @@ export const integrationsRouter = router({
         });
       }
 
-      const linearClient = new LinearClient({ accessToken: config.accessToken });
+      const linearClient = new LinearClient({
+        accessToken: config.accessToken,
+      });
       return await linearClient.getWorkflowStates(input.teamId);
     }),
 
@@ -753,7 +757,9 @@ export const integrationsRouter = router({
       }
 
       // Fetch current issue state from Linear
-      const linearClient = new LinearClient({ accessToken: config.accessToken });
+      const linearClient = new LinearClient({
+        accessToken: config.accessToken,
+      });
       const issue = await linearClient.getIssue(link.externalId);
 
       if (!issue) {

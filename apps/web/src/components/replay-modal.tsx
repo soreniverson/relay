@@ -27,7 +27,7 @@ export function ReplayModal({
       },
       {
         enabled: !!currentProject?.id && !replayId,
-      }
+      },
     );
 
   const effectiveReplayId = replayId || interaction?.replay?.id;
@@ -44,7 +44,7 @@ export function ReplayModal({
     },
     {
       enabled: !!currentProject?.id && !!effectiveReplayId,
-    }
+    },
   );
 
   const isLoading = interactionLoading || replayLoading;
@@ -100,9 +100,7 @@ export function ReplayModal({
                 <p className="text-sm text-red-400 mb-1">
                   Failed to load replay
                 </p>
-                <p className="text-xs text-muted-foreground">
-                  {error.message}
-                </p>
+                <p className="text-xs text-muted-foreground">{error.message}</p>
               </div>
             </div>
           ) : !effectiveReplayId ? (

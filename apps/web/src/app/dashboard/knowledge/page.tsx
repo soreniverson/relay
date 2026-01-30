@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useAuthStore } from "@/stores/auth";
+import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,15 +32,7 @@ import {
   ExternalLink,
   Folder,
   ChevronDown,
-  Code,
-  BookOpen,
-  Lightbulb,
-  Rocket,
-  Settings,
-  HelpCircle,
-  Zap,
-  Shield,
-  type LucideIcon,
+  Loader2,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -47,121 +41,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { ApiError, EmptyState } from "@/components/api-error";
 
-type ArticleIconType =
-  | "FileText"
-  | "Code"
-  | "BookOpen"
-  | "Lightbulb"
-  | "Rocket"
-  | "Settings"
-  | "HelpCircle"
-  | "Zap"
-  | "Shield";
-
-const iconOptions: {
-  value: ArticleIconType;
-  icon: LucideIcon;
-  label: string;
-}[] = [
-  { value: "FileText", icon: FileText, label: "Document" },
-  { value: "Code", icon: Code, label: "Code" },
-  { value: "BookOpen", icon: BookOpen, label: "Guide" },
-  { value: "Lightbulb", icon: Lightbulb, label: "Tip" },
-  { value: "Rocket", icon: Rocket, label: "Getting Started" },
-  { value: "Settings", icon: Settings, label: "Settings" },
-  { value: "HelpCircle", icon: HelpCircle, label: "FAQ" },
-  { value: "Zap", icon: Zap, label: "Quick Start" },
-  { value: "Shield", icon: Shield, label: "Security" },
-];
-
-const iconMap: Record<ArticleIconType, LucideIcon> = {
-  FileText,
-  Code,
-  BookOpen,
-  Lightbulb,
-  Rocket,
-  Settings,
-  HelpCircle,
-  Zap,
-  Shield,
-};
-
-interface Article {
-  id: string;
-  title: string;
-  content: string;
-  slug: string;
-  status: "published" | "draft" | "archived";
-  category: string;
-  icon: ArticleIconType;
-  viewCount: number;
-  helpfulCount: number;
-  updatedAt: string;
-}
-
-interface Category {
-  id: string;
-  name: string;
-}
-
-const initialArticles: Article[] = [
-  {
-    id: "1",
-    title: "Getting Started with Relay",
-    content: "Learn how to set up Relay in your application...",
-    slug: "getting-started",
-    status: "published",
-    category: "Onboarding",
-    icon: "Rocket",
-    viewCount: 1243,
-    helpfulCount: 89,
-    updatedAt: "2024-01-15",
-  },
-  {
-    id: "2",
-    title: "Setting Up Your First Project",
-    content: "Step-by-step guide to creating your first project...",
-    slug: "first-project",
-    status: "published",
-    category: "Onboarding",
-    icon: "BookOpen",
-    viewCount: 856,
-    helpfulCount: 62,
-    updatedAt: "2024-01-14",
-  },
-  {
-    id: "3",
-    title: "Understanding Feedback Collection",
-    content: "How feedback flows from users to your dashboard...",
-    slug: "feedback-collection",
-    status: "draft",
-    category: "Features",
-    icon: "Lightbulb",
-    viewCount: 0,
-    helpfulCount: 0,
-    updatedAt: "2024-01-16",
-  },
-  {
-    id: "4",
-    title: "API Documentation",
-    content: "Complete API reference for developers...",
-    slug: "api-docs",
-    status: "published",
-    category: "Developers",
-    icon: "Code",
-    viewCount: 2341,
-    helpfulCount: 156,
-    updatedAt: "2024-01-12",
-  },
-];
-
-const initialCategories: Category[] = [
-  { id: "1", name: "Onboarding" },
-  { id: "2", name: "Features" },
-  { id: "3", name: "Developers" },
-  { id: "4", name: "Troubleshooting" },
-];
+type ArticleStatus = "draft" | "published" | "archived";
 
 const statusColors = {
   published: "bg-emerald-500/10 text-emerald-400",
@@ -175,103 +57,133 @@ const statusLabels = {
   archived: "Archived",
 };
 
+function generateSlug(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
 export default function KnowledgePage() {
-  const [articles, setArticles] = useState(initialArticles);
-  const [categories, setCategories] = useState(initialCategories);
+  const { currentProject } = useAuthStore();
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<ArticleStatus | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isCreateCategoryOpen, setIsCreateCategoryOpen] = useState(false);
-  const [newArticle, setNewArticle] = useState<{
-    title: string;
-    content: string;
-    category: string;
-    status: Article["status"];
-  }>({
+  const [newArticle, setNewArticle] = useState({
     title: "",
     content: "",
-    category: "Onboarding",
-    status: "draft",
+    categoryId: "",
+    status: "draft" as ArticleStatus,
   });
   const [newCategoryName, setNewCategoryName] = useState("");
 
-  const filteredArticles = articles.filter((article) => {
-    if (search && !article.title.toLowerCase().includes(search.toLowerCase())) {
-      return false;
-    }
-    if (selectedCategory && article.category !== selectedCategory) {
-      return false;
-    }
-    if (statusFilter && article.status !== statusFilter) {
-      return false;
-    }
-    return true;
+  const utils = trpc.useUtils();
+
+  // Fetch articles
+  const {
+    data: articlesData,
+    isLoading,
+    error,
+    refetch,
+  } = trpc.knowledge.listArticles.useQuery(
+    {
+      projectId: currentProject?.id || "",
+      status: statusFilter || undefined,
+      categoryId: selectedCategory || undefined,
+      search: search || undefined,
+    },
+    { enabled: !!currentProject?.id },
+  );
+
+  // Fetch categories
+  const { data: categories } = trpc.knowledge.listCategories.useQuery(
+    { projectId: currentProject?.id || "" },
+    { enabled: !!currentProject?.id },
+  );
+
+  // Create article mutation
+  const createArticleMutation = trpc.knowledge.createArticle.useMutation({
+    onSuccess: () => {
+      utils.knowledge.listArticles.invalidate();
+      setNewArticle({
+        title: "",
+        content: "",
+        categoryId: "",
+        status: "draft",
+      });
+      setIsCreateOpen(false);
+    },
+  });
+
+  // Update article mutation
+  const updateArticleMutation = trpc.knowledge.updateArticle.useMutation({
+    onSuccess: () => {
+      utils.knowledge.listArticles.invalidate();
+    },
+  });
+
+  // Delete article mutation
+  const deleteArticleMutation = trpc.knowledge.deleteArticle.useMutation({
+    onSuccess: () => {
+      utils.knowledge.listArticles.invalidate();
+    },
+  });
+
+  // Create category mutation
+  const createCategoryMutation = trpc.knowledge.createCategory.useMutation({
+    onSuccess: () => {
+      utils.knowledge.listCategories.invalidate();
+      setNewCategoryName("");
+      setIsCreateCategoryOpen(false);
+    },
   });
 
   const handleCreateArticle = () => {
-    if (!newArticle.title.trim()) return;
-
-    const article: Article = {
-      id: Date.now().toString(),
+    if (!currentProject?.id || !newArticle.title.trim()) return;
+    createArticleMutation.mutate({
+      projectId: currentProject.id,
       title: newArticle.title,
+      slug: generateSlug(newArticle.title),
       content: newArticle.content,
-      slug: newArticle.title.toLowerCase().replace(/\s+/g, "-"),
+      categoryId: newArticle.categoryId || undefined,
       status: newArticle.status,
-      category: newArticle.category,
-      icon: "FileText",
-      viewCount: 0,
-      helpfulCount: 0,
-      updatedAt: new Date().toISOString().split("T")[0],
-    };
-
-    setArticles((prev) => [article, ...prev]);
-    setNewArticle({
-      title: "",
-      content: "",
-      category: "Onboarding",
-      status: "draft",
     });
-    setIsCreateOpen(false);
   };
 
   const handleCreateCategory = () => {
-    if (!newCategoryName.trim()) return;
-
-    const category: Category = {
-      id: Date.now().toString(),
+    if (!currentProject?.id || !newCategoryName.trim()) return;
+    createCategoryMutation.mutate({
+      projectId: currentProject.id,
       name: newCategoryName,
-    };
-
-    setCategories((prev) => [...prev, category]);
-    setNewCategoryName("");
-    setIsCreateCategoryOpen(false);
+      slug: generateSlug(newCategoryName),
+    });
   };
 
   const handleDeleteArticle = (id: string) => {
-    setArticles((prev) => prev.filter((a) => a.id !== id));
+    deleteArticleMutation.mutate({ id });
   };
 
-  const handleToggleStatus = (id: string) => {
-    setArticles((prev) =>
-      prev.map((article) =>
-        article.id === id
-          ? {
-              ...article,
-              status: article.status === "published" ? "draft" : "published",
-            }
-          : article,
-      ),
-    );
+  const handleToggleStatus = (id: string, currentStatus: ArticleStatus) => {
+    const newStatus = currentStatus === "published" ? "draft" : "published";
+    updateArticleMutation.mutate({ id, status: newStatus });
   };
 
-  const handleIconChange = (id: string, icon: ArticleIconType) => {
-    setArticles((prev) =>
-      prev.map((article) =>
-        article.id === id ? { ...article, icon } : article,
-      ),
+  const articles = articlesData?.articles || [];
+
+  if (!currentProject) {
+    return (
+      <EmptyState
+        title="No project selected"
+        description="Please select a project to view the knowledge base"
+      />
     );
-  };
+  }
+
+  if (error) {
+    return <ApiError error={error} onRetry={refetch} />;
+  }
 
   return (
     <div className="flex flex-col h-full">
@@ -282,7 +194,12 @@ export default function KnowledgePage() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => window.open("/help", "_blank")}
+            onClick={() =>
+              window.open(
+                `/help/${currentProject.slug || currentProject.id}`,
+                "_blank",
+              )
+            }
             className="h-7 w-7 p-0 text-muted-foreground"
           >
             <ExternalLink className="h-4 w-4" />
@@ -337,17 +254,17 @@ export default function KnowledgePage() {
                       Category
                     </Label>
                     <Select
-                      value={newArticle.category}
+                      value={newArticle.categoryId}
                       onValueChange={(value) =>
-                        setNewArticle({ ...newArticle, category: value })
+                        setNewArticle({ ...newArticle, categoryId: value })
                       }
                     >
                       <SelectTrigger>
-                        <SelectValue />
+                        <SelectValue placeholder="Select category" />
                       </SelectTrigger>
                       <SelectContent>
-                        {categories.map((cat) => (
-                          <SelectItem key={cat.id} value={cat.name}>
+                        {categories?.map((cat) => (
+                          <SelectItem key={cat.id} value={cat.id}>
                             {cat.name}
                           </SelectItem>
                         ))}
@@ -363,7 +280,7 @@ export default function KnowledgePage() {
                       onValueChange={(value) =>
                         setNewArticle({
                           ...newArticle,
-                          status: value as Article["status"],
+                          status: value as ArticleStatus,
                         })
                       }
                     >
@@ -389,8 +306,13 @@ export default function KnowledgePage() {
                 <Button
                   size="sm"
                   onClick={handleCreateArticle}
-                  disabled={!newArticle.title.trim()}
+                  disabled={
+                    !newArticle.title.trim() || createArticleMutation.isPending
+                  }
                 >
+                  {createArticleMutation.isPending && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
                   Create
                 </Button>
               </DialogFooter>
@@ -451,8 +373,14 @@ export default function KnowledgePage() {
                   <Button
                     size="sm"
                     onClick={handleCreateCategory}
-                    disabled={!newCategoryName.trim()}
+                    disabled={
+                      !newCategoryName.trim() ||
+                      createCategoryMutation.isPending
+                    }
                   >
+                    {createCategoryMutation.isPending && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
                     Create
                   </Button>
                 </DialogFooter>
@@ -472,16 +400,16 @@ export default function KnowledgePage() {
               <Folder className="h-4 w-4" />
               <span className="flex-1 text-left">All Articles</span>
               <span className="text-xs text-muted-foreground/50">
-                {articles.length}
+                {articlesData?.pagination.total || 0}
               </span>
             </button>
-            {categories.map((category) => (
+            {categories?.map((category) => (
               <button
                 key={category.id}
-                onClick={() => setSelectedCategory(category.name)}
+                onClick={() => setSelectedCategory(category.id)}
                 className={cn(
                   "w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-colors",
-                  selectedCategory === category.name
+                  selectedCategory === category.id
                     ? "bg-accent/40 text-foreground"
                     : "text-muted-foreground hover:bg-accent/30 hover:text-foreground",
                 )}
@@ -489,7 +417,7 @@ export default function KnowledgePage() {
                 <Folder className="h-4 w-4" />
                 <span className="flex-1 text-left">{category.name}</span>
                 <span className="text-xs text-muted-foreground/50">
-                  {articles.filter((a) => a.category === category.name).length}
+                  {category._count?.articles || 0}
                 </span>
               </button>
             ))}
@@ -515,9 +443,7 @@ export default function KnowledgePage() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
-                  {statusFilter
-                    ? statusLabels[statusFilter as keyof typeof statusLabels]
-                    : "Status"}
+                  {statusFilter ? statusLabels[statusFilter] : "Status"}
                   <ChevronDown className="h-3 w-3" />
                 </button>
               </DropdownMenuTrigger>
@@ -531,7 +457,7 @@ export default function KnowledgePage() {
                 {Object.entries(statusLabels).map(([value, label]) => (
                   <DropdownMenuItem
                     key={value}
-                    onClick={() => setStatusFilter(value)}
+                    onClick={() => setStatusFilter(value as ArticleStatus)}
                   >
                     {label}
                     {statusFilter === value && (
@@ -545,121 +471,99 @@ export default function KnowledgePage() {
 
           {/* Articles List */}
           <div className="flex-1 overflow-auto">
-            {filteredArticles.length === 0 ? (
+            {isLoading ? (
+              <div className="flex items-center justify-center h-full">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : articles.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
                 <FileText className="h-12 w-12 mb-4 opacity-50" />
                 <p>No articles found</p>
-                <p className="text-sm">Try adjusting your filters</p>
+                <p className="text-sm">
+                  Create your first article to get started
+                </p>
               </div>
             ) : (
-              filteredArticles.map((article) => {
-                const IconComponent = iconMap[article.icon];
-                return (
-                  <div
-                    key={article.id}
-                    className="border-b border-border px-4 py-3 hover:bg-accent/30 transition-colors cursor-pointer"
-                    style={{ borderBottomWidth: "0.5px" }}
-                  >
-                    <div className="flex items-center gap-3">
-                      {/* Icon with picker */}
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button className="shrink-0 h-8 w-8 rounded-md bg-muted/50 border border-border/50 flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors focus:outline-none">
-                            <IconComponent className="h-4 w-4" />
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent
-                          align="start"
-                          className="p-1.5 min-w-0"
-                        >
-                          <div className="grid grid-cols-3 gap-1">
-                            {iconOptions.map((option) => {
-                              const OptionIcon = option.icon;
-                              const isSelected = article.icon === option.value;
-                              return (
-                                <button
-                                  key={option.value}
-                                  onClick={() =>
-                                    handleIconChange(article.id, option.value)
-                                  }
-                                  className={cn(
-                                    "h-8 w-8 rounded-md flex items-center justify-center transition-colors focus:outline-none",
-                                    isSelected
-                                      ? "bg-accent text-foreground"
-                                      : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
-                                  )}
-                                >
-                                  <OptionIcon className="h-4 w-4" />
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-
-                      {/* Content */}
-                      <div className="flex-1 min-w-0">
-                        {/* Row 1: Title + Status */}
-                        <div className="flex items-center gap-2">
-                          <p className="text-sm font-medium text-foreground truncate">
-                            {article.title}
-                          </p>
-                          {article.status !== "published" && (
-                            <span
-                              className={cn(
-                                "text-[11px] leading-none px-1.5 py-1 rounded shrink-0",
-                                statusColors[article.status],
-                              )}
-                            >
-                              {statusLabels[article.status]}
-                            </span>
-                          )}
-                        </div>
-                        {/* Row 2: Updated + Views + Helpful */}
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                          <span className="text-xs text-muted-foreground/70">
-                            Updated {article.updatedAt}
-                          </span>
-                          <span className="text-muted-foreground/40">·</span>
-                          <span className="text-xs text-muted-foreground/50 flex items-center gap-1">
-                            <Eye className="h-3 w-3" />
-                            {article.viewCount}
-                          </span>
-                          <span className="text-muted-foreground/40">·</span>
-                          <span className="text-xs text-muted-foreground/50 flex items-center gap-1">
-                            <ThumbsUp className="h-3 w-3" />
-                            {article.helpfulCount}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Actions */}
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button className="shrink-0 p-1 text-muted-foreground hover:text-foreground transition-colors">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() => handleToggleStatus(article.id)}
-                          >
-                            {article.status === "published"
-                              ? "Unpublish"
-                              : "Publish"}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => handleDeleteArticle(article.id)}
-                            className="text-destructive"
-                          >
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+              articles.map((article) => (
+                <div
+                  key={article.id}
+                  className="border-b border-border px-4 py-3 hover:bg-accent/30 transition-colors cursor-pointer"
+                  style={{ borderBottomWidth: "0.5px" }}
+                >
+                  <div className="flex items-center gap-3">
+                    {/* Icon */}
+                    <div className="shrink-0 h-8 w-8 rounded-md bg-muted/50 border border-border/50 flex items-center justify-center text-muted-foreground">
+                      <FileText className="h-4 w-4" />
                     </div>
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      {/* Row 1: Title + Status */}
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-medium text-foreground truncate">
+                          {article.title}
+                        </p>
+                        {article.status !== "published" && (
+                          <span
+                            className={cn(
+                              "text-[11px] leading-none px-1.5 py-1 rounded shrink-0",
+                              statusColors[article.status],
+                            )}
+                          >
+                            {statusLabels[article.status]}
+                          </span>
+                        )}
+                      </div>
+                      {/* Row 2: Category + Views + Helpful */}
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        {article.category && (
+                          <>
+                            <span className="text-xs text-muted-foreground/70">
+                              {article.category.name}
+                            </span>
+                            <span className="text-muted-foreground/40">·</span>
+                          </>
+                        )}
+                        <span className="text-xs text-muted-foreground/50 flex items-center gap-1">
+                          <Eye className="h-3 w-3" />
+                          {article.viewCount}
+                        </span>
+                        <span className="text-muted-foreground/40">·</span>
+                        <span className="text-xs text-muted-foreground/50 flex items-center gap-1">
+                          <ThumbsUp className="h-3 w-3" />
+                          {article.helpfulCount}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className="shrink-0 p-1 text-muted-foreground hover:text-foreground transition-colors">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          onClick={() =>
+                            handleToggleStatus(article.id, article.status)
+                          }
+                        >
+                          {article.status === "published"
+                            ? "Unpublish"
+                            : "Publish"}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => handleDeleteArticle(article.id)}
+                          className="text-destructive"
+                        >
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
-                );
-              })
+                </div>
+              ))
             )}
           </div>
         </div>

@@ -33,6 +33,7 @@ import {
   ExternalLink,
   ChevronDown,
   Loader2,
+  Sparkles,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -570,21 +571,23 @@ function InteractionDetail({
   // Check if Linear is connected
   const { data: integrations } = trpc.integrations.list.useQuery(
     { projectId: currentProject?.id || "" },
-    { enabled: !!currentProject?.id }
+    { enabled: !!currentProject?.id },
   );
-  const linearConnected = integrations?.find(i => i.provider === "linear")?.configured &&
-                          integrations?.find(i => i.provider === "linear")?.enabled;
+  const linearConnected =
+    integrations?.find((i) => i.provider === "linear")?.configured &&
+    integrations?.find((i) => i.provider === "linear")?.enabled;
 
   // Fetch Linear teams when modal opens
-  const { data: linearTeams, isLoading: teamsLoading } = trpc.integrations.getLinearTeams.useQuery(
-    { projectId: currentProject?.id || "" },
-    { enabled: !!currentProject?.id && showLinearModal && !!linearConnected }
-  );
+  const { data: linearTeams, isLoading: teamsLoading } =
+    trpc.integrations.getLinearTeams.useQuery(
+      { projectId: currentProject?.id || "" },
+      { enabled: !!currentProject?.id && showLinearModal && !!linearConnected },
+    );
 
   // Fetch labels for selected team
   const { data: linearLabels } = trpc.integrations.getLinearLabels.useQuery(
     { projectId: currentProject?.id || "", teamId: selectedTeamId },
-    { enabled: !!currentProject?.id && !!selectedTeamId && showLinearModal }
+    { enabled: !!currentProject?.id && !!selectedTeamId && showLinearModal },
   );
 
   // Auto-select first team when teams load
@@ -595,9 +598,23 @@ function InteractionDetail({
   }, [linearTeams, selectedTeamId]);
 
   // Create Linear issue mutation
-  const createLinearIssueMutation = trpc.integrations.syncLinearIssue.useMutation({
+  const createLinearIssueMutation =
+    trpc.integrations.syncLinearIssue.useMutation({
+      onSuccess: () => {
+        setShowLinearModal(false);
+        utils.interactions.inbox.invalidate();
+      },
+    });
+
+  // AI status check
+  const { data: aiStatus } = trpc.interactions.aiStatus.useQuery(
+    { projectId: currentProject?.id || "" },
+    { enabled: !!currentProject?.id },
+  );
+
+  // AI summarize mutation
+  const summarizeMutation = trpc.interactions.summarize.useMutation({
     onSuccess: () => {
-      setShowLinearModal(false);
       utils.interactions.inbox.invalidate();
     },
   });
@@ -678,6 +695,27 @@ function InteractionDetail({
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                {aiStatus?.available && (
+                  <DropdownMenuItem
+                    onClick={() => {
+                      if (!currentProject?.id) return;
+                      summarizeMutation.mutate({
+                        projectId: currentProject.id,
+                        interactionId: interaction.id,
+                      });
+                    }}
+                    disabled={summarizeMutation.isPending}
+                  >
+                    {summarizeMutation.isPending ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Sparkles className="mr-2 h-4 w-4" />
+                    )}
+                    {summarizeMutation.isPending
+                      ? "Summarizing..."
+                      : "Summarize with AI"}
+                  </DropdownMenuItem>
+                )}
                 {linearConnected && !interaction.linkedIssueId && (
                   <DropdownMenuItem onClick={() => setShowLinearModal(true)}>
                     <ExternalLink className="mr-2 h-4 w-4" />
@@ -686,7 +724,11 @@ function InteractionDetail({
                 )}
                 {interaction.linkedIssueUrl && (
                   <DropdownMenuItem asChild>
-                    <a href={interaction.linkedIssueUrl} target="_blank" rel="noopener noreferrer">
+                    <a
+                      href={interaction.linkedIssueUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
                       <ExternalLink className="mr-2 h-4 w-4" />
                       View in Linear ({interaction.linkedIssueId})
                     </a>
@@ -1091,7 +1133,9 @@ function InteractionDetail({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-medium text-foreground">Create Linear Issue</h3>
+              <h3 className="text-sm font-medium text-foreground">
+                Create Linear Issue
+              </h3>
               <button
                 onClick={() => setShowLinearModal(false)}
                 className="text-muted-foreground hover:text-foreground"
@@ -1108,7 +1152,9 @@ function InteractionDetail({
               <div className="space-y-4">
                 {/* Team Selection */}
                 <div>
-                  <label className="text-xs text-muted-foreground mb-1.5 block">Team</label>
+                  <label className="text-xs text-muted-foreground mb-1.5 block">
+                    Team
+                  </label>
                   <select
                     value={selectedTeamId}
                     onChange={(e) => {
@@ -1127,7 +1173,9 @@ function InteractionDetail({
 
                 {/* Priority Selection */}
                 <div>
-                  <label className="text-xs text-muted-foreground mb-1.5 block">Priority</label>
+                  <label className="text-xs text-muted-foreground mb-1.5 block">
+                    Priority
+                  </label>
                   <select
                     value={linearPriority}
                     onChange={(e) => setLinearPriority(Number(e.target.value))}
@@ -1144,7 +1192,9 @@ function InteractionDetail({
                 {/* Labels Selection */}
                 {linearLabels && linearLabels.length > 0 && (
                   <div>
-                    <label className="text-xs text-muted-foreground mb-1.5 block">Labels</label>
+                    <label className="text-xs text-muted-foreground mb-1.5 block">
+                      Labels
+                    </label>
                     <div className="flex flex-wrap gap-1.5">
                       {linearLabels.map((label) => (
                         <button
@@ -1153,14 +1203,14 @@ function InteractionDetail({
                             setSelectedLabelIds((prev) =>
                               prev.includes(label.id)
                                 ? prev.filter((id) => id !== label.id)
-                                : [...prev, label.id]
+                                : [...prev, label.id],
                             );
                           }}
                           className={cn(
                             "px-2 py-1 rounded text-xs transition-colors",
                             selectedLabelIds.includes(label.id)
                               ? "bg-foreground text-background"
-                              : "bg-muted text-muted-foreground hover:bg-accent"
+                              : "bg-muted text-muted-foreground hover:bg-accent",
                           )}
                           style={{
                             borderLeft: `3px solid ${label.color}`,
@@ -1175,12 +1225,18 @@ function InteractionDetail({
 
                 {/* Issue Preview */}
                 <div className="p-3 bg-muted/30 rounded-md">
-                  <div className="text-xs text-muted-foreground mb-1">Preview</div>
+                  <div className="text-xs text-muted-foreground mb-1">
+                    Preview
+                  </div>
                   <div className="text-sm font-medium text-foreground">
-                    {interaction.content?.title || interaction.contentText?.slice(0, 100) || "Untitled"}
+                    {interaction.content?.title ||
+                      interaction.contentText?.slice(0, 100) ||
+                      "Untitled"}
                   </div>
                   <div className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                    {interaction.content?.description || interaction.contentText || "No description"}
+                    {interaction.content?.description ||
+                      interaction.contentText ||
+                      "No description"}
                   </div>
                 </div>
 
@@ -1208,11 +1264,16 @@ function InteractionDetail({
                         projectId: currentProject.id,
                         interactionId: interaction.id,
                         teamId: selectedTeamId,
-                        labelIds: selectedLabelIds.length > 0 ? selectedLabelIds : undefined,
+                        labelIds:
+                          selectedLabelIds.length > 0
+                            ? selectedLabelIds
+                            : undefined,
                         priority: linearPriority,
                       });
                     }}
-                    disabled={!selectedTeamId || createLinearIssueMutation.isPending}
+                    disabled={
+                      !selectedTeamId || createLinearIssueMutation.isPending
+                    }
                   >
                     {createLinearIssueMutation.isPending ? (
                       <>

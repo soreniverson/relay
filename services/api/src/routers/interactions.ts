@@ -3,6 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { router, projectProcedure } from "../lib/trpc";
 import { pubsub } from "../lib/redis";
 import { getPresignedDownloadUrl, getBucketName } from "../lib/storage";
+import { openai } from "../lib/openai";
 import {
   inboxQuerySchema,
   interactionStatusSchema,
@@ -547,5 +548,106 @@ export const interactionsRouter = router({
         meta: log.meta,
         createdAt: log.createdAt,
       }));
+    }),
+
+  // AI Summarize interaction
+  summarize: projectProcedure
+    .input(
+      z.object({
+        projectId: z.string().uuid(),
+        interactionId: z.string().uuid(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      if (!openai.isConfigured) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "OpenAI is not configured. Please set OPENAI_API_KEY.",
+        });
+      }
+
+      const interaction = await ctx.prisma.interaction.findUnique({
+        where: { id: input.interactionId, projectId: ctx.projectId },
+        include: { user: true, session: true },
+      });
+
+      if (!interaction) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Interaction not found",
+        });
+      }
+
+      // Extract content for summarization
+      const content = interaction.contentJson as Record<string, unknown> | null;
+      const technicalContext = interaction.technicalContext as Record<
+        string,
+        unknown
+      > | null;
+      const device = interaction.session?.device as Record<
+        string,
+        unknown
+      > | null;
+
+      const result = await openai.summarizeInteraction({
+        title: content?.title as string | undefined,
+        description:
+          (content?.description as string) ||
+          interaction.contentText ||
+          undefined,
+        type: interaction.type,
+        url: technicalContext?.url as string | undefined,
+        browser: device?.browser as string | undefined,
+        error: technicalContext?.error as string | undefined,
+        userEmail: interaction.user?.email || undefined,
+      });
+
+      // Update interaction with AI results
+      await ctx.prisma.interaction.update({
+        where: { id: input.interactionId },
+        data: {
+          aiSummary: result.summary,
+          aiLabels: [result.category, result.sentiment, ...result.tags],
+        },
+      });
+
+      // Create audit log
+      await ctx.prisma.auditLog.create({
+        data: {
+          projectId: ctx.projectId,
+          actorType: "admin",
+          actorId: ctx.adminUser!.id,
+          action: "interaction.ai_summarized",
+          targetType: "interaction",
+          targetId: input.interactionId,
+          meta: {
+            summary: result.summary,
+            tags: result.tags,
+            sentiment: result.sentiment,
+            category: result.category,
+          },
+        },
+      });
+
+      ctx.logger.info(
+        { interactionId: input.interactionId, summary: result.summary },
+        "Interaction summarized with AI",
+      );
+
+      return result;
+    }),
+
+  // Check if AI is available
+  aiStatus: projectProcedure
+    .input(z.object({ projectId: z.string().uuid() }))
+    .query(() => {
+      return {
+        available: openai.isConfigured,
+        features: {
+          summarization: openai.isConfigured,
+          suggestions: openai.isConfigured,
+          duplicateDetection: openai.isConfigured,
+        },
+      };
     }),
 });

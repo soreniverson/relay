@@ -5,6 +5,7 @@
 Phase 3 adds AI-powered features (summarization, auto-tagging, knowledge base, copilot) and completes the advanced targeting system (surveys, events, SDK enhancements).
 
 **Prerequisites:**
+
 - OpenAI API key for AI features
 - API deployment for webhook endpoints (optional but recommended)
 
@@ -13,12 +14,14 @@ Phase 3 adds AI-powered features (summarization, auto-tagging, knowledge base, c
 ## Pre-Implementation: Infrastructure Setup
 
 ### OpenAI Integration
+
 ```
 OPENAI_API_KEY=sk-...
 OPENAI_MODEL=gpt-4-turbo-preview  # or gpt-3.5-turbo for cost savings
 ```
 
 ### Database Additions (Prisma)
+
 ```prisma
 model Article {
   id          String   @id @default(cuid())
@@ -101,7 +104,7 @@ model UserEvent {
 interface SummarizeResult {
   summary: string;
   tags: string[];
-  sentiment: 'positive' | 'neutral' | 'negative';
+  sentiment: "positive" | "neutral" | "negative";
   category: string | null;
 }
 
@@ -115,6 +118,7 @@ interface SummarizeResult {
 ### 1.2 Interaction Summarization
 
 **Files to Update:**
+
 - `services/api/src/routers/interactions.ts` - Add summarize mutation
 - `services/api/src/workers/ai-processor.ts` - Background summarization job
 
@@ -212,6 +216,7 @@ interface SummarizeResult {
 ### 2.1 Article CRUD
 
 **Files to Create:**
+
 - `services/api/src/routers/articles.ts` - Article management
 - `apps/web/src/app/dashboard/knowledge/page.tsx` - Article list
 - `apps/web/src/app/dashboard/knowledge/[id]/page.tsx` - Article editor
@@ -332,6 +337,7 @@ Phase 2: Semantic Search (later)
 ### 3.1 Suggested Replies
 
 **Files to Update:**
+
 - `services/api/src/routers/conversations.ts` - Add suggest mutation
 - `apps/web/src/app/dashboard/conversations/page.tsx` - Show suggestions
 
@@ -545,22 +551,22 @@ Relay.track('page_viewed', { page: '/pricing' })
 
 ## File Summary
 
-| Action | File |
-|--------|------|
-| Create | `services/api/src/lib/openai.ts` - OpenAI client |
-| Create | `services/api/src/routers/articles.ts` - Knowledge base |
+| Action | File                                                            |
+| ------ | --------------------------------------------------------------- |
+| Create | `services/api/src/lib/openai.ts` - OpenAI client                |
+| Create | `services/api/src/routers/articles.ts` - Knowledge base         |
 | Create | `services/api/src/workers/ai-processor.ts` - Background AI jobs |
-| Update | `services/api/src/routers/interactions.ts` - Add summarize |
-| Update | `services/api/src/routers/conversations.ts` - Add suggest |
-| Update | `services/api/src/routers/surveys.ts` - Trait/event targeting |
-| Update | `services/api/src/routers/ingest.ts` - Event tracking |
+| Update | `services/api/src/routers/interactions.ts` - Add summarize      |
+| Update | `services/api/src/routers/conversations.ts` - Add suggest       |
+| Update | `services/api/src/routers/surveys.ts` - Trait/event targeting   |
+| Update | `services/api/src/routers/ingest.ts` - Event tracking           |
 | Update | `services/api/prisma/schema.prisma` - Article, UserEvent models |
-| Create | `apps/web/src/app/dashboard/knowledge/page.tsx` - Article list |
-| Create | `apps/web/src/app/dashboard/knowledge/[id]/page.tsx` - Editor |
-| Create | `apps/web/src/app/help/[slug]/page.tsx` - Public help center |
-| Update | `packages/sdk-web/src/index.ts` - Programmatic control, events |
-| Create | `packages/sdk-web/src/ui/Survey.tsx` - Survey renderer |
-| Create | `packages/sdk-web/src/ui/HelpCenter.tsx` - Help center widget |
+| Create | `apps/web/src/app/dashboard/knowledge/page.tsx` - Article list  |
+| Create | `apps/web/src/app/dashboard/knowledge/[id]/page.tsx` - Editor   |
+| Create | `apps/web/src/app/help/[slug]/page.tsx` - Public help center    |
+| Update | `packages/sdk-web/src/index.ts` - Programmatic control, events  |
+| Create | `packages/sdk-web/src/ui/Survey.tsx` - Survey renderer          |
+| Create | `packages/sdk-web/src/ui/HelpCenter.tsx` - Help center widget   |
 
 ---
 
@@ -581,24 +587,28 @@ OPENAI_DAILY_LIMIT_USD=10
 ## Implementation Order
 
 ### Week 1: AI Foundation
+
 1. Set up OpenAI client library
 2. Implement interaction summarization (manual + auto)
 3. Add auto-tagging
 4. Update inbox UI to show AI features
 
 ### Week 2: Knowledge Base Core
+
 1. Add Prisma models (Article, ArticleCategory)
 2. Implement article CRUD router
 3. Build article editor page
 4. Build article list page
 
 ### Week 3: Knowledge Base Public
+
 1. Build public help center page
 2. Implement search (full-text)
 3. Add "Was this helpful?" feedback
 4. SDK help center integration
 
 ### Week 4: AI Copilot + Surveys
+
 1. Implement suggested replies
 2. Add article suggestions in conversations
 3. Complete survey rendering in SDK
@@ -609,28 +619,33 @@ OPENAI_DAILY_LIMIT_USD=10
 ## Verification Checklist
 
 ### AI Processing
+
 - [ ] Click "Summarize" on interaction → summary appears
 - [ ] New interactions auto-summarized (if enabled)
 - [ ] Tags suggested and applicable
 - [ ] Sentiment indicator visible
 
 ### Knowledge Base
+
 - [ ] Create, edit, publish article
 - [ ] Public help center accessible at /help/[slug]
 - [ ] Search returns relevant results
 - [ ] "Was this helpful?" records feedback
 
 ### AI Copilot
+
 - [ ] "Suggest replies" generates options
 - [ ] Clicking suggestion inserts into reply box
 - [ ] Relevant articles shown in conversation view
 
 ### SDK Enhancements
+
 - [ ] `Relay.open('feedback')` opens feedback form
 - [ ] `Relay.prefill({ title: 'Test' })` prefills form
 - [ ] `Relay.track('event')` sends to API
 
 ### Survey System
+
 - [ ] Survey with user trait targeting shows to matching users
 - [ ] Survey with event trigger shows after track() call
 - [ ] Survey renders in SDK with all question types

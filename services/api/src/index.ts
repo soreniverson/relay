@@ -50,7 +50,7 @@ async function main() {
   app.post(
     "/webhooks/stripe",
     express.raw({ type: "application/json" }),
-    handleStripeWebhook
+    handleStripeWebhook,
   );
 
   // Linear webhook endpoint

@@ -162,7 +162,7 @@ class RelaySDK implements RelayInstance {
     }
   }
 
-  open(view?: "bug" | "feedback" | "chat" | WidgetView): void {
+  open(view?: "bug" | "feedback" | "chat" | "help" | WidgetView): void {
     // Map legacy view names to new structure
     let mappedView: WidgetView | undefined;
     if (view === "bug") {
@@ -171,6 +171,8 @@ class RelaySDK implements RelayInstance {
       mappedView = "feature-request";
     } else if (view === "chat") {
       mappedView = "messages";
+    } else if (view === "help") {
+      mappedView = "messages"; // Help center in messages view for now
     } else {
       mappedView = view;
     }
@@ -181,6 +183,24 @@ class RelaySDK implements RelayInstance {
   close(): void {
     this.closeWidget();
     this.emit("close");
+  }
+
+  /**
+   * Toggle the widget open/closed state
+   */
+  toggle(): void {
+    if (this.widgetOpen) {
+      this.close();
+    } else {
+      this.open();
+    }
+  }
+
+  /**
+   * Check if the widget is currently open
+   */
+  isOpen(): boolean {
+    return this.widgetOpen;
   }
 
   /**
@@ -475,7 +495,7 @@ class RelaySDK implements RelayInstance {
           const max = question.max || 5;
           for (let i = 1; i <= max; i++) {
             const star = document.createElement("button");
-            star.innerHTML = `<svg width="32" height="32" viewBox="0 0 24 24" fill="${i <= (responses[question.id] as number || 0) ? "#f59e0b" : "#e5e7eb"}"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`;
+            star.innerHTML = `<svg width="32" height="32" viewBox="0 0 24 24" fill="${i <= ((responses[question.id] as number) || 0) ? "#f59e0b" : "#e5e7eb"}"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`;
             star.style.cssText = `
               padding: 8px;
               background: none;
@@ -489,7 +509,10 @@ class RelaySDK implements RelayInstance {
             ratingContainer.appendChild(star);
           }
           content.appendChild(ratingContainer);
-        } else if (question.type === "single_choice" || question.type === "multi_choice") {
+        } else if (
+          question.type === "single_choice" ||
+          question.type === "multi_choice"
+        ) {
           const choices = document.createElement("div");
           choices.style.cssText = `display: flex; flex-direction: column; gap: 8px;`;
 
@@ -537,7 +560,9 @@ class RelaySDK implements RelayInstance {
 
             choice.onclick = () => {
               if (isMulti) {
-                const current = ((responses[question.id] as string[]) || []).slice();
+                const current = (
+                  (responses[question.id] as string[]) || []
+                ).slice();
                 const idx = current.indexOf(option);
                 if (idx >= 0) {
                   current.splice(idx, 1);

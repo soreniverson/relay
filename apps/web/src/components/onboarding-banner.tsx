@@ -61,7 +61,9 @@ export function OnboardingBanner({ onDismiss }: OnboardingBannerProps) {
             variant="outline"
             size="sm"
             className="h-7 text-xs"
-            onClick={() => window.open("https://docs.relay.dev/quickstart", "_blank")}
+            onClick={() =>
+              window.open("https://docs.relay.dev/quickstart", "_blank")
+            }
           >
             <Code className="h-3 w-3 mr-1.5" />
             View Setup Guide

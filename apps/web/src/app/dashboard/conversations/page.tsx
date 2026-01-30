@@ -5,8 +5,16 @@ import { useAuthStore } from "@/stores/auth";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, MessageSquare } from "lucide-react";
+import {
+  Loader2,
+  MessageSquare,
+  Sparkles,
+  FileText,
+  ChevronRight,
+  X,
+} from "lucide-react";
 import { ApiError, EmptyState } from "@/components/api-error";
+import { cn } from "@/lib/utils";
 
 type ConversationStatus = "open" | "closed";
 
@@ -44,6 +52,8 @@ export default function ConversationsPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [replyText, setReplyText] = useState("");
   const [filter, setFilter] = useState<"all" | ConversationStatus>("all");
+  const [showCopilot, setShowCopilot] = useState(false);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const utils = trpc.useUtils();
@@ -72,12 +82,36 @@ export default function ConversationsPage() {
       { enabled: !!currentProject?.id && !!selectedId },
     );
 
+  // AI status query
+  const { data: aiStatus } = trpc.conversations.aiStatus.useQuery(
+    { projectId: currentProject?.id || "" },
+    { enabled: !!currentProject?.id },
+  );
+
+  // Relevant articles query
+  const { data: relevantArticlesData } =
+    trpc.conversations.getRelevantArticles.useQuery(
+      {
+        projectId: currentProject?.id || "",
+        conversationId: selectedId || "",
+      },
+      { enabled: !!currentProject?.id && !!selectedId && showCopilot },
+    );
+
   // Send message mutation
   const sendMutation = trpc.conversations.sendMessage.useMutation({
     onSuccess: () => {
       setReplyText("");
+      setSuggestions([]);
       utils.conversations.get.invalidate();
       utils.conversations.list.invalidate();
+    },
+  });
+
+  // Suggest replies mutation
+  const suggestMutation = trpc.conversations.suggestReplies.useMutation({
+    onSuccess: (data) => {
+      setSuggestions(data.suggestions);
     },
   });
 
@@ -90,6 +124,7 @@ export default function ConversationsPage() {
   });
 
   const conversations = conversationsData?.data || [];
+  const relevantArticles = relevantArticlesData?.articles || [];
 
   // Auto-select first conversation if none selected
   useEffect(() => {
@@ -97,6 +132,11 @@ export default function ConversationsPage() {
       setSelectedId(conversations[0].id);
     }
   }, [conversations, selectedId]);
+
+  // Clear suggestions when conversation changes
+  useEffect(() => {
+    setSuggestions([]);
+  }, [selectedId]);
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -110,6 +150,19 @@ export default function ConversationsPage() {
       conversationId: selectedId,
       body: replyText,
     });
+  };
+
+  const handleSuggestReplies = () => {
+    if (!selectedId || !currentProject?.id) return;
+    setShowCopilot(true);
+    suggestMutation.mutate({
+      projectId: currentProject.id,
+      conversationId: selectedId,
+    });
+  };
+
+  const handleUseSuggestion = (suggestion: string) => {
+    setReplyText(suggestion);
   };
 
   const handleToggleStatus = () => {
@@ -277,6 +330,17 @@ export default function ConversationsPage() {
               </p>
             </div>
             <div className="flex items-center gap-2">
+              {aiStatus?.available && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowCopilot(!showCopilot)}
+                  className={cn(showCopilot && "bg-accent")}
+                >
+                  <Sparkles className="h-4 w-4 mr-1" />
+                  Copilot
+                </Button>
+              )}
               <Button
                 variant={
                   selectedConversation.status === "open" ? "default" : "outline"
@@ -290,74 +354,167 @@ export default function ConversationsPage() {
             </div>
           </div>
 
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {detailLoading ? (
-              <div className="flex items-center justify-center h-full">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-              </div>
-            ) : (
-              selectedConversation.messages.map(
-                (message: ConversationMessage) => (
-                  <div
-                    key={message.id}
-                    className={`flex ${message.direction === "outbound" ? "justify-end" : ""}`}
-                  >
-                    <div
-                      className={`max-w-lg rounded-lg p-3 ${
-                        message.direction === "outbound"
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted text-foreground"
-                      }`}
-                    >
-                      <p className="text-sm whitespace-pre-wrap">
-                        {message.body}
-                      </p>
-                      <div
-                        className={`text-xs mt-1 ${
-                          message.direction === "outbound"
-                            ? "text-primary-foreground/70"
-                            : "text-muted-foreground"
-                        }`}
-                      >
-                        {new Date(message.createdAt).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </div>
-                    </div>
+          <div className="flex-1 flex overflow-hidden">
+            {/* Messages Area */}
+            <div className="flex-1 flex flex-col">
+              {/* Messages */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                {detailLoading ? (
+                  <div className="flex items-center justify-center h-full">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                   </div>
-                ),
-              )
-            )}
-            <div ref={messagesEndRef} />
-          </div>
-
-          {/* Reply Box */}
-          {selectedConversation.status === "open" && (
-            <div className="p-4 border-t border-border bg-card">
-              <div className="flex gap-2">
-                <Input
-                  value={replyText}
-                  onChange={(e) => setReplyText(e.target.value)}
-                  placeholder="Type your reply..."
-                  className="flex-1"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSendReply();
-                    }
-                  }}
-                />
-                <Button
-                  onClick={handleSendReply}
-                  disabled={!replyText.trim() || sendMutation.isPending}
-                >
-                  {sendMutation.isPending ? "Sending..." : "Send"}
-                </Button>
+                ) : (
+                  selectedConversation.messages.map(
+                    (message: ConversationMessage) => (
+                      <div
+                        key={message.id}
+                        className={`flex ${message.direction === "outbound" ? "justify-end" : ""}`}
+                      >
+                        <div
+                          className={`max-w-lg rounded-lg p-3 ${
+                            message.direction === "outbound"
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-muted text-foreground"
+                          }`}
+                        >
+                          <p className="text-sm whitespace-pre-wrap">
+                            {message.body}
+                          </p>
+                          <div
+                            className={`text-xs mt-1 ${
+                              message.direction === "outbound"
+                                ? "text-primary-foreground/70"
+                                : "text-muted-foreground"
+                            }`}
+                          >
+                            {new Date(message.createdAt).toLocaleTimeString(
+                              [],
+                              {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              },
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ),
+                  )
+                )}
+                <div ref={messagesEndRef} />
               </div>
+
+              {/* AI Suggestions */}
+              {showCopilot && suggestions.length > 0 && (
+                <div className="border-t border-border p-3 bg-accent/30">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                      <Sparkles className="h-3 w-3" />
+                      Suggested Replies
+                    </span>
+                    <button
+                      onClick={() => setSuggestions([])}
+                      className="text-muted-foreground hover:text-foreground"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                  <div className="space-y-2">
+                    {suggestions.map((suggestion, index) => (
+                      <button
+                        key={index}
+                        onClick={() => handleUseSuggestion(suggestion)}
+                        className="w-full text-left p-2 text-sm rounded border border-border bg-card hover:bg-accent/50 transition-colors"
+                      >
+                        {suggestion}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Reply Box */}
+              {selectedConversation.status === "open" && (
+                <div className="p-4 border-t border-border bg-card">
+                  <div className="flex gap-2">
+                    <Input
+                      value={replyText}
+                      onChange={(e) => setReplyText(e.target.value)}
+                      placeholder="Type your reply..."
+                      className="flex-1"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
+                          handleSendReply();
+                        }
+                      }}
+                    />
+                    {aiStatus?.available && (
+                      <Button
+                        variant="outline"
+                        onClick={handleSuggestReplies}
+                        disabled={suggestMutation.isPending}
+                      >
+                        {suggestMutation.isPending ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Sparkles className="h-4 w-4" />
+                        )}
+                      </Button>
+                    )}
+                    <Button
+                      onClick={handleSendReply}
+                      disabled={!replyText.trim() || sendMutation.isPending}
+                    >
+                      {sendMutation.isPending ? "Sending..." : "Send"}
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
-          )}
+
+            {/* Copilot Sidebar */}
+            {showCopilot && (
+              <div className="w-64 border-l border-border bg-card/50 flex flex-col">
+                <div className="p-3 border-b border-border">
+                  <h4 className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                    <FileText className="h-3 w-3" />
+                    Relevant Articles
+                  </h4>
+                </div>
+                <div className="flex-1 overflow-y-auto p-2">
+                  {relevantArticles.length === 0 ? (
+                    <p className="text-xs text-muted-foreground text-center py-4">
+                      No matching articles found
+                    </p>
+                  ) : (
+                    <div className="space-y-1">
+                      {relevantArticles.map((article) => (
+                        <a
+                          key={article.id}
+                          href={`/help/${currentProject.slug || currentProject.id}/${article.slug}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block p-2 rounded hover:bg-accent/50 transition-colors group"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-foreground group-hover:text-foreground truncate">
+                              {article.title}
+                            </span>
+                            <ChevronRight className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                          </div>
+                          {article.excerpt && (
+                            <p className="text-xs text-muted-foreground truncate mt-0.5">
+                              {article.excerpt}
+                            </p>
+                          )}
+                        </a>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       ) : (
         <div className="flex-1 flex items-center justify-center text-muted-foreground">

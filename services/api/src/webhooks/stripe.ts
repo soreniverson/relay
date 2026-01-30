@@ -6,7 +6,7 @@ import { logger } from "../lib/logger";
 
 export async function handleStripeWebhook(
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<void> {
   const signature = req.headers["stripe-signature"] as string;
 
@@ -22,21 +22,30 @@ export async function handleStripeWebhook(
     return;
   }
 
-  logger.info({ eventType: event.type, eventId: event.id }, "Stripe webhook received");
+  logger.info(
+    { eventType: event.type, eventId: event.id },
+    "Stripe webhook received",
+  );
 
   try {
     switch (event.type) {
       case "checkout.session.completed":
-        await handleCheckoutCompleted(event.data.object as Stripe.Checkout.Session);
+        await handleCheckoutCompleted(
+          event.data.object as Stripe.Checkout.Session,
+        );
         break;
 
       case "customer.subscription.created":
       case "customer.subscription.updated":
-        await handleSubscriptionUpdated(event.data.object as Stripe.Subscription);
+        await handleSubscriptionUpdated(
+          event.data.object as Stripe.Subscription,
+        );
         break;
 
       case "customer.subscription.deleted":
-        await handleSubscriptionDeleted(event.data.object as Stripe.Subscription);
+        await handleSubscriptionDeleted(
+          event.data.object as Stripe.Subscription,
+        );
         break;
 
       case "invoice.paid":
@@ -53,13 +62,16 @@ export async function handleStripeWebhook(
 
     res.json({ received: true });
   } catch (error) {
-    logger.error({ error, eventType: event.type }, "Error handling Stripe webhook");
+    logger.error(
+      { error, eventType: event.type },
+      "Error handling Stripe webhook",
+    );
     res.status(500).json({ error: "Webhook handler failed" });
   }
 }
 
 async function handleCheckoutCompleted(
-  session: Stripe.Checkout.Session
+  session: Stripe.Checkout.Session,
 ): Promise<void> {
   const projectId = session.metadata?.projectId;
   if (!projectId) {
@@ -72,7 +84,7 @@ async function handleCheckoutCompleted(
 
   logger.info(
     { projectId, subscriptionId, customerId },
-    "Checkout completed, activating subscription"
+    "Checkout completed, activating subscription",
   );
 
   await prisma.subscription.update({
@@ -100,7 +112,7 @@ async function handleCheckoutCompleted(
 }
 
 async function handleSubscriptionUpdated(
-  subscription: Stripe.Subscription
+  subscription: Stripe.Subscription,
 ): Promise<void> {
   const projectId = subscription.metadata?.projectId;
 
@@ -114,7 +126,7 @@ async function handleSubscriptionUpdated(
   if (!existingSub) {
     logger.warn(
       { subscriptionId: subscription.id },
-      "No matching subscription found for update"
+      "No matching subscription found for update",
     );
     return;
   }
@@ -133,14 +145,24 @@ async function handleSubscriptionUpdated(
   const status = statusMap[subscription.status] || "active";
 
   // Get period info from subscription items if available
-  const periodStart = (subscription as unknown as { current_period_start?: number }).current_period_start;
-  const periodEnd = (subscription as unknown as { current_period_end?: number }).current_period_end;
+  const periodStart = (
+    subscription as unknown as { current_period_start?: number }
+  ).current_period_start;
+  const periodEnd = (subscription as unknown as { current_period_end?: number })
+    .current_period_end;
 
   await prisma.subscription.update({
     where: { id: existingSub.id },
     data: {
-      status: status as "active" | "past_due" | "canceled" | "incomplete" | "trialing",
-      currentPeriodStart: periodStart ? new Date(periodStart * 1000) : undefined,
+      status: status as
+        | "active"
+        | "past_due"
+        | "canceled"
+        | "incomplete"
+        | "trialing",
+      currentPeriodStart: periodStart
+        ? new Date(periodStart * 1000)
+        : undefined,
       currentPeriodEnd: periodEnd ? new Date(periodEnd * 1000) : undefined,
       cancelAtPeriodEnd: subscription.cancel_at_period_end,
       canceledAt: subscription.canceled_at
@@ -151,12 +173,12 @@ async function handleSubscriptionUpdated(
 
   logger.info(
     { projectId: existingSub.projectId, status },
-    "Subscription updated"
+    "Subscription updated",
   );
 }
 
 async function handleSubscriptionDeleted(
-  subscription: Stripe.Subscription
+  subscription: Stripe.Subscription,
 ): Promise<void> {
   const existingSub = await prisma.subscription.findFirst({
     where: { stripeSubscriptionId: subscription.id },
@@ -165,7 +187,7 @@ async function handleSubscriptionDeleted(
   if (!existingSub) {
     logger.warn(
       { subscriptionId: subscription.id },
-      "No matching subscription found for deletion"
+      "No matching subscription found for deletion",
     );
     return;
   }
@@ -199,7 +221,7 @@ async function handleSubscriptionDeleted(
 
   logger.info(
     { projectId: existingSub.projectId },
-    "Subscription canceled, downgraded to free"
+    "Subscription canceled, downgraded to free",
   );
 }
 
@@ -268,12 +290,12 @@ async function handleInvoicePaid(invoice: Stripe.Invoice): Promise<void> {
 
   logger.info(
     { projectId: subscription.projectId, invoiceId: invoice.id },
-    "Invoice paid"
+    "Invoice paid",
   );
 }
 
 async function handleInvoicePaymentFailed(
-  invoice: Stripe.Invoice
+  invoice: Stripe.Invoice,
 ): Promise<void> {
   const customerId = invoice.customer as string;
 
@@ -331,6 +353,6 @@ async function handleInvoicePaymentFailed(
 
   logger.warn(
     { projectId: subscription.projectId, invoiceId: invoice.id },
-    "Invoice payment failed"
+    "Invoice payment failed",
   );
 }

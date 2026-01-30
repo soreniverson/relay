@@ -426,7 +426,10 @@ export const surveysRouter = router({
         }
 
         // User trait targeting
-        if (targeting.userTraits && Object.keys(targeting.userTraits).length > 0) {
+        if (
+          targeting.userTraits &&
+          Object.keys(targeting.userTraits).length > 0
+        ) {
           for (const [key, condition] of Object.entries(targeting.userTraits)) {
             const userValue = userTraits[key];
 
@@ -434,16 +437,36 @@ export const surveysRouter = router({
               // Complex condition: { $gt, $lt, $contains, $in }
               const cond = condition as Record<string, unknown>;
               if (cond.$gt !== undefined && cond.$gt !== null) {
-                if (userValue === undefined || userValue === null || (userValue as number) <= (cond.$gt as number)) return false;
+                if (
+                  userValue === undefined ||
+                  userValue === null ||
+                  (userValue as number) <= (cond.$gt as number)
+                )
+                  return false;
               }
               if (cond.$lt !== undefined && cond.$lt !== null) {
-                if (userValue === undefined || userValue === null || (userValue as number) >= (cond.$lt as number)) return false;
+                if (
+                  userValue === undefined ||
+                  userValue === null ||
+                  (userValue as number) >= (cond.$lt as number)
+                )
+                  return false;
               }
               if (cond.$gte !== undefined && cond.$gte !== null) {
-                if (userValue === undefined || userValue === null || (userValue as number) < (cond.$gte as number)) return false;
+                if (
+                  userValue === undefined ||
+                  userValue === null ||
+                  (userValue as number) < (cond.$gte as number)
+                )
+                  return false;
               }
               if (cond.$lte !== undefined && cond.$lte !== null) {
-                if (userValue === undefined || userValue === null || (userValue as number) > (cond.$lte as number)) return false;
+                if (
+                  userValue === undefined ||
+                  userValue === null ||
+                  (userValue as number) > (cond.$lte as number)
+                )
+                  return false;
               }
               if (cond.$contains !== undefined) {
                 if (

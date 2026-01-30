@@ -365,7 +365,7 @@ export default function OnboardingPage() {
                         "p-2 rounded-md border text-center transition-colors",
                         framework === fw.id
                           ? "border-foreground bg-foreground/5"
-                          : "border-border hover:border-foreground/50"
+                          : "border-border hover:border-foreground/50",
                       )}
                     >
                       <span className="text-lg">{fw.icon}</span>
@@ -380,7 +380,10 @@ export default function OnboardingPage() {
               {/* Install SDK */}
               <div>
                 <Label className="text-xs text-muted-foreground">
-                  1. {framework === "vanilla" ? "Add the script" : "Install the SDK"}
+                  1.{" "}
+                  {framework === "vanilla"
+                    ? "Add the script"
+                    : "Install the SDK"}
                 </Label>
                 <div className="mt-1.5 p-3 bg-zinc-900 rounded-md font-mono text-sm text-zinc-100 overflow-x-auto">
                   <code>{getInstallCommand(framework)}</code>

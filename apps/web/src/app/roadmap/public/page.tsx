@@ -40,7 +40,7 @@ export default function PublicRoadmapPage() {
   // For production use the slug-based page at /roadmap/[slug]
   const { data, isLoading, error, refetch } = trpc.roadmap.publicList.useQuery(
     { page: 1, pageSize: 50 },
-    { enabled: false } // Disabled since this is the demo page
+    { enabled: false }, // Disabled since this is the demo page
   );
 
   // Use mock data for the demo public page

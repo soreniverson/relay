@@ -306,7 +306,10 @@ export async function exchangeLinearOAuthCode(
     throw new Error(`Linear OAuth error: ${error}`);
   }
 
-  const data = (await response.json()) as { access_token: string; expires_in?: number };
+  const data = (await response.json()) as {
+    access_token: string;
+    expires_in?: number;
+  };
   return {
     accessToken: data.access_token,
     expiresIn: data.expires_in,
@@ -339,9 +342,7 @@ export function mapLinearStateToRelayStatus(
 /**
  * Map Relay interaction status to Linear state type
  */
-export function mapRelayStatusToLinearStateType(
-  status: string,
-): string | null {
+export function mapRelayStatusToLinearStateType(status: string): string | null {
   switch (status) {
     case "new":
       return "unstarted";

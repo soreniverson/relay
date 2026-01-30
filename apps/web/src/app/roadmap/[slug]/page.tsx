@@ -63,7 +63,14 @@ export default function PublicRoadmapBySlugPage() {
         setLoading(true);
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/trpc/roadmap.publicListBySlug?input=${encodeURIComponent(
-            JSON.stringify({ json: { slug, sessionId: sessionId || undefined, page: 1, pageSize: 50 } }),
+            JSON.stringify({
+              json: {
+                slug,
+                sessionId: sessionId || undefined,
+                page: 1,
+                pageSize: 50,
+              },
+            }),
           )}`,
         );
 

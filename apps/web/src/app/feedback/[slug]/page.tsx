@@ -73,7 +73,9 @@ export default function PublicFeedbackBoardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [votingItemId, setVotingItemId] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
+  const [statusFilter, setStatusFilter] = useState<string | undefined>(
+    undefined,
+  );
 
   // Submit modal state
   const [showSubmitModal, setShowSubmitModal] = useState(false);

@@ -361,7 +361,12 @@ export const authRouter = router({
       z.object({
         projectId: z.string().uuid(),
         name: z.string().min(1).max(100).optional(),
-        slug: z.string().min(1).max(50).regex(/^[a-z0-9-]+$/).optional(),
+        slug: z
+          .string()
+          .min(1)
+          .max(50)
+          .regex(/^[a-z0-9-]+$/)
+          .optional(),
       }),
     )
     .mutation(async ({ input, ctx }) => {
@@ -559,5 +564,31 @@ export const authRouter = router({
       });
 
       return { success: true };
+    }),
+
+  // Get project by slug (public - for help center, roadmap, etc.)
+  getProjectBySlug: publicProcedure
+    .input(z.object({ slug: z.string() }))
+    .query(async ({ input, ctx }) => {
+      // Try to find by slug first, then by ID
+      const project = await ctx.prisma.project.findFirst({
+        where: {
+          OR: [{ slug: input.slug }, { id: input.slug }],
+        },
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+        },
+      });
+
+      if (!project) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Project not found",
+        });
+      }
+
+      return project;
     }),
 });

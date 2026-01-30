@@ -9,7 +9,11 @@ import {
   createPortalSession,
   STRIPE_PRICES,
 } from "../lib/stripe";
-import { BILLING_PLANS, getPlanLimits, type BillingPlanKey } from "@relay/shared";
+import {
+  BILLING_PLANS,
+  getPlanLimits,
+  type BillingPlanKey,
+} from "@relay/shared";
 
 export const billingRouter = router({
   // Get current subscription and usage
@@ -101,7 +105,7 @@ export const billingRouter = router({
         interval: z.enum(["monthly", "yearly"]).default("monthly"),
         successUrl: z.string().url(),
         cancelUrl: z.string().url(),
-      })
+      }),
     )
     .mutation(async ({ input, ctx }) => {
       if (!isStripeConfigured()) {
@@ -196,7 +200,7 @@ export const billingRouter = router({
       z.object({
         projectId: z.string().uuid(),
         returnUrl: z.string().url(),
-      })
+      }),
     )
     .mutation(async ({ input, ctx }) => {
       if (!isStripeConfigured()) {
@@ -240,7 +244,7 @@ export const billingRouter = router({
       z.object({
         projectId: z.string().uuid(),
         limit: z.number().min(1).max(100).default(10),
-      })
+      }),
     )
     .query(async ({ input, ctx }) => {
       const invoices = await ctx.prisma.invoice.findMany({
@@ -270,7 +274,7 @@ export const billingRouter = router({
       z.object({
         projectId: z.string().uuid(),
         metric: z.enum(["interactions", "replays", "storageGb", "teamMembers"]),
-      })
+      }),
     )
     .query(async ({ input, ctx }) => {
       const subscription = await ctx.prisma.subscription.findUnique({
@@ -304,7 +308,8 @@ export const billingRouter = router({
           limit = limits.replays;
           break;
         case "storageGb":
-          currentUsage = Number(usageMetrics?.storageBytes || 0) / (1024 * 1024 * 1024);
+          currentUsage =
+            Number(usageMetrics?.storageBytes || 0) / (1024 * 1024 * 1024);
           limit = limits.storageGb;
           break;
         case "teamMembers":

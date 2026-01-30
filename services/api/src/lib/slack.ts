@@ -242,7 +242,7 @@ export class SlackClient {
                 type: "mrkdwn",
                 text: data.title
                   ? `*${data.title}*`
-                  : (data.description?.slice(0, 200) || "No description"),
+                  : data.description?.slice(0, 200) || "No description",
               },
             },
             {
@@ -415,9 +415,10 @@ export class SlackClient {
               type: "section",
               text: {
                 type: "mrkdwn",
-                text: data.userName || data.userEmail
-                  ? `:bust_in_silhouette: ${data.userName || data.userEmail}`
-                  : "_Anonymous user_",
+                text:
+                  data.userName || data.userEmail
+                    ? `:bust_in_silhouette: ${data.userName || data.userEmail}`
+                    : "_Anonymous user_",
               },
             },
             {

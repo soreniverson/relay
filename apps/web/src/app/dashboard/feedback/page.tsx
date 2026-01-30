@@ -84,7 +84,9 @@ const categoryLabels: Record<string, string> = {
 export default function FeedbackPage() {
   const { currentProject } = useAuthStore();
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
+  const [statusFilter, setStatusFilter] = useState<string | undefined>(
+    undefined,
+  );
   const [sortBy, setSortBy] = useState<"votes" | "createdAt">("votes");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [newItem, setNewItem] = useState({

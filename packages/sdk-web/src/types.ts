@@ -200,15 +200,34 @@ export interface RelayInstance {
   init(config: RelayConfig): Promise<void>;
   identify(user: RelayUser): Promise<void>;
   setSessionAttributes(attrs: Record<string, unknown>): void;
-  open(tab?: "bug" | "feedback" | "chat"): void;
+  open(tab?: "bug" | "feedback" | "chat" | "help"): void;
   close(): void;
+  toggle(): void;
+  isOpen(): boolean;
+  prefill(data: {
+    title?: string;
+    description?: string;
+    email?: string;
+    category?: string;
+    tags?: string[];
+  }): void;
+  clearPrefill(): void;
+  setCustomData(key: string, value: unknown): void;
+  getCustomData(): Record<string, unknown>;
+  clearCustomData(key: string): void;
+  clearAllCustomData(): void;
   captureBug(data: BugReportData): Promise<string>;
   captureFeedback(data: FeedbackData): Promise<string>;
   startRecording(): void;
   stopRecording(): Promise<void>;
   setPrivacy(config: PrivacyConfig): void;
   track(event: string, properties?: Record<string, unknown>): void;
+  showSurvey(surveyId: string): Promise<void>;
+  checkForSurveys(triggerEvent?: string): Promise<void>;
   on(event: RelayEventType, handler: RelayEventHandler): void;
   off(event: RelayEventType, handler: RelayEventHandler): void;
+  getSessionId(): string | null;
+  getUserId(): string | null;
+  isInitialized(): boolean;
   destroy(): void;
 }

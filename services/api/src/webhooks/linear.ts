@@ -34,14 +34,14 @@ interface LinearWebhookPayload {
 function verifyLinearSignature(
   body: string,
   signature: string,
-  secret: string
+  secret: string,
 ): boolean {
   const hmac = crypto.createHmac("sha256", secret);
   hmac.update(body);
   const expectedSignature = hmac.digest("hex");
   return crypto.timingSafeEqual(
     Buffer.from(signature),
-    Buffer.from(expectedSignature)
+    Buffer.from(expectedSignature),
   );
 }
 
@@ -50,13 +50,16 @@ function verifyLinearSignature(
  */
 export async function handleLinearWebhook(
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<void> {
   const signature = req.headers["linear-signature"] as string;
   const rawBody = JSON.stringify(req.body);
 
   // Log incoming webhook
-  logger.info({ headers: req.headers, body: req.body }, "Linear webhook received");
+  logger.info(
+    { headers: req.headers, body: req.body },
+    "Linear webhook received",
+  );
 
   // For now, skip signature verification if no secret is configured
   // In production, you'd want to verify the signature
@@ -110,7 +113,10 @@ async function handleIssueUpdate(payload: LinearWebhookPayload): Promise<void> {
   });
 
   if (!link) {
-    logger.debug({ linearIssueId }, "No linked interaction found for Linear issue");
+    logger.debug(
+      { linearIssueId },
+      "No linked interaction found for Linear issue",
+    );
     return;
   }
 
@@ -123,7 +129,10 @@ async function handleIssueUpdate(payload: LinearWebhookPayload): Promise<void> {
   });
 
   if (!interaction) {
-    logger.warn({ interactionId: link.internalId }, "Linked interaction not found");
+    logger.warn(
+      { interactionId: link.internalId },
+      "Linked interaction not found",
+    );
     return;
   }
 
@@ -160,7 +169,7 @@ async function handleIssueUpdate(payload: LinearWebhookPayload): Promise<void> {
         oldStatus: interaction.status,
         newStatus: newRelayStatus,
       },
-      "Interaction status synced from Linear"
+      "Interaction status synced from Linear",
     );
   }
 }
@@ -200,6 +209,6 @@ async function handleIssueRemove(payload: LinearWebhookPayload): Promise<void> {
 
   logger.info(
     { interactionId: link.internalId, linearIssueId },
-    "Linear issue link removed"
+    "Linear issue link removed",
   );
 }

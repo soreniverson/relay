@@ -465,12 +465,16 @@ export function createSurvey(config: SurveyConfig): SurveyResult {
     const question = definition.questions[currentQuestionIndex];
     if (!question) return;
 
-    const questionEl = createElement("div", { class: "relay-survey__question" });
+    const questionEl = createElement("div", {
+      class: "relay-survey__question",
+    });
 
     // Question text
-    const textEl = createElement("p", { class: "relay-survey__question-text" }, [
-      question.text,
-    ]);
+    const textEl = createElement(
+      "p",
+      { class: "relay-survey__question-text" },
+      [question.text],
+    );
     if (question.required) {
       const requiredSpan = createElement(
         "span",
@@ -594,7 +598,9 @@ export function createSurvey(config: SurveyConfig): SurveyResult {
 
     // Labels
     if (question.minLabel || question.maxLabel) {
-      const labels = createElement("div", { class: "relay-survey__nps-labels" });
+      const labels = createElement("div", {
+        class: "relay-survey__nps-labels",
+      });
       labels.appendChild(
         createElement("span", { class: "relay-survey__nps-label" }, [
           question.minLabel || "",
@@ -622,20 +628,25 @@ export function createSurvey(config: SurveyConfig): SurveyResult {
       });
       btn.innerHTML = STAR_ICON;
 
-      if (responses[question.id] !== undefined && i <= (responses[question.id] as number)) {
+      if (
+        responses[question.id] !== undefined &&
+        i <= (responses[question.id] as number)
+      ) {
         btn.classList.add("relay-survey__rating-star--selected");
       }
 
       btn.addEventListener("click", () => {
         responses[question.id] = i;
         // Update selection
-        container.querySelectorAll(".relay-survey__rating-star").forEach((star, idx) => {
-          if (idx < i) {
-            star.classList.add("relay-survey__rating-star--selected");
-          } else {
-            star.classList.remove("relay-survey__rating-star--selected");
-          }
-        });
+        container
+          .querySelectorAll(".relay-survey__rating-star")
+          .forEach((star, idx) => {
+            if (idx < i) {
+              star.classList.add("relay-survey__rating-star--selected");
+            } else {
+              star.classList.remove("relay-survey__rating-star--selected");
+            }
+          });
       });
 
       container.appendChild(btn);
@@ -677,9 +688,11 @@ export function createSurvey(config: SurveyConfig): SurveyResult {
       const indicator = createElement("div", {
         class: "relay-survey__choice-indicator",
       });
-      const text = createElement("span", { class: "relay-survey__choice-text" }, [
-        option,
-      ]);
+      const text = createElement(
+        "span",
+        { class: "relay-survey__choice-text" },
+        [option],
+      );
 
       choice.appendChild(indicator);
       choice.appendChild(text);
@@ -712,7 +725,9 @@ export function createSurvey(config: SurveyConfig): SurveyResult {
           responses[question.id] = option;
           container
             .querySelectorAll(".relay-survey__choice")
-            .forEach((c) => c.classList.remove("relay-survey__choice--selected"));
+            .forEach((c) =>
+              c.classList.remove("relay-survey__choice--selected"),
+            );
           choice.classList.add("relay-survey__choice--selected");
         }
       });

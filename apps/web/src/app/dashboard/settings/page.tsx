@@ -149,10 +149,16 @@ function GeneralSettings() {
               id="project-slug"
               placeholder="my-project"
               value={projectSlug}
-              onChange={(e) => setProjectSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
+              onChange={(e) =>
+                setProjectSlug(
+                  e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""),
+                )
+              }
             />
             <p className="text-xs text-muted-foreground">
-              Used for public pages: /roadmap/{projectSlug || "slug"}, /feedback/{projectSlug || "slug"}, /changelog/{projectSlug || "slug"}
+              Used for public pages: /roadmap/{projectSlug || "slug"},
+              /feedback/{projectSlug || "slug"}, /changelog/
+              {projectSlug || "slug"}
             </p>
           </div>
           <div className="grid gap-1.5">
@@ -174,7 +180,12 @@ function GeneralSettings() {
             </Select>
           </div>
         </div>
-        <Button size="sm" className="mt-4" onClick={handleSave} disabled={saving}>
+        <Button
+          size="sm"
+          className="mt-4"
+          onClick={handleSave}
+          disabled={saving}
+        >
           {saving ? "Saving..." : "Save Changes"}
         </Button>
       </div>
@@ -538,7 +549,10 @@ function ApiKeysSettings() {
   );
 }
 
-const integrationMeta: Record<string, { icon: string; description: string; displayName: string }> = {
+const integrationMeta: Record<
+  string,
+  { icon: string; description: string; displayName: string }
+> = {
   linear: {
     icon: "📋",
     description: "Create Linear issues from bug reports",
@@ -568,11 +582,17 @@ const integrationMeta: Record<string, { icon: string; description: string; displ
 
 function IntegrationsSettings() {
   const { currentProject } = useAuthStore();
-  const [connectingProvider, setConnectingProvider] = useState<string | null>(null);
+  const [connectingProvider, setConnectingProvider] = useState<string | null>(
+    null,
+  );
 
-  const { data: integrations, isLoading, refetch } = trpc.integrations.list.useQuery(
+  const {
+    data: integrations,
+    isLoading,
+    refetch,
+  } = trpc.integrations.list.useQuery(
     { projectId: currentProject?.id || "" },
-    { enabled: !!currentProject?.id }
+    { enabled: !!currentProject?.id },
   );
 
   const connectLinearMutation = trpc.integrations.connectLinear.useMutation({
@@ -592,7 +612,12 @@ function IntegrationsSettings() {
     const code = params.get("code");
     const state = params.get("state");
 
-    if (code && state === "linear" && currentProject?.id && !connectingProvider) {
+    if (
+      code &&
+      state === "linear" &&
+      currentProject?.id &&
+      !connectingProvider
+    ) {
       setConnectingProvider("linear");
       // Clean URL
       window.history.replaceState({}, "", window.location.pathname);
@@ -609,12 +634,16 @@ function IntegrationsSettings() {
     const clientId = process.env.NEXT_PUBLIC_LINEAR_CLIENT_ID;
     if (!clientId) {
       // Fallback: try to initiate OAuth anyway, the env var might be server-side only
-      const redirectUri = encodeURIComponent(`${window.location.origin}/dashboard/settings`);
+      const redirectUri = encodeURIComponent(
+        `${window.location.origin}/dashboard/settings`,
+      );
       const linearAuthUrl = `https://linear.app/oauth/authorize?client_id=7e171e7a28cb2487d9773452b6ded3bc&redirect_uri=${redirectUri}&response_type=code&scope=read,write&state=linear`;
       window.location.href = linearAuthUrl;
       return;
     }
-    const redirectUri = encodeURIComponent(`${window.location.origin}/dashboard/settings`);
+    const redirectUri = encodeURIComponent(
+      `${window.location.origin}/dashboard/settings`,
+    );
     const linearAuthUrl = `https://linear.app/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=read,write&state=linear`;
     window.location.href = linearAuthUrl;
   };
@@ -643,7 +672,9 @@ function IntegrationsSettings() {
               description: "Third-party integration",
               displayName: integration.provider,
             };
-            const isAvailable = ["linear", "slack"].includes(integration.provider);
+            const isAvailable = ["linear", "slack"].includes(
+              integration.provider,
+            );
 
             return (
               <div
@@ -681,13 +712,18 @@ function IntegrationsSettings() {
                     disabled={connectingProvider === integration.provider}
                   >
                     {connectingProvider === integration.provider ? (
-                      <><Loader2 className="h-3 w-3 animate-spin mr-1" /> Connecting...</>
+                      <>
+                        <Loader2 className="h-3 w-3 animate-spin mr-1" />{" "}
+                        Connecting...
+                      </>
                     ) : (
                       "Connect"
                     )}
                   </Button>
                 ) : (
-                  <span className="text-xs text-muted-foreground">Coming soon</span>
+                  <span className="text-xs text-muted-foreground">
+                    Coming soon
+                  </span>
                 )}
               </div>
             );
@@ -851,12 +887,12 @@ function BillingSettings() {
 
   const { data: billing, isLoading } = trpc.billing.getSubscription.useQuery(
     { projectId: currentProject?.id || "" },
-    { enabled: !!currentProject?.id }
+    { enabled: !!currentProject?.id },
   );
 
   const { data: invoices } = trpc.billing.getInvoices.useQuery(
     { projectId: currentProject?.id || "", limit: 5 },
-    { enabled: !!currentProject?.id }
+    { enabled: !!currentProject?.id },
   );
 
   const checkoutMutation = trpc.billing.createCheckoutSession.useMutation({
@@ -997,7 +1033,7 @@ function BillingSettings() {
                         ? "bg-red-500"
                         : getUsagePercent(item.current, item.limit) > 75
                           ? "bg-amber-500"
-                          : "bg-emerald-500"
+                          : "bg-emerald-500",
                     )}
                     style={{
                       width: `${getUsagePercent(item.current, item.limit)}%`,
@@ -1019,15 +1055,15 @@ function BillingSettings() {
                     "h-full rounded-full transition-all",
                     getUsagePercent(
                       usage.storageBytes / (1024 * 1024 * 1024),
-                      limits.storageGb
+                      limits.storageGb,
                     ) > 90
                       ? "bg-red-500"
                       : getUsagePercent(
                             usage.storageBytes / (1024 * 1024 * 1024),
-                            limits.storageGb
+                            limits.storageGb,
                           ) > 75
                         ? "bg-amber-500"
-                        : "bg-emerald-500"
+                        : "bg-emerald-500",
                   )}
                   style={{
                     width: `${getUsagePercent(usage.storageBytes / (1024 * 1024 * 1024), limits.storageGb)}%`,
@@ -1147,7 +1183,7 @@ function BillingSettings() {
                       ? "text-emerald-400"
                       : invoice.status === "open"
                         ? "text-amber-400"
-                        : "text-muted-foreground"
+                        : "text-muted-foreground",
                   )}
                 >
                   {invoice.status}

@@ -215,11 +215,16 @@ export const ingestRouter = router({
           where: { id: internalUserId },
           select: { email: true, name: true },
         });
-        userInfo = { email: user?.email || undefined, name: user?.name || undefined };
+        userInfo = {
+          email: user?.email || undefined,
+          name: user?.name || undefined,
+        };
       }
 
       const content = input.content as Record<string, unknown> | undefined;
-      const technicalContext = input.technicalContext as Record<string, unknown> | undefined;
+      const technicalContext = input.technicalContext as
+        | Record<string, unknown>
+        | undefined;
       const dashboardUrl = process.env.DASHBOARD_URL || "https://app.relay.dev";
       const relayUrl = `${dashboardUrl}/dashboard/inbox?id=${interaction.id}`;
 
@@ -295,7 +300,10 @@ export const ingestRouter = router({
                   relayUrl,
                 })
                 .catch((err) => {
-                  ctx.logger.error({ err }, "Failed to send Slack notification");
+                  ctx.logger.error(
+                    { err },
+                    "Failed to send Slack notification",
+                  );
                 });
             } else if (input.type === "bug" || input.type === "feedback") {
               slackClient
@@ -310,7 +318,10 @@ export const ingestRouter = router({
                   relayUrl,
                 })
                 .catch((err) => {
-                  ctx.logger.error({ err }, "Failed to send Slack notification");
+                  ctx.logger.error(
+                    { err },
+                    "Failed to send Slack notification",
+                  );
                 });
             }
           }

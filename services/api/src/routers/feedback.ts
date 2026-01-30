@@ -1,6 +1,11 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { router, projectProcedure, sdkProcedure, publicProcedure } from "../lib/trpc";
+import {
+  router,
+  projectProcedure,
+  sdkProcedure,
+  publicProcedure,
+} from "../lib/trpc";
 import {
   createFeedbackItemSchema,
   updateFeedbackItemSchema,
@@ -629,7 +634,9 @@ export const feedbackRouter = router({
 
       const where: Record<string, unknown> = {
         projectId: project.id,
-        status: status || { in: ["under_review", "planned", "in_progress", "shipped"] },
+        status: status || {
+          in: ["under_review", "planned", "in_progress", "shipped"],
+        },
       };
 
       const [items, total] = await Promise.all([

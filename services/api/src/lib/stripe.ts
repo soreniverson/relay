@@ -106,7 +106,7 @@ export async function createPortalSession(params: {
 // Helper to cancel a subscription
 export async function cancelSubscription(
   subscriptionId: string,
-  cancelAtPeriodEnd: boolean = true
+  cancelAtPeriodEnd: boolean = true,
 ): Promise<Stripe.Subscription | null> {
   if (!stripe) return null;
 
@@ -126,7 +126,7 @@ export async function cancelSubscription(
 
 // Helper to get subscription
 export async function getSubscription(
-  subscriptionId: string
+  subscriptionId: string,
 ): Promise<Stripe.Subscription | null> {
   if (!stripe) return null;
 
@@ -141,7 +141,7 @@ export async function getSubscription(
 // Helper to list invoices for a customer
 export async function listInvoices(
   customerId: string,
-  limit: number = 10
+  limit: number = 10,
 ): Promise<Stripe.Invoice[]> {
   if (!stripe) return [];
 
@@ -160,7 +160,7 @@ export async function listInvoices(
 // Verify webhook signature
 export function constructWebhookEvent(
   payload: string | Buffer,
-  signature: string
+  signature: string,
 ): Stripe.Event | null {
   if (!stripe) return null;
 
@@ -168,7 +168,7 @@ export function constructWebhookEvent(
     return stripe.webhooks.constructEvent(
       payload,
       signature,
-      STRIPE_WEBHOOK_SECRET
+      STRIPE_WEBHOOK_SECRET,
     );
   } catch (error) {
     logger.error({ error }, "Failed to verify webhook signature");

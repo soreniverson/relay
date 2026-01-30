@@ -35,7 +35,7 @@ export function useFirstInteraction({
       enabled: !!projectId && enabled && !hasFirstInteraction,
       refetchOnWindowFocus: false,
       staleTime: 0,
-    }
+    },
   );
 
   useEffect(() => {

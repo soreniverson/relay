@@ -10,22 +10,25 @@
 
 ### Working
 
-- [x] SDK: Bug reports, feedback, chat, screenshots, annotations, replay capture, user identification
-- [x] API: Sessions, interactions, conversations, surveys, feedback, roadmap, announcements, integrations
-- [x] Dashboard: Inbox, conversations, surveys, feedback, roadmap, settings (fully wired)
-- [x] Public Pages: Roadmap, feedback board, changelog (all with voting)
+- [x] SDK: Bug reports, feedback, chat, screenshots, annotations, replay capture, user identification, programmatic control, event tracking, survey rendering
+- [x] API: Sessions, interactions, conversations, surveys, feedback, roadmap, announcements, integrations, knowledge base, AI processing
+- [x] Dashboard: Inbox (with AI summarization), conversations (with AI copilot), surveys, feedback, roadmap, knowledge base, settings (fully wired)
+- [x] Public Pages: Roadmap, feedback board, changelog, help center (all with voting/feedback)
 - [x] Integrations: Linear OAuth + issue creation, Slack webhooks
 - [x] Billing: Stripe Checkout, Customer Portal, usage tracking
 - [x] Replays: rrweb-player with playback controls
+- [x] AI Features: OpenAI integration, interaction summarization, suggested replies, relevant article suggestions
+- [x] Knowledge Base: Article CRUD, categories, public help center, search
 - [x] Infrastructure: Docker, Postgres, Redis, MinIO, multi-region schema
 - [x] Auth: Password-based login/signup (replaced magic links for simplicity)
 - [x] CI/CD: GitHub Actions (lint, typecheck, test, build) + Vercel deployment
 
 ### Needs Completion
 
-- [ ] AI features (queued but processors are stubs)
+- [x] AI features (Phase 3 complete: summarization, copilot, knowledge base)
 - [ ] API deployment (currently using Vercel frontend only)
 - [ ] Linear webhook registration (requires deployed API)
+- [ ] Duplicate detection (deferred to Phase 4)
 
 ---
 
@@ -115,43 +118,51 @@ _Completed January 2026_
 
 ---
 
-## Phase 3: AI Layer + Advanced Targeting
+## Phase 3: AI Layer + Advanced Targeting ✅ COMPLETE
+
+_Completed January 2026_
 
 _Differentiation through intelligence._
 
-See `PHASE3_PLAN.md` for detailed implementation plan.
-
 ### 3.1 AI Processing (OpenAI Integration)
 
-- [ ] Interaction summarization (auto-generate from description + logs)
-- [ ] Auto-tagging and categorization
-- [ ] Duplicate detection and linking
-- [ ] Sentiment analysis
+- [x] OpenAI client library (`services/api/src/lib/openai.ts`)
+- [x] Interaction summarization (one-click summarize in inbox)
+- [x] Auto-tagging and categorization (AI-generated tags)
+- [x] Sentiment analysis (integrated with summarization)
+- [ ] Duplicate detection and linking (deferred to Phase 4)
 
 ### 3.2 Knowledge Base - MVP
 
-- [ ] Article CRUD with markdown editor
-- [ ] Category organization
-- [ ] Public help center page
-- [ ] Search (full-text first, semantic later)
-- [ ] SDK widget integration
+- [x] Article CRUD with markdown editor
+- [x] Category organization
+- [x] Public help center page (`/help/[slug]`)
+- [x] Full-text search (Postgres ILIKE)
+- [x] Article feedback (helpful/not helpful)
+- [ ] SDK widget integration (deferred - help center is public page)
 
 ### 3.3 AI Copilot - Basic
 
-- [ ] Suggested replies in conversation view
-- [ ] Relevant article suggestions
-- [ ] One-click insert article links
+- [x] Suggested replies in conversation view
+- [x] Relevant article suggestions
+- [x] One-click copy suggested reply
+- [x] Copilot toggle in conversation UI
 
-### 3.4 SDK Enhancements (from Phase 2)
+### 3.4 SDK Enhancements
 
-- [ ] Programmatic control (open specific views, prefill forms)
-- [ ] Event tracking for surveys/targeting
+- [x] Programmatic control (`open()`, `close()`, `toggle()`, `isOpen()`)
+- [x] Form prefilling (`prefill()`, `clearPrefill()`)
+- [x] Custom data (`setCustomData()`, `getCustomData()`, `clearCustomData()`)
+- [x] Event tracking (`track()` with batching)
+- [x] Session/user info (`getSessionId()`, `getUserId()`, `isInitialized()`)
 
-### 3.5 Survey System Complete (from Phase 2)
+### 3.5 Survey System Complete
 
-- [ ] User trait targeting
-- [ ] Event-based triggers
-- [ ] SDK survey rendering
+- [x] User trait targeting with operators ($gt, $lt, $gte, $lte, $contains, $in, $nin)
+- [x] Event-based triggers (triggerEvent, triggerEventCount)
+- [x] Frequency caps (maxShowsPerUser, minDaysBetweenShows)
+- [x] SDK survey rendering (`showSurvey()`, `checkForSurveys()`)
+- [x] Question types: NPS, rating, text, single/multi choice
 
 ---
 
@@ -338,15 +349,16 @@ These are 2027+ features after core product-market fit.
 
 ## Next Action
 
-**Start Phase 3** — AI Layer with interaction summarization, knowledge base, and copilot.
+**Start Phase 4** — Growth Features with extended integrations, team features, analytics, and AI bot.
 
-See `PHASE3_PLAN.md` for detailed implementation plan.
+**Priority items:**
 
-**Quick start:**
-1. Set up `OPENAI_API_KEY` environment variable
-2. Run Prisma migration for Article and UserEvent models
-3. Implement AI summarization (highest impact, lowest effort)
+1. Jira + GitHub integrations (extend existing integration framework)
+2. Team roles and permissions (Owner, Admin, Agent, Viewer)
+3. Analytics dashboard (interaction volume, response times)
+4. Product tours (SDK integration for guided onboarding)
 
 **Infrastructure (when ready):**
+
 - Deploy API for webhook endpoints
 - Register Linear webhook for bidirectional sync

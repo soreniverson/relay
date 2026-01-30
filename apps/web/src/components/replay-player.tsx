@@ -32,7 +32,10 @@ interface RRWebPlayerInstance {
   pause: () => void;
   goto: (time: number) => void;
   setSpeed: (speed: number) => void;
-  addEventListener: (event: string, callback: (params: unknown) => void) => void;
+  addEventListener: (
+    event: string,
+    callback: (params: unknown) => void,
+  ) => void;
 }
 
 const PLAYBACK_SPEEDS = [0.5, 1, 1.5, 2, 4];
@@ -115,7 +118,9 @@ export function ReplayPlayer({ chunks, duration, onClose }: ReplayPlayerProps) {
         });
       } catch (err) {
         if (mounted) {
-          setError(err instanceof Error ? err.message : "Failed to load replay");
+          setError(
+            err instanceof Error ? err.message : "Failed to load replay",
+          );
           setIsLoading(false);
         }
       }
@@ -153,10 +158,13 @@ export function ReplayPlayer({ chunks, duration, onClose }: ReplayPlayerProps) {
 
   const handleSkip = useCallback(
     (seconds: number) => {
-      const newTime = Math.max(0, Math.min(duration, currentTime + seconds * 1000));
+      const newTime = Math.max(
+        0,
+        Math.min(duration, currentTime + seconds * 1000),
+      );
       handleSeek(newTime);
     },
-    [currentTime, duration, handleSeek]
+    [currentTime, duration, handleSeek],
   );
 
   const handleSpeedChange = useCallback(() => {
