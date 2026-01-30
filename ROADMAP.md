@@ -107,22 +107,19 @@ _Completed January 2026_
 
 - [x] Custom trigger positioning and styling
 - [x] User identification with traits (`Relay.identify()`)
-- [ ] Programmatic control (open specific views, prefill forms) — deferred
-- [ ] Event tracking for surveys/targeting — deferred
 
 ### 2.4 Survey Targeting
 
 - [x] URL-based targeting (API-side)
 - [x] Sampling and frequency caps (showOnce, sampleRate)
-- [ ] User trait targeting — deferred to Phase 3
-- [ ] Event-based triggers — deferred to Phase 3
-- [ ] SDK survey rendering — deferred to Phase 3
 
 ---
 
-## Phase 3: AI Layer (Week 8-10)
+## Phase 3: AI Layer + Advanced Targeting
 
 _Differentiation through intelligence._
+
+See `PHASE3_PLAN.md` for detailed implementation plan.
 
 ### 3.1 AI Processing (OpenAI Integration)
 
@@ -144,6 +141,17 @@ _Differentiation through intelligence._
 - [ ] Suggested replies in conversation view
 - [ ] Relevant article suggestions
 - [ ] One-click insert article links
+
+### 3.4 SDK Enhancements (from Phase 2)
+
+- [ ] Programmatic control (open specific views, prefill forms)
+- [ ] Event tracking for surveys/targeting
+
+### 3.5 Survey System Complete (from Phase 2)
+
+- [ ] User trait targeting
+- [ ] Event-based triggers
+- [ ] SDK survey rendering
 
 ---
 
@@ -332,12 +340,13 @@ These are 2027+ features after core product-market fit.
 
 **Start Phase 3** — AI Layer with interaction summarization, knowledge base, and copilot.
 
-Priority order:
-1. 3.1 AI Processing — OpenAI integration for auto-summarization and tagging
-2. 3.2 Knowledge Base — Article CRUD, public help center, SDK integration
-3. 3.3 AI Copilot — Suggested replies, article suggestions
+See `PHASE3_PLAN.md` for detailed implementation plan.
 
-**Infrastructure needed:**
-- Deploy API to Railway/Render/Fly.io for webhook endpoints
+**Quick start:**
+1. Set up `OPENAI_API_KEY` environment variable
+2. Run Prisma migration for Article and UserEvent models
+3. Implement AI summarization (highest impact, lowest effort)
+
+**Infrastructure (when ready):**
+- Deploy API for webhook endpoints
 - Register Linear webhook for bidirectional sync
-- Set up OpenAI API key for AI features
