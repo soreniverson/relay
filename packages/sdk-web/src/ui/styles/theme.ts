@@ -8,61 +8,70 @@ export interface ThemeColors {
   "--relay-bg-secondary": string;
   "--relay-bg-tertiary": string;
   "--relay-text": string;
+  "--relay-text-secondary": string;
   "--relay-text-muted": string;
-  "--relay-text-subtle": string;
+  "--relay-text-hint": string;
   "--relay-border": string;
   "--relay-border-hover": string;
+  "--relay-border-focus": string;
   "--relay-primary": string;
   "--relay-primary-hover": string;
   "--relay-primary-text": string;
   "--relay-success": string;
   "--relay-warning": string;
   "--relay-error": string;
+  "--relay-info": string;
   "--relay-shadow": string;
   "--relay-shadow-lg": string;
   "--relay-overlay": string;
 }
 
+// Light theme - clean white design
 export const lightTheme: ThemeColors = {
-  "--relay-bg": "0 0% 100%",
-  "--relay-bg-secondary": "240 5% 96%",
-  "--relay-bg-tertiary": "240 5% 92%",
-  "--relay-text": "240 10% 4%",
-  "--relay-text-muted": "240 4% 46%",
-  "--relay-text-subtle": "240 4% 65%",
-  "--relay-border": "240 6% 90%",
-  "--relay-border-hover": "240 5% 75%",
-  "--relay-primary": "240 6% 10%",
-  "--relay-primary-hover": "240 5% 20%",
-  "--relay-primary-text": "0 0% 100%",
-  "--relay-success": "142 71% 45%",
-  "--relay-warning": "38 92% 50%",
-  "--relay-error": "0 72% 51%",
-  "--relay-shadow": "0 1px 2px rgba(0, 0, 0, 0.05)",
-  "--relay-shadow-lg":
-    "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)",
-  "--relay-overlay": "rgba(0, 0, 0, 0.4)",
+  "--relay-bg": "0 0% 100%",              // #ffffff
+  "--relay-bg-secondary": "0 0% 98%",     // #fafafa
+  "--relay-bg-tertiary": "0 0% 96%",      // #f5f5f5
+  "--relay-text": "0 0% 9%",              // #171717
+  "--relay-text-secondary": "0 0% 45%",   // #737373
+  "--relay-text-muted": "0 0% 64%",       // #a3a3a3
+  "--relay-text-hint": "0 0% 74%",        // #bdbdbd
+  "--relay-border": "0 0% 90%",           // #e5e5e5
+  "--relay-border-hover": "0 0% 82%",     // #d4d4d4
+  "--relay-border-focus": "0 0% 70%",     // #b3b3b3
+  "--relay-primary": "217 91% 60%",       // #3b82f6 (blue)
+  "--relay-primary-hover": "217 91% 50%", // darker blue
+  "--relay-primary-text": "0 0% 100%",    // white
+  "--relay-success": "142 71% 45%",       // #22c55e
+  "--relay-warning": "45 93% 47%",        // #eab308
+  "--relay-error": "0 84% 60%",           // #ef4444
+  "--relay-info": "217 91% 60%",          // #3b82f6
+  "--relay-shadow": "0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06)",
+  "--relay-shadow-lg": "0 10px 25px rgba(0, 0, 0, 0.1), 0 6px 10px rgba(0, 0, 0, 0.08)",
+  "--relay-overlay": "rgba(0, 0, 0, 0.5)",
 };
 
+// Dark theme - matches dashboard design system
 export const darkTheme: ThemeColors = {
-  "--relay-bg": "240 10% 4%",
-  "--relay-bg-secondary": "240 6% 10%",
-  "--relay-bg-tertiary": "240 4% 16%",
-  "--relay-text": "0 0% 98%",
-  "--relay-text-muted": "240 5% 65%",
-  "--relay-text-subtle": "240 4% 46%",
-  "--relay-border": "240 4% 16%",
-  "--relay-border-hover": "240 5% 26%",
-  "--relay-primary": "0 0% 98%",
-  "--relay-primary-hover": "0 0% 85%",
-  "--relay-primary-text": "240 10% 4%",
-  "--relay-success": "142 71% 45%",
-  "--relay-warning": "38 92% 50%",
-  "--relay-error": "0 72% 51%",
-  "--relay-shadow": "0 1px 2px rgba(0, 0, 0, 0.3)",
-  "--relay-shadow-lg":
-    "0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3)",
-  "--relay-overlay": "rgba(0, 0, 0, 0.6)",
+  "--relay-bg": "0 0% 4%",                // #0a0a0a
+  "--relay-bg-secondary": "0 0% 6%",      // #0f0f0f
+  "--relay-bg-tertiary": "0 0% 10%",      // #1a1a1a
+  "--relay-text": "0 0% 90%",             // #e5e5e5
+  "--relay-text-secondary": "0 0% 64%",   // #a3a3a3
+  "--relay-text-muted": "0 0% 32%",       // #525252
+  "--relay-text-hint": "0 0% 25%",        // #404040
+  "--relay-border": "0 0% 10%",           // #1a1a1a
+  "--relay-border-hover": "0 0% 15%",     // #262626
+  "--relay-border-focus": "0 0% 20%",     // #333333
+  "--relay-primary": "217 91% 60%",       // #3b82f6 (blue)
+  "--relay-primary-hover": "217 91% 50%", // darker blue
+  "--relay-primary-text": "0 0% 100%",    // white
+  "--relay-success": "142 71% 45%",       // #22c55e
+  "--relay-warning": "45 93% 47%",        // #eab308
+  "--relay-error": "0 84% 60%",           // #ef4444
+  "--relay-info": "217 91% 60%",          // #3b82f6
+  "--relay-shadow": "0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2)",
+  "--relay-shadow-lg": "0 10px 25px rgba(0, 0, 0, 0.4), 0 6px 10px rgba(0, 0, 0, 0.3)",
+  "--relay-overlay": "rgba(0, 0, 0, 0.8)",
 };
 
 export type ThemeMode = "light" | "dark" | "auto";

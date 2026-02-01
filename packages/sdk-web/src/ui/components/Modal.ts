@@ -17,6 +17,7 @@ export interface ModalConfig {
 }
 
 export const modalStyles = `
+  /* Modal - matches dashboard design system */
   #relay-widget .relay-modal {
     position: fixed;
     z-index: 999999;
@@ -26,12 +27,8 @@ export const modalStyles = `
     max-height: min(700px, calc(100vh - 120px));
     background: hsl(var(--relay-bg));
     border: 1px solid hsl(var(--relay-border));
-    border-radius: 16px;
-    box-shadow:
-      0 0 0 1px hsl(var(--relay-border) / 0.1),
-      0 4px 6px -1px rgba(0, 0, 0, 0.08),
-      0 10px 15px -3px rgba(0, 0, 0, 0.1),
-      0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    box-shadow: var(--relay-shadow-lg);
     display: none;
     flex-direction: column;
     overflow: hidden;

@@ -21,10 +21,11 @@ export interface InputProps {
 }
 
 export const inputStyles = `
+  /* Input group - matches dashboard design system */
   #relay-widget .relay-input-group {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
   }
 
   #relay-widget .relay-input-label {
@@ -41,36 +42,36 @@ export const inputStyles = `
 
   #relay-widget .relay-input {
     width: 100%;
-    padding: 10px 14px;
+    height: 36px;
+    padding: 0 12px;
     font-family: inherit;
     font-size: 14px;
-    line-height: 1.5;
+    line-height: 36px;
     color: hsl(var(--relay-text));
     background: hsl(var(--relay-bg-secondary));
     border: 1px solid hsl(var(--relay-border));
-    border-radius: 10px;
+    border-radius: 8px;
     transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
   }
 
   #relay-widget .relay-input::placeholder {
-    color: hsl(var(--relay-text-subtle));
+    color: hsl(var(--relay-text-muted));
   }
 
   #relay-widget .relay-input:hover:not(:focus):not(:disabled) {
     border-color: hsl(var(--relay-border-hover));
-    background: hsl(var(--relay-bg));
   }
 
   #relay-widget .relay-input:focus {
     outline: none;
-    border-color: hsl(var(--relay-primary));
-    box-shadow: 0 0 0 3px hsl(var(--relay-primary) / 0.08);
+    border-color: hsl(var(--relay-border-focus));
+    background: hsl(var(--relay-bg));
   }
 
   #relay-widget .relay-input:disabled {
     opacity: 0.6;
     cursor: not-allowed;
-    background: hsl(var(--relay-bg-secondary));
+    background: hsl(var(--relay-bg-tertiary));
   }
 
   #relay-widget .relay-input--error {
@@ -78,12 +79,14 @@ export const inputStyles = `
   }
 
   #relay-widget .relay-input--error:focus {
+    border-color: hsl(var(--relay-error));
     box-shadow: 0 0 0 3px hsl(var(--relay-error) / 0.1);
   }
 
   #relay-widget .relay-input-error {
     font-size: 12px;
     color: hsl(var(--relay-error));
+    margin-top: 2px;
   }
 
   #relay-widget .relay-input-hint {

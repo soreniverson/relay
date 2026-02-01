@@ -21,10 +21,11 @@ export interface TextareaProps {
 }
 
 export const textareaStyles = `
+  /* Textarea - matches dashboard design system */
   #relay-widget .relay-textarea-group {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
   }
 
   #relay-widget .relay-textarea-label {
@@ -41,38 +42,37 @@ export const textareaStyles = `
 
   #relay-widget .relay-textarea {
     width: 100%;
-    padding: 10px 14px;
+    padding: 10px 12px;
     font-family: inherit;
     font-size: 14px;
     line-height: 1.5;
     color: hsl(var(--relay-text));
     background: hsl(var(--relay-bg-secondary));
     border: 1px solid hsl(var(--relay-border));
-    border-radius: 10px;
+    border-radius: 8px;
     resize: vertical;
     min-height: 100px;
     transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
   }
 
   #relay-widget .relay-textarea::placeholder {
-    color: hsl(var(--relay-text-subtle));
+    color: hsl(var(--relay-text-muted));
   }
 
   #relay-widget .relay-textarea:hover:not(:focus):not(:disabled) {
     border-color: hsl(var(--relay-border-hover));
-    background: hsl(var(--relay-bg));
   }
 
   #relay-widget .relay-textarea:focus {
     outline: none;
-    border-color: hsl(var(--relay-primary));
-    box-shadow: 0 0 0 3px hsl(var(--relay-primary) / 0.08);
+    border-color: hsl(var(--relay-border-focus));
+    background: hsl(var(--relay-bg));
   }
 
   #relay-widget .relay-textarea:disabled {
     opacity: 0.6;
     cursor: not-allowed;
-    background: hsl(var(--relay-bg-secondary));
+    background: hsl(var(--relay-bg-tertiary));
   }
 
   #relay-widget .relay-textarea--error {
@@ -80,6 +80,7 @@ export const textareaStyles = `
   }
 
   #relay-widget .relay-textarea--error:focus {
+    border-color: hsl(var(--relay-error));
     box-shadow: 0 0 0 3px hsl(var(--relay-error) / 0.1);
   }
 
@@ -91,18 +92,19 @@ export const textareaStyles = `
   #relay-widget .relay-textarea-error {
     font-size: 12px;
     color: hsl(var(--relay-error));
+    margin-top: 2px;
   }
 
   #relay-widget .relay-textarea-footer {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: -4px;
+    margin-top: 2px;
   }
 
   #relay-widget .relay-textarea-counter {
     font-size: 11px;
-    color: hsl(var(--relay-text-subtle));
+    color: hsl(var(--relay-text-muted));
     margin-left: auto;
   }
 

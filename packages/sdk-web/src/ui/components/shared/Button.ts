@@ -17,15 +17,16 @@ export interface ButtonProps {
 }
 
 export const buttonStyles = `
+  /* Button base - matches dashboard design system */
   #relay-widget .relay-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
     font-family: inherit;
-    font-weight: 600;
-    border: none;
-    border-radius: 10px;
+    font-weight: 500;
+    border: 1px solid transparent;
+    border-radius: 8px;
     cursor: pointer;
     transition: all 0.15s ease;
     white-space: nowrap;
@@ -33,8 +34,9 @@ export const buttonStyles = `
   }
 
   #relay-widget .relay-btn:disabled {
-    opacity: 0.5;
+    opacity: 0.6;
     cursor: not-allowed;
+    pointer-events: none;
   }
 
   #relay-widget .relay-btn:active:not(:disabled) {
@@ -42,54 +44,60 @@ export const buttonStyles = `
   }
 
   #relay-widget .relay-btn:focus-visible {
-    outline: 2px solid hsl(var(--relay-primary));
-    outline-offset: 2px;
+    outline: none;
+    box-shadow: 0 0 0 2px hsl(var(--relay-bg)), 0 0 0 4px hsl(var(--relay-border-focus));
   }
 
-  /* Sizes */
+  /* Sizes - 32px sm, 36px md, 40px lg */
   #relay-widget .relay-btn--sm {
-    padding: 8px 14px;
+    height: 32px;
+    padding: 0 12px;
     font-size: 13px;
-    border-radius: 8px;
+    border-radius: 6px;
   }
 
   #relay-widget .relay-btn--md {
-    padding: 10px 18px;
+    height: 36px;
+    padding: 0 16px;
     font-size: 14px;
   }
 
   #relay-widget .relay-btn--lg {
-    padding: 12px 24px;
-    font-size: 15px;
-    border-radius: 12px;
+    height: 40px;
+    padding: 0 20px;
+    font-size: 14px;
+    border-radius: 10px;
   }
 
-  /* Variants */
+  /* Primary variant */
   #relay-widget .relay-btn--primary {
     background: hsl(var(--relay-primary));
     color: hsl(var(--relay-primary-text));
-    box-shadow: 0 1px 2px hsl(var(--relay-primary) / 0.2);
+    border-color: hsl(var(--relay-primary));
   }
 
   #relay-widget .relay-btn--primary:hover:not(:disabled) {
     background: hsl(var(--relay-primary-hover));
-    box-shadow: 0 2px 4px hsl(var(--relay-primary) / 0.15);
+    border-color: hsl(var(--relay-primary-hover));
   }
 
+  /* Secondary/default variant - transparent with border */
   #relay-widget .relay-btn--secondary {
-    background: hsl(var(--relay-bg));
+    background: transparent;
     color: hsl(var(--relay-text));
-    border: 1px solid hsl(var(--relay-border));
+    border-color: hsl(var(--relay-border));
   }
 
   #relay-widget .relay-btn--secondary:hover:not(:disabled) {
-    background: hsl(var(--relay-bg-secondary));
+    background: hsl(var(--relay-bg-tertiary));
     border-color: hsl(var(--relay-border-hover));
   }
 
+  /* Ghost variant */
   #relay-widget .relay-btn--ghost {
     background: transparent;
-    color: hsl(var(--relay-text-muted));
+    color: hsl(var(--relay-text-secondary));
+    border-color: transparent;
   }
 
   #relay-widget .relay-btn--ghost:hover:not(:disabled) {
@@ -97,14 +105,16 @@ export const buttonStyles = `
     color: hsl(var(--relay-text));
   }
 
+  /* Danger/destructive variant */
   #relay-widget .relay-btn--danger {
-    background: hsl(var(--relay-error));
-    color: white;
-    box-shadow: 0 1px 2px hsl(var(--relay-error) / 0.2);
+    background: transparent;
+    color: hsl(var(--relay-error));
+    border-color: hsl(var(--relay-error) / 0.3);
   }
 
   #relay-widget .relay-btn--danger:hover:not(:disabled) {
-    filter: brightness(1.1);
+    background: hsl(var(--relay-error) / 0.1);
+    border-color: hsl(var(--relay-error) / 0.5);
   }
 
   /* Full width */

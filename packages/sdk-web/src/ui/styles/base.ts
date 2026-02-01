@@ -34,8 +34,10 @@ export function generateBaseCSS(
     #relay-widget,
     .relay-screenshot-editor {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-      font-size: 14px;
+      font-size: 15px;
+      font-weight: 400;
       line-height: 1.5;
+      letter-spacing: -0.01em;
       color: hsl(var(--relay-text));
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
@@ -49,28 +51,41 @@ export function generateBaseCSS(
       padding: 0;
     }
 
-    /* Typography */
+    /* Typography - matches dashboard design system */
     #relay-widget h1,
     #relay-widget h2,
     #relay-widget h3,
     #relay-widget h4 {
-      font-weight: 600;
-      line-height: 1.25;
+      font-weight: 500;
+      line-height: 1.3;
+      letter-spacing: -0.02em;
       color: hsl(var(--relay-text));
     }
 
-    #relay-widget h1 { font-size: 24px; }
-    #relay-widget h2 { font-size: 20px; }
-    #relay-widget h3 { font-size: 16px; }
+    #relay-widget h1 { font-size: 20px; }
+    #relay-widget h2 { font-size: 16px; }
+    #relay-widget h3 { font-size: 15px; }
     #relay-widget h4 { font-size: 14px; }
 
     #relay-widget p {
-      color: hsl(var(--relay-text-muted));
+      font-size: 14px;
+      color: hsl(var(--relay-text-secondary));
     }
 
     #relay-widget small {
       font-size: 12px;
-      color: hsl(var(--relay-text-subtle));
+      color: hsl(var(--relay-text-muted));
+    }
+
+    #relay-widget .relay-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: hsl(var(--relay-text));
+    }
+
+    #relay-widget .relay-meta {
+      font-size: 12px;
+      color: hsl(var(--relay-text-muted));
     }
 
     /* Links */
@@ -85,8 +100,17 @@ export function generateBaseCSS(
 
     /* Focus styles */
     #relay-widget *:focus-visible {
-      outline: 2px solid hsl(var(--relay-primary));
-      outline-offset: 2px;
+      outline: 2px solid hsl(var(--relay-border-focus));
+      outline-offset: 1px;
+    }
+
+    #relay-widget button:focus-visible,
+    #relay-widget input:focus-visible,
+    #relay-widget textarea:focus-visible,
+    #relay-widget select:focus-visible {
+      outline: none;
+      border-color: hsl(var(--relay-border-focus));
+      box-shadow: 0 0 0 3px hsl(var(--relay-primary) / 0.1);
     }
 
     /* Animations */
