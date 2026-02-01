@@ -650,13 +650,13 @@ function ce(h, e) {
   for (const [t, r] of Object.entries(e))
     r !== void 0 && (h.style[t] = r);
 }
-function ze(h, e) {
+function He(h, e) {
   const t = document.createElement("style");
   return t.id = e, t.textContent = h, t;
 }
-let He = 0;
+let ze = 0;
 function A(h = "relay") {
-  return `${h}-${++He}-${Date.now().toString(36)}`;
+  return `${h}-${++ze}-${Date.now().toString(36)}`;
 }
 function P(h) {
   const e = document.createElement("div");
@@ -779,7 +779,7 @@ function Fe(h, e) {
 ` : t += `${r}: ${a};
 `;
   if (e) {
-    const r = De(e);
+    const r = $e(e);
     if (r) {
       t += `--relay-primary: ${r};
 `;
@@ -793,7 +793,7 @@ function Fe(h, e) {
   }
   return t;
 }
-function De(h) {
+function $e(h) {
   h = h.replace(/^#/, "");
   let e, t, r;
   if (h.length === 3)
@@ -822,7 +822,7 @@ function De(h) {
   }
   return `${Math.round(i * 360)} ${Math.round(l * 100)}% ${Math.round(o * 100)}%`;
 }
-function $e(h) {
+function De(h) {
   if (typeof window > "u")
     return () => {
     };
@@ -1992,7 +1992,7 @@ function ue(h, e = {}) {
       w.innerHTML = Ye(k.type);
       const L = d("div", {
         class: "relay-file-upload__file-info"
-      }), z = d(
+      }), H = d(
         "div",
         { class: "relay-file-upload__file-name" },
         [P(k.name)]
@@ -2001,13 +2001,13 @@ function ue(h, e = {}) {
         { class: "relay-file-upload__file-size" },
         [j(k.size)]
       );
-      L.appendChild(z), L.appendChild(E);
+      L.appendChild(H), L.appendChild(E);
       const I = d("button", {
         type: "button",
         class: "relay-file-upload__file-remove"
       });
       I.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>', I.addEventListener("click", () => {
-        p = p.filter((H, R) => R !== C), S(), o == null || o(p);
+        p = p.filter((z, R) => R !== C), S(), o == null || o(p);
       }), M.appendChild(w), M.appendChild(L), M.appendChild(I), _.appendChild(M);
     });
   }, T = (k) => {
@@ -2273,7 +2273,7 @@ function Ze(h) {
       );
       R.addEventListener("click", () => c()), I.appendChild(R);
     }
-    const H = d(
+    const z = d(
       "button",
       {
         type: "button",
@@ -2281,9 +2281,9 @@ function Ze(h) {
       },
       ["Remove"]
     );
-    H.addEventListener("click", () => {
+    z.addEventListener("click", () => {
       M(null);
-    }), I.appendChild(H), m.appendChild(I), v.appendChild(E), v.appendChild(m);
+    }), I.appendChild(z), m.appendChild(I), v.appendChild(E), v.appendChild(m);
   }
   const _ = d("div", {
     class: "relay-bug-form__options"
@@ -2331,8 +2331,8 @@ function Ze(h) {
     F(k, !0, "Submitting...");
     try {
       await o(I);
-    } catch (H) {
-      F(k, !1), console.error("[Relay] Bug report submission failed:", H);
+    } catch (z) {
+      F(k, !1), console.error("[Relay] Bug report submission failed:", z);
     }
   });
   const M = (E) => {
@@ -2358,10 +2358,10 @@ function Ze(h) {
         class: "relay-bug-form__success-icon"
       });
       I.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>';
-      const H = d("h4", {}, ["Thank you!"]), R = d("p", {}, [
+      const z = d("h4", {}, ["Thank you!"]), R = d("p", {}, [
         "Your bug report has been submitted."
       ]);
-      E.appendChild(I), E.appendChild(H), E.appendChild(R), n.appendChild(E);
+      E.appendChild(I), E.appendChild(z), E.appendChild(R), n.appendChild(E);
     },
     setPrefillData: (E) => {
       E.title && u.setValue(E.title), E.description && g.setValue(E.description);
@@ -2913,11 +2913,11 @@ function nt(h) {
   }), v = f.getContext("2d");
   g.appendChild(f);
   const m = (w) => {
-    const L = f.getBoundingClientRect(), z = f.width / L.width, E = f.height / L.height;
-    let I, H;
-    return "touches" in w ? (I = w.touches[0].clientX, H = w.touches[0].clientY) : (I = w.clientX, H = w.clientY), {
-      x: (I - L.left) * z,
-      y: (H - L.top) * E
+    const L = f.getBoundingClientRect(), H = f.width / L.width, E = f.height / L.height;
+    let I, z;
+    return "touches" in w ? (I = w.touches[0].clientX, z = w.touches[0].clientY) : (I = w.clientX, z = w.clientY), {
+      x: (I - L.left) * H,
+      y: (z - L.top) * E
     };
   }, x = () => {
     v.clearRect(0, 0, f.width, f.height), o.forEach((w) => {
@@ -2925,17 +2925,17 @@ function nt(h) {
     }), u && u.type && _(v, u);
   }, _ = (w, L) => {
     w.strokeStyle = L.color || l, w.fillStyle = L.color || l, w.lineWidth = 3;
-    const z = L.x || 0, E = L.y || 0, I = L.width || 0, H = L.height || 0;
+    const H = L.x || 0, E = L.y || 0, I = L.width || 0, z = L.height || 0;
     switch (L.type) {
       case "rectangle":
-        w.strokeRect(z, E, I, H);
+        w.strokeRect(H, E, I, z);
         break;
       case "circle":
         w.beginPath();
-        const R = Math.abs(I) / 2, be = Math.abs(H) / 2;
+        const R = Math.abs(I) / 2, be = Math.abs(z) / 2;
         w.ellipse(
-          z + I / 2,
-          E + H / 2,
+          H + I / 2,
+          E + z / 2,
           R,
           be,
           0,
@@ -2944,24 +2944,24 @@ function nt(h) {
         ), w.stroke();
         break;
       case "arrow":
-        w.beginPath(), w.moveTo(z, E), w.lineTo(z + I, E + H), w.stroke();
-        const N = Math.atan2(H, I), V = 15;
-        w.beginPath(), w.moveTo(z + I, E + H), w.lineTo(
-          z + I - V * Math.cos(N - Math.PI / 6),
-          E + H - V * Math.sin(N - Math.PI / 6)
+        w.beginPath(), w.moveTo(H, E), w.lineTo(H + I, E + z), w.stroke();
+        const N = Math.atan2(z, I), V = 15;
+        w.beginPath(), w.moveTo(H + I, E + z), w.lineTo(
+          H + I - V * Math.cos(N - Math.PI / 6),
+          E + z - V * Math.sin(N - Math.PI / 6)
         ), w.lineTo(
-          z + I - V * Math.cos(N + Math.PI / 6),
-          E + H - V * Math.sin(N + Math.PI / 6)
+          H + I - V * Math.cos(N + Math.PI / 6),
+          E + z - V * Math.sin(N + Math.PI / 6)
         ), w.closePath(), w.fill();
         break;
       case "highlight":
-        w.fillStyle = (L.color || l) + "40", w.fillRect(z, E, I, H);
+        w.fillStyle = (L.color || l) + "40", w.fillRect(H, E, I, z);
         break;
       case "blur":
-        w.fillStyle = "rgba(128, 128, 128, 0.6)", w.fillRect(z, E, I, H);
+        w.fillStyle = "rgba(128, 128, 128, 0.6)", w.fillRect(H, E, I, z);
         break;
       case "text":
-        L.text && (w.font = "16px sans-serif", w.fillText(L.text, z, E));
+        L.text && (w.font = "16px sans-serif", w.fillText(L.text, H, E));
         break;
     }
   };
@@ -2970,8 +2970,8 @@ function nt(h) {
     b && b.remove(), b = d("input", {
       type: "text",
       class: "relay-annotation-layer__text-input"
-    }), b.style.left = `${w / f.width * 100}%`, b.style.top = `${L / f.height * 100}%`, b.style.color = l, b.style.borderColor = l, b.addEventListener("keydown", (z) => {
-      z.key === "Enter" ? T() : z.key === "Escape" && (b == null || b.remove(), b = null);
+    }), b.style.left = `${w / f.width * 100}%`, b.style.top = `${L / f.height * 100}%`, b.style.color = l, b.style.borderColor = l, b.addEventListener("keydown", (H) => {
+      H.key === "Enter" ? T() : H.key === "Escape" && (b == null || b.remove(), b = null);
     }), b.addEventListener("blur", T), g.appendChild(b), b.focus();
   }, T = () => {
     if (!b || !b.value.trim()) {
@@ -2979,7 +2979,7 @@ function nt(h) {
       return;
     }
     f.getBoundingClientRect();
-    const w = parseFloat(b.style.left) / 100 * f.width, L = parseFloat(b.style.top) / 100 * f.height, z = {
+    const w = parseFloat(b.style.left) / 100 * f.width, L = parseFloat(b.style.top) / 100 * f.height, H = {
       id: A("annotation"),
       type: "text",
       x: w,
@@ -2988,11 +2988,11 @@ function nt(h) {
       color: l,
       text: b.value.trim()
     };
-    o.push(z), c = [], s == null || s(z), x(), b.remove(), b = null;
+    o.push(H), c = [], s == null || s(H), x(), b.remove(), b = null;
   }, k = (w) => {
     if (i === "text") {
-      const z = m(w);
-      S(z.x, z.y);
+      const H = m(w);
+      S(H.x, H.y);
       return;
     }
     p = !0;
@@ -4258,19 +4258,20 @@ const Mt = `
 
   #relay-widget .relay-home__greeting {
     margin-bottom: 24px;
+    text-align: center;
   }
 
   #relay-widget .relay-home__greeting h2 {
-    font-size: 24px;
-    font-weight: 700;
+    font-size: 22px;
+    font-weight: 600;
     color: hsl(var(--relay-text));
-    margin: 0 0 4px;
+    margin: 0 0 6px;
     letter-spacing: -0.02em;
   }
 
   #relay-widget .relay-home__greeting p {
-    font-size: 15px;
-    color: hsl(var(--relay-text-muted));
+    font-size: 14px;
+    color: hsl(var(--relay-text-secondary));
     margin: 0;
   }
 
@@ -4374,10 +4375,12 @@ const Mt = `
     transform: scale(0.98);
   }
 
-  #relay-widget .relay-home__action-btn span {
-    font-size: 16px;
+  #relay-widget .relay-home__action-btn svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
   }
-`, Et = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>';
+`, Et = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>', It = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2l1.5 1.5M16 2l-1.5 1.5M9 18h6M12 18v4"/><circle cx="12" cy="11" r="5"/><path d="M5 11h2M17 11h2M7.5 6.5l-2-2M16.5 6.5l2-2"/></svg>', Ht = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/></svg>';
 function ie(h) {
   const {
     greeting: e = "Hi there!",
@@ -4413,36 +4416,36 @@ function ie(h) {
     type: "button",
     class: "relay-home__action-btn"
   });
-  f.innerHTML = "<span>🐛</span> Report a bug", f.addEventListener("click", a);
+  f.innerHTML = `${It} Report a bug`, f.addEventListener("click", a);
   const v = d("button", {
     type: "button",
     class: "relay-home__action-btn"
   });
-  return v.innerHTML = "<span>💡</span> Request a feature", v.addEventListener("click", s), g.appendChild(f), g.appendChild(v), i.appendChild(l), i.appendChild(p), i.appendChild(g), {
+  return v.innerHTML = `${Ht} Request a feature`, v.addEventListener("click", s), g.appendChild(f), g.appendChild(v), i.appendChild(l), i.appendChild(p), i.appendChild(g), {
     element: i,
     focus: () => y.focus()
   };
 }
-const It = `
+const zt = `
   ${Lt}
-`, zt = {
+`, Rt = {
   mobile: 480
 };
-function D() {
-  return typeof window > "u" ? "desktop" : window.innerWidth <= zt.mobile ? "mobile" : "desktop";
+function $() {
+  return typeof window > "u" ? "desktop" : window.innerWidth <= Rt.mobile ? "mobile" : "desktop";
 }
 function ye(h) {
   if (typeof window > "u")
     return () => {
     };
-  let e = D();
+  let e = $();
   const t = () => {
-    const r = D();
+    const r = $();
     r !== e && (e = r, h(r));
   };
   return window.addEventListener("resize", t), () => window.removeEventListener("resize", t);
 }
-function ge(h, e = D()) {
+function ge(h, e = $()) {
   if (e === "mobile")
     return {
       trigger: {
@@ -4473,12 +4476,12 @@ function ge(h, e = D()) {
     }
   };
 }
-const Ht = `
+const At = `
   #relay-widget .relay-trigger {
     position: fixed;
     z-index: 999998;
-    width: 60px;
-    height: 60px;
+    width: 48px;
+    height: 48px;
     border-radius: 50%;
     background: hsl(var(--relay-primary));
     border: none;
@@ -4511,8 +4514,8 @@ const Ht = `
   }
 
   #relay-widget .relay-trigger__icon {
-    width: 26px;
-    height: 26px;
+    width: 22px;
+    height: 22px;
     color: hsl(var(--relay-primary-text));
     transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   }
@@ -4556,11 +4559,11 @@ const Ht = `
       height: 24px;
     }
   }
-`, Rt = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/></svg>', At = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>';
-function Bt(h) {
+`, Bt = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/></svg>', Ft = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+function $t(h) {
   const {
     position: e,
-    icon: t = Rt,
+    icon: t = Bt,
     ariaLabel: r = "Open feedback widget",
     onClick: a
   } = h, s = d("button", {
@@ -4583,7 +4586,7 @@ function Bt(h) {
   return a && s.addEventListener("click", a), {
     element: s,
     setOpen: (p) => {
-      s.classList.toggle("relay-trigger--open", p), i.innerHTML = p ? At : t, s.setAttribute(
+      s.classList.toggle("relay-trigger--open", p), i.innerHTML = p ? Ft : t, s.setAttribute(
         "aria-label",
         p ? "Close feedback widget" : r
       );
@@ -4599,15 +4602,15 @@ function Bt(h) {
     }
   };
 }
-const Ft = `
+const Dt = `
   /* Modal - matches dashboard design system */
   #relay-widget .relay-modal {
     position: fixed;
     z-index: 999999;
     width: 400px;
     max-width: 400px;
-    height: 700px;
-    max-height: min(700px, calc(100vh - 120px));
+    height: 600px;
+    max-height: min(600px, calc(100vh - 120px));
     background: hsl(var(--relay-bg));
     border: 1px solid hsl(var(--relay-border));
     border-radius: 12px;
@@ -4616,7 +4619,7 @@ const Ft = `
     flex-direction: column;
     overflow: hidden;
     right: 24px;
-    bottom: 96px;
+    bottom: 80px;
   }
 
   #relay-widget .relay-modal--open {
@@ -4726,7 +4729,7 @@ const Ft = `
     opacity: 0;
   }
 `;
-function Dt(h) {
+function Pt(h) {
   const { position: e, onClose: t } = h;
   let r = !1, a = !1;
   const s = d("div", { class: "relay-modal-overlay" }), i = d("div", {
@@ -4736,7 +4739,7 @@ function Dt(h) {
   });
   i.appendChild(l);
   const o = (u, g) => {
-    const f = g || D(), v = ge(u, f);
+    const f = g || $(), v = ge(u, f);
     i.style.top = "", i.style.right = "", i.style.bottom = "", i.style.left = "", f === "desktop" && ce(i, v.modal);
   };
   o(e);
@@ -4753,13 +4756,13 @@ function Dt(h) {
   const y = () => {
     if (r)
       return;
-    r = !0, i.classList.add("relay-modal--open"), i.classList.remove("relay-modal--closing"), D() === "mobile" && (s.classList.add("relay-modal-overlay--visible"), s.classList.remove("relay-modal-overlay--hiding"));
+    r = !0, i.classList.add("relay-modal--open"), i.classList.remove("relay-modal--closing"), $() === "mobile" && (s.classList.add("relay-modal-overlay--visible"), s.classList.remove("relay-modal-overlay--hiding"));
     const u = i.querySelector(
       'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
     );
     u == null || u.focus();
   }, n = async () => {
-    !r || a || (a = !0, i.classList.add("relay-modal--closing"), D() === "mobile" && s.classList.add("relay-modal-overlay--hiding"), await le(i), i.classList.remove("relay-modal--open", "relay-modal--closing"), s.classList.remove(
+    !r || a || (a = !0, i.classList.add("relay-modal--closing"), $() === "mobile" && s.classList.add("relay-modal-overlay--hiding"), await le(i), i.classList.remove("relay-modal--open", "relay-modal--closing"), s.classList.remove(
       "relay-modal-overlay--visible",
       "relay-modal-overlay--hiding"
     ), r = !1, a = !1, t == null || t());
@@ -4782,7 +4785,7 @@ function Dt(h) {
     }
   };
 }
-const $t = `
+const Nt = `
   #relay-widget .relay-bottom-nav {
     display: flex;
     align-items: center;
@@ -4868,7 +4871,7 @@ const $t = `
   roadmap: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 10c-.83 0-1.5-.67-1.5-1.5v-5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5z"/><path d="M20.5 10H19V8.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/><path d="M9.5 14c.83 0 1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5S8 21.33 8 20.5v-5c0-.83.67-1.5 1.5-1.5z"/><path d="M3.5 14H5v1.5c0 .83-.67 1.5-1.5 1.5S2 16.33 2 15.5 2.67 14 3.5 14z"/><path d="M14 14.5c0-.83.67-1.5 1.5-1.5h5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5h-5c-.83 0-1.5-.67-1.5-1.5z"/><path d="M15.5 19H14v1.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5-.67-1.5-1.5-1.5z"/><path d="M10 9.5c0 .83-.67 1.5-1.5 1.5h-5C2.67 11 2 10.33 2 9.5S2.67 8 3.5 8h5c.83 0 1.5.67 1.5 1.5z"/><path d="M8.5 5H10V3.5c0-.83-.67-1.5-1.5-1.5S7 2.67 7 3.5 7.67 5 8.5 5z"/></svg>',
   roadmapActive: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M14.5 10c-.83 0-1.5-.67-1.5-1.5v-5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5z"/><path d="M20.5 10H19V8.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/><path d="M9.5 14c.83 0 1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5S8 21.33 8 20.5v-5c0-.83.67-1.5 1.5-1.5z"/><path d="M3.5 14H5v1.5c0 .83-.67 1.5-1.5 1.5S2 16.33 2 15.5 2.67 14 3.5 14z"/><path d="M14 14.5c0-.83.67-1.5 1.5-1.5h5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5h-5c-.83 0-1.5-.67-1.5-1.5z"/><path d="M15.5 19H14v1.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5-.67-1.5-1.5-1.5z"/><path d="M10 9.5c0 .83-.67 1.5-1.5 1.5h-5C2.67 11 2 10.33 2 9.5S2.67 8 3.5 8h5c.83 0 1.5.67 1.5 1.5z"/><path d="M8.5 5H10V3.5c0-.83-.67-1.5-1.5-1.5S7 2.67 7 3.5 7.67 5 8.5 5z"/></svg>'
 };
-function Pt(h) {
+function Vt(h) {
   const {
     activeTab: e,
     onTabChange: t,
@@ -4964,7 +4967,7 @@ const U = [
     unreadCount: 0,
     createdAt: "2024-01-10T08:30:00Z"
   }
-], $ = {
+], D = {
   "conv-1": [
     {
       id: "msg-1",
@@ -5086,21 +5089,21 @@ const U = [
     hasVoted: !1
   }
 ];
-function Nt() {
+function Ot() {
   return [...U];
 }
-function Vt(h) {
-  return $[h] || [];
+function jt(h) {
+  return D[h] || [];
 }
-function Ot() {
+function qt() {
   return [...me];
 }
-function jt(h) {
+function Ut(h) {
   const e = me.find((t) => t.id === h);
   return e ? (e.hasVoted = !e.hasVoted, e.voteCount += e.hasVoted ? 1 : -1, { ...e }) : null;
 }
 let fe = 100;
-function qt(h, e) {
+function Wt(h, e) {
   const t = {
     id: `msg-${++fe}`,
     conversationId: h,
@@ -5108,7 +5111,7 @@ function qt(h, e) {
     direction: "inbound",
     createdAt: (/* @__PURE__ */ new Date()).toISOString()
   };
-  $[h] || ($[h] = []), $[h].push(t);
+  D[h] || (D[h] = []), D[h].push(t);
   const r = U.find((a) => a.id === h);
   return r && (r.lastMessage = {
     body: e,
@@ -5116,9 +5119,9 @@ function qt(h, e) {
     createdAt: t.createdAt
   }), t;
 }
-let Ut = 10;
-function Wt(h, e) {
-  const t = (/* @__PURE__ */ new Date()).toISOString(), r = `conv-${++Ut}`, a = {
+let Yt = 10;
+function Kt(h, e) {
+  const t = (/* @__PURE__ */ new Date()).toISOString(), r = `conv-${++Yt}`, a = {
     id: r,
     subject: h,
     lastMessage: {
@@ -5129,7 +5132,7 @@ function Wt(h, e) {
     unreadCount: 0,
     createdAt: t
   };
-  return U.unshift(a), $[r] = [
+  return U.unshift(a), D[r] = [
     {
       id: `msg-${++fe}`,
       conversationId: r,
@@ -5139,7 +5142,7 @@ function Wt(h, e) {
     }
   ], a;
 }
-const Yt = `
+const Gt = `
   #relay-widget .relay-page-header {
     display: flex;
     align-items: center;
@@ -5430,8 +5433,8 @@ const Yt = `
     padding: 32px;
     color: hsl(var(--relay-text-muted));
   }
-`, Kt = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>', se = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>';
-class Gt {
+`, Xt = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>', se = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+class Zt {
   constructor(e) {
     this.container = null, this.trigger = null, this.modal = null, this.bottomNav = null, this.homePage = null, this.bugReportForm = null, this.feedbackForm = null, this.featureRequestForm = null, this.screenshotEditor = null, this.conversationList = null, this.messageThread = null, this.chatInput = null, this.currentConversation = null, this.messagePollingInterval = null, this.roadmapList = null, this.roadmapItems = [], this.helpCategories = [], this.helpArticles = [], this.currentHelpArticle = null, this.helpSearchQuery = "", this.currentView = "home", this.isOpen = !1, this.screenshotBlob = null, this.annotations = [], this.formDirty = !1, this.lastError = null, this.prefillData = {}, this.removeThemeListener = null, this.config = e.config, this.callbacks = e.callbacks, this.themeMode = e.themeMode || "auto", this.useMockData = e.useMockData ?? !1;
   }
@@ -5444,14 +5447,14 @@ class Gt {
     this.container = d("div", {
       id: "relay-widget"
     });
-    const e = this.generateStyles(), t = ze(e, "relay-widget-styles");
-    this.container.appendChild(t), this.trigger = Bt({
+    const e = this.generateStyles(), t = He(e, "relay-widget-styles");
+    this.container.appendChild(t), this.trigger = $t({
       position: this.config.position || "bottom-right",
       onClick: () => this.toggle()
-    }), this.container.appendChild(this.trigger.element), this.modal = Dt({
+    }), this.container.appendChild(this.trigger.element), this.modal = Pt({
       position: this.config.position || "bottom-right",
       onClose: () => this.handleClose()
-    }), this.container.appendChild(this.modal.overlay), this.container.appendChild(this.modal.element), this.bottomNav = Pt({
+    }), this.container.appendChild(this.modal.overlay), this.container.appendChild(this.modal.element), this.bottomNav = Vt({
       activeTab: "home",
       showMessages: this.config.showChat !== !1,
       showHelp: !1,
@@ -5464,7 +5467,7 @@ class Gt {
       onChatSubmit: (r) => this.handleChatSubmit(r),
       onReportBug: () => this.navigateTo("bug-report"),
       onRequestFeature: () => this.navigateTo("feature-request")
-    }), this.renderCurrentView(), this.themeMode === "auto" && (this.removeThemeListener = $e(() => {
+    }), this.renderCurrentView(), this.themeMode === "auto" && (this.removeThemeListener = De(() => {
       this.updateTheme();
     })), document.body.appendChild(this.container);
   }
@@ -5554,11 +5557,11 @@ class Gt {
     return `
       ${Pe(this.themeMode, this.config.primaryColor)}
       ${Ne()}
-      ${Ht}
-      ${Ft}
-      ${$t}
-      ${Yt}
-      ${It}
+      ${At}
+      ${Dt}
+      ${Nt}
+      ${Gt}
+      ${zt}
       ${Ke}
       ${e(at)}
       ${e(dt)}
@@ -5663,7 +5666,7 @@ class Gt {
     var e, t, r, a, s, i, l;
     try {
       if (this.useMockData) {
-        const o = Nt();
+        const o = Ot();
         (e = this.conversationList) == null || e.setConversations(o), (t = this.conversationList) == null || t.setLoading(!1);
         const c = o.reduce(
           (p, y) => p + y.unreadCount,
@@ -5723,7 +5726,7 @@ class Gt {
     if (this.currentConversation)
       try {
         if (this.useMockData) {
-          const i = Vt(this.currentConversation.id);
+          const i = jt(this.currentConversation.id);
           (e = this.messageThread) == null || e.setMessages(
             i.map((l) => ({
               id: l.id,
@@ -5821,7 +5824,7 @@ class Gt {
     var e, t, r, a, s;
     try {
       if (this.useMockData) {
-        const i = Ot();
+        const i = qt();
         this.roadmapItems = i, (e = this.roadmapList) == null || e.setItems(i), (t = this.roadmapList) == null || t.setLoading(!1);
       } else {
         const i = await this.callbacks.onFetchRoadmap();
@@ -6069,7 +6072,7 @@ It can have multiple paragraphs.`
         type: "button",
         class: "relay-page-header__back"
       });
-      l.innerHTML = Kt, l.setAttribute("aria-label", "Go back"), l.addEventListener("click", () => {
+      l.innerHTML = Xt, l.setAttribute("aria-label", "Go back"), l.addEventListener("click", () => {
         this.confirmDiscard() && (this.formDirty = !1, r ? r() : this.navigateTo("home"));
       }), a.appendChild(l);
     }
@@ -6109,7 +6112,7 @@ It can have multiple paragraphs.`
   async handleChatSubmit(e) {
     try {
       if (this.useMockData) {
-        const t = Wt(
+        const t = Kt(
           e.substring(0, 50) + (e.length > 50 ? "..." : ""),
           e
         );
@@ -6187,7 +6190,7 @@ It can have multiple paragraphs.`
     };
     (a = this.messageThread) == null || a.addMessage(r), (s = this.chatInput) == null || s.clear();
     try {
-      this.useMockData ? qt(this.currentConversation.id, e) : await this.callbacks.onSendMessage(
+      this.useMockData ? Wt(this.currentConversation.id, e) : await this.callbacks.onSendMessage(
         this.currentConversation.id,
         e
       );
@@ -6206,7 +6209,7 @@ It can have multiple paragraphs.`
     const r = this.roadmapItems.findIndex((i) => i.id === e.id);
     r !== -1 && (this.roadmapItems[r] = t);
     try {
-      this.useMockData ? jt(e.id) : e.hasVoted ? await this.callbacks.onUnvote(e.id) : await this.callbacks.onVote(e.id);
+      this.useMockData ? Ut(e.id) : e.hasVoted ? await this.callbacks.onUnvote(e.id) : await this.callbacks.onVote(e.id);
     } catch (i) {
       console.error("[Relay] Vote failed:", i), (s = this.roadmapList) == null || s.updateItem(e), r !== -1 && (this.roadmapItems[r] = e), this.showError("Failed to update vote");
     }
@@ -6245,7 +6248,7 @@ It can have multiple paragraphs.`
     ) : !0;
   }
 }
-const Xt = `
+const Jt = `
   .relay-tour-overlay {
     position: fixed;
     inset: 0;
@@ -6509,12 +6512,12 @@ const Xt = `
     50% { transform: scale(1.3); opacity: 0; }
   }
 `;
-class Zt {
+class Qt {
   constructor(e) {
     this.currentTour = null, this.currentStepIndex = 0, this.container = null, this.styleElement = null, this.advanceListener = null, this.advanceListenerTarget = null, this.advanceListenerType = null, this.callbacks = e;
   }
   injectStyles() {
-    this.styleElement || (this.styleElement = document.createElement("style"), this.styleElement.textContent = Xt, document.head.appendChild(this.styleElement));
+    this.styleElement || (this.styleElement = document.createElement("style"), this.styleElement.textContent = Jt, document.head.appendChild(this.styleElement));
   }
   async startTour(e) {
     this.injectStyles(), this.currentTour = e, this.currentStepIndex = e.currentStep || 0, await this.callbacks.onStart(e.id), this.renderStep();
@@ -6792,7 +6795,7 @@ class Zt {
     this.cleanup(), this.styleElement && (this.styleElement.remove(), this.styleElement = null);
   }
 }
-class Jt {
+class er {
   constructor() {
     this.config = null, this.api = null, this.sessionId = null, this.userId = null, this.initialized = !1, this.consoleCapture = we(), this.networkCapture = ke(), this.errorCapture = Ce(), this.replayCapture = null, this.replayId = null, this.eventHandlers = /* @__PURE__ */ new Map(), this.heartbeatInterval = null, this.widgetOpen = !1, this.widgetContainer = null, this.widget = null, this.prefillData = {}, this.customData = {}, this.tourRenderer = null, this.activeTours = [];
   }
@@ -6829,7 +6832,7 @@ class Jt {
     }, 1e3), e.debug && console.log("[Relay] Initialized", { sessionId: this.sessionId });
   }
   initTourRenderer() {
-    this.tourRenderer = new Zt({
+    this.tourRenderer = new Qt({
       onStart: async (e) => {
         this.api && this.sessionId && await this.api.startTour({
           tourId: e,
@@ -7474,7 +7477,7 @@ class Jt {
   // ============================================================================
   createWidget() {
     var e, t, r;
-    this.widget || (this.widget = new Gt({
+    this.widget || (this.widget = new Zt({
       config: ((e = this.config) == null ? void 0 : e.widget) || {},
       themeMode: "auto",
       useMockData: ((r = (t = this.config) == null ? void 0 : t.widget) == null ? void 0 : r.useMockData) ?? !1,
@@ -7688,11 +7691,11 @@ ${e.description}`,
     this.widget && (this.widget.close(), this.widgetOpen = !1);
   }
 }
-const Qt = new Jt();
-typeof window < "u" && (window.Relay = Qt);
+const tr = new er();
+typeof window < "u" && (window.Relay = tr);
 export {
-  Qt as Relay,
-  Jt as RelaySDK,
-  Qt as default
+  tr as Relay,
+  er as RelaySDK,
+  tr as default
 };
 //# sourceMappingURL=relay.esm.js.map

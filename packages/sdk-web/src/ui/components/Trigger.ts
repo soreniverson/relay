@@ -22,8 +22,8 @@ export const triggerStyles = `
   #relay-widget .relay-trigger {
     position: fixed;
     z-index: 999998;
-    width: 60px;
-    height: 60px;
+    width: 48px;
+    height: 48px;
     border-radius: 50%;
     background: hsl(var(--relay-primary));
     border: none;
@@ -56,8 +56,8 @@ export const triggerStyles = `
   }
 
   #relay-widget .relay-trigger__icon {
-    width: 26px;
-    height: 26px;
+    width: 22px;
+    height: 22px;
     color: hsl(var(--relay-primary-text));
     transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   }

@@ -23,19 +23,20 @@ export const homePageStyles = `
 
   #relay-widget .relay-home__greeting {
     margin-bottom: 24px;
+    text-align: center;
   }
 
   #relay-widget .relay-home__greeting h2 {
-    font-size: 24px;
-    font-weight: 700;
+    font-size: 22px;
+    font-weight: 600;
     color: hsl(var(--relay-text));
-    margin: 0 0 4px;
+    margin: 0 0 6px;
     letter-spacing: -0.02em;
   }
 
   #relay-widget .relay-home__greeting p {
-    font-size: 15px;
-    color: hsl(var(--relay-text-muted));
+    font-size: 14px;
+    color: hsl(var(--relay-text-secondary));
     margin: 0;
   }
 
@@ -139,12 +140,16 @@ export const homePageStyles = `
     transform: scale(0.98);
   }
 
-  #relay-widget .relay-home__action-btn span {
-    font-size: 16px;
+  #relay-widget .relay-home__action-btn svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
   }
 `;
 
 const SEND_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>`;
+const BUG_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2l1.5 1.5M16 2l-1.5 1.5M9 18h6M12 18v4"/><circle cx="12" cy="11" r="5"/><path d="M5 11h2M17 11h2M7.5 6.5l-2-2M16.5 6.5l2-2"/></svg>`;
+const LIGHTBULB_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/></svg>`;
 
 export interface HomePageResult {
   element: HTMLElement;
@@ -222,14 +227,14 @@ export function createHomePage(config: HomePageConfig): HomePageResult {
     type: "button",
     class: "relay-home__action-btn",
   });
-  bugBtn.innerHTML = "<span>🐛</span> Report a bug";
+  bugBtn.innerHTML = `${BUG_ICON} Report a bug`;
   bugBtn.addEventListener("click", onReportBug);
 
   const featureBtn = createElement("button", {
     type: "button",
     class: "relay-home__action-btn",
   });
-  featureBtn.innerHTML = "<span>💡</span> Request a feature";
+  featureBtn.innerHTML = `${LIGHTBULB_ICON} Request a feature`;
   featureBtn.addEventListener("click", onRequestFeature);
 
   actionsSection.appendChild(bugBtn);

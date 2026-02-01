@@ -23,8 +23,8 @@ export const modalStyles = `
     z-index: 999999;
     width: 400px;
     max-width: 400px;
-    height: 700px;
-    max-height: min(700px, calc(100vh - 120px));
+    height: 600px;
+    max-height: min(600px, calc(100vh - 120px));
     background: hsl(var(--relay-bg));
     border: 1px solid hsl(var(--relay-border));
     border-radius: 12px;
@@ -33,7 +33,7 @@ export const modalStyles = `
     flex-direction: column;
     overflow: hidden;
     right: 24px;
-    bottom: 96px;
+    bottom: 80px;
   }
 
   #relay-widget .relay-modal--open {
