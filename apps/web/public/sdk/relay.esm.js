@@ -687,12 +687,12 @@ const G = {
   // #d4d4d4
   "--relay-border-focus": "0 0% 70%",
   // #b3b3b3
-  "--relay-primary": "217 91% 60%",
-  // #3b82f6 (blue)
-  "--relay-primary-hover": "217 91% 50%",
-  // darker blue
+  "--relay-primary": "0 0% 9%",
+  // near black
+  "--relay-primary-hover": "0 0% 20%",
+  // slightly lighter
   "--relay-primary-text": "0 0% 100%",
-  // white
+  // white text on dark
   "--relay-success": "142 71% 45%",
   // #22c55e
   "--relay-warning": "45 93% 47%",
@@ -725,12 +725,12 @@ const G = {
   // #262626
   "--relay-border-focus": "0 0% 20%",
   // #333333
-  "--relay-primary": "217 91% 60%",
-  // #3b82f6 (blue)
-  "--relay-primary-hover": "217 91% 50%",
-  // darker blue
-  "--relay-primary-text": "0 0% 100%",
+  "--relay-primary": "0 0% 98%",
   // white
+  "--relay-primary-hover": "0 0% 85%",
+  // slightly darker
+  "--relay-primary-text": "0 0% 4%",
+  // dark text on white
   "--relay-success": "142 71% 45%",
   // #22c55e
   "--relay-warning": "45 93% 47%",
