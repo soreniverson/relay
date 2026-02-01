@@ -8,12 +8,42 @@ import {
 import { TRPCError } from "@trpc/server";
 import { prisma } from "../lib/prisma";
 
-// Simple RAG search using text matching (in production, use pgvector)
+// OpenAI API configuration
+const OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
+
+interface OpenAIMessage {
+  role: "system" | "user" | "assistant";
+  content: string;
+}
+
+interface OpenAIResponse {
+  id: string;
+  choices: Array<{
+    message: {
+      content: string;
+    };
+    finish_reason: string;
+  }>;
+  usage: {
+    prompt_tokens: number;
+    completion_tokens: number;
+    total_tokens: number;
+  };
+}
+
+// Simple RAG search using text matching
+// For production, consider using pgvector for semantic search
 async function searchKnowledgeBase(
   projectId: string,
   query: string,
   limit = 5,
 ) {
+  // Extract keywords for better matching
+  const keywords = query
+    .toLowerCase()
+    .split(/\s+/)
+    .filter((w) => w.length > 2);
+
   const articles = await prisma.article.findMany({
     where: {
       projectId,
@@ -22,6 +52,13 @@ async function searchKnowledgeBase(
       OR: [
         { title: { contains: query, mode: "insensitive" } },
         { content: { contains: query, mode: "insensitive" } },
+        // Also search for individual keywords
+        ...keywords.slice(0, 3).map((keyword) => ({
+          OR: [
+            { title: { contains: keyword, mode: "insensitive" as const } },
+            { content: { contains: keyword, mode: "insensitive" as const } },
+          ],
+        })),
       ],
     },
     select: {
@@ -33,16 +70,34 @@ async function searchKnowledgeBase(
     take: limit,
   });
 
-  return articles.map((a) => ({
-    id: a.id,
-    title: a.title,
-    content: a.content.slice(0, 1000), // Truncate for context
-    slug: a.slug,
-    score: 1, // In production, this would be similarity score
-  }));
+  // Calculate simple relevance score based on keyword matches
+  return articles.map((a) => {
+    const titleLower = a.title.toLowerCase();
+    const contentLower = a.content.toLowerCase();
+    const queryLower = query.toLowerCase();
+
+    let score = 0;
+    // Exact phrase match in title
+    if (titleLower.includes(queryLower)) score += 1.0;
+    // Exact phrase match in content
+    if (contentLower.includes(queryLower)) score += 0.5;
+    // Keyword matches
+    keywords.forEach((kw) => {
+      if (titleLower.includes(kw)) score += 0.3;
+      if (contentLower.includes(kw)) score += 0.1;
+    });
+
+    return {
+      id: a.id,
+      title: a.title,
+      content: a.content.slice(0, 1500), // Truncate for context window
+      slug: a.slug,
+      score: Math.min(score, 1), // Normalize to 0-1
+    };
+  }).sort((a, b) => b.score - a.score);
 }
 
-// Generate AI response
+// Generate AI response using OpenAI
 async function generateBotResponse(
   config: {
     name: string;
@@ -52,48 +107,149 @@ async function generateBotResponse(
     temperature: number;
     maxTokens: number;
   },
-  context: { id: string; title: string; content: string }[],
+  context: { id: string; title: string; content: string; score?: number }[],
   conversationHistory: { role: string; content: string }[],
   userMessage: string,
-) {
-  // Build system prompt
+): Promise<{
+  content: string;
+  confidence: number;
+  retrievedArticles: Array<{ id: string; title: string; score: number }>;
+  promptTokens: number;
+  completionTokens: number;
+}> {
+  const openaiApiKey = process.env.OPENAI_API_KEY;
+
+  // Build system prompt with RAG context
   const basePrompt =
     config.systemPrompt ||
-    `You are ${config.name}, a helpful AI support assistant. Be ${config.personality} and concise.`;
+    `You are ${config.name}, an AI support assistant. Your personality is ${config.personality}.
+
+Key guidelines:
+- Be helpful, accurate, and concise
+- If you use information from the knowledge base, cite it naturally
+- If you're uncertain or don't have enough information, be honest and offer to connect with a human agent
+- Keep responses friendly but professional
+- Don't make up information - only use what's in the knowledge base or is general knowledge`;
 
   const contextText =
     context.length > 0
-      ? `\n\nRelevant knowledge base articles:\n${context.map((c) => `## ${c.title}\n${c.content}`).join("\n\n")}`
-      : "";
+      ? `\n\nRelevant knowledge base articles to reference:\n${context
+          .map((c) => `### ${c.title}\n${c.content}`)
+          .join("\n\n")}`
+      : "\n\nNo directly relevant articles found in the knowledge base.";
 
   const systemPrompt =
     basePrompt +
     contextText +
-    `\n\nIf you don't have enough information to answer, say so honestly and offer to connect the user with a human agent.`;
+    `\n\nRemember: If you cannot answer confidently, offer to connect the user with a human support agent.`;
 
-  // In production, call OpenAI/Anthropic API here
-  // For now, return a simulated response
-  const hasRelevantContext = context.length > 0;
+  // Build messages array
+  const messages: OpenAIMessage[] = [
+    { role: "system", content: systemPrompt },
+  ];
 
-  if (hasRelevantContext) {
+  // Add conversation history
+  for (const msg of conversationHistory.slice(-10)) {
+    messages.push({
+      role: msg.role === "user" ? "user" : "assistant",
+      content: msg.content,
+    });
+  }
+
+  // Add current user message
+  messages.push({ role: "user", content: userMessage });
+
+  // If OpenAI API key is not configured, return a simulated response
+  if (!openaiApiKey) {
+    const hasRelevantContext = context.length > 0 && context[0].score && context[0].score > 0.3;
+
+    if (hasRelevantContext) {
+      return {
+        content: `Based on our documentation about "${context[0].title}", ${context[0].content.slice(0, 200)}... I hope this helps! Let me know if you have more questions.`,
+        confidence: 0.75,
+        retrievedArticles: context.map((c) => ({
+          id: c.id,
+          title: c.title,
+          score: c.score || 0.5,
+        })),
+        promptTokens: 500,
+        completionTokens: 100,
+      };
+    } else {
+      return {
+        content: `I appreciate you reaching out! While I don't have specific information about that in my knowledge base, I'd be happy to connect you with a human support agent who can help you further. Would you like me to do that?`,
+        confidence: 0.3,
+        retrievedArticles: [],
+        promptTokens: 300,
+        completionTokens: 50,
+      };
+    }
+  }
+
+  // Call OpenAI API
+  try {
+    const response = await fetch(OPENAI_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${openaiApiKey}`,
+      },
+      body: JSON.stringify({
+        model: config.model || "gpt-4o-mini",
+        messages,
+        max_tokens: config.maxTokens || 500,
+        temperature: config.temperature || 0.7,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("OpenAI API error:", response.status, errorText);
+      throw new Error(`OpenAI API error: ${response.status}`);
+    }
+
+    const data = (await response.json()) as OpenAIResponse;
+    const assistantMessage = data.choices[0]?.message?.content || "";
+
+    // Calculate confidence based on context relevance and response
+    let confidence = 0.5; // Base confidence
+    if (context.length > 0 && context[0].score) {
+      confidence = Math.min(0.95, 0.5 + context[0].score * 0.4);
+    }
+    // Reduce confidence if response mentions uncertainty
+    const uncertainPhrases = [
+      "i don't have",
+      "i'm not sure",
+      "i cannot",
+      "human agent",
+      "i don't know",
+      "uncertain",
+    ];
+    const responseLower = assistantMessage.toLowerCase();
+    if (uncertainPhrases.some((phrase) => responseLower.includes(phrase))) {
+      confidence = Math.min(confidence, 0.4);
+    }
+
     return {
-      content: `Based on our documentation, ${context[0].content.slice(0, 200)}... You can read more about this in our help center article: "${context[0].title}".`,
-      confidence: 0.85,
+      content: assistantMessage,
+      confidence,
       retrievedArticles: context.map((c) => ({
         id: c.id,
         title: c.title,
-        score: 1,
+        score: c.score || 0.5,
       })),
-      promptTokens: 500,
-      completionTokens: 100,
+      promptTokens: data.usage?.prompt_tokens || 0,
+      completionTokens: data.usage?.completion_tokens || 0,
     };
-  } else {
+  } catch (error) {
+    console.error("Error calling OpenAI:", error);
+    // Fallback response on API error
     return {
-      content: `I don't have specific information about that in my knowledge base. Would you like me to connect you with a human support agent who can help you further?`,
-      confidence: 0.3,
+      content: `I apologize, but I'm having trouble processing your request right now. Would you like me to connect you with a human support agent instead?`,
+      confidence: 0.2,
       retrievedArticles: [],
-      promptTokens: 300,
-      completionTokens: 50,
+      promptTokens: 0,
+      completionTokens: 0,
     };
   }
 }
@@ -419,6 +575,424 @@ export const botRouter = router({
         ],
         sentiment,
         suggestedTags: ["support", sentiment],
+      };
+    }),
+
+  // ============================================================================
+  // SDK ENDPOINTS (for Kai - the AI assistant)
+  // ============================================================================
+
+  // Get bot configuration for SDK
+  sdkGetConfig: sdkProcedure.query(async ({ ctx }) => {
+    let config = await ctx.prisma.botConfig.findUnique({
+      where: { projectId: ctx.projectId },
+    });
+
+    if (!config) {
+      return {
+        enabled: false,
+        name: "Kai",
+        avatar: null,
+        welcomeMessage: "Hi! I'm Kai, your AI assistant. How can I help you today?",
+      };
+    }
+
+    return {
+      enabled: config.enabled,
+      name: config.name,
+      avatar: config.avatar,
+      welcomeMessage: config.welcomeMessage,
+    };
+  }),
+
+  // Start a new bot conversation (for SDK)
+  sdkStartConversation: sdkProcedure
+    .input(
+      z.object({
+        sessionId: z.string().uuid(),
+        userId: z.string().optional(),
+        initialMessage: z.string().min(1).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Get bot config
+      const config = await ctx.prisma.botConfig.findUnique({
+        where: { projectId: ctx.projectId },
+      });
+
+      if (!config || !config.enabled) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "AI assistant is not enabled for this project",
+        });
+      }
+
+      // Resolve internal user ID if provided
+      let internalUserId: string | null = null;
+      if (input.userId) {
+        const user = await ctx.prisma.endUser.findUnique({
+          where: {
+            projectId_externalUserId: {
+              projectId: ctx.projectId,
+              externalUserId: input.userId,
+            },
+          },
+        });
+        internalUserId = user?.id || null;
+      }
+
+      // Create conversation
+      const conversation = await ctx.prisma.conversation.create({
+        data: {
+          projectId: ctx.projectId,
+          sessionId: input.sessionId,
+          userId: internalUserId,
+          subject: "AI Assistant Chat",
+          status: "open",
+        },
+      });
+
+      // If initial message provided, process it
+      if (input.initialMessage) {
+        // Save user message
+        await ctx.prisma.message.create({
+          data: {
+            projectId: ctx.projectId,
+            conversationId: conversation.id,
+            direction: "inbound",
+            body: input.initialMessage,
+          },
+        });
+
+        await ctx.prisma.botMessage.create({
+          data: {
+            conversationId: conversation.id,
+            role: "user",
+            content: input.initialMessage,
+          },
+        });
+
+        // Search knowledge base
+        const relevantArticles = await searchKnowledgeBase(
+          ctx.projectId,
+          input.initialMessage,
+        );
+
+        // Generate response
+        const response = await generateBotResponse(
+          {
+            name: config.name,
+            personality: config.personality,
+            systemPrompt: config.systemPrompt,
+            model: config.model,
+            temperature: config.temperature,
+            maxTokens: config.maxTokens,
+          },
+          relevantArticles,
+          [],
+          input.initialMessage,
+        );
+
+        // Save bot response
+        const botMessage = await ctx.prisma.botMessage.create({
+          data: {
+            conversationId: conversation.id,
+            role: "assistant",
+            content: response.content,
+            confidence: response.confidence,
+            retrievedArticles: response.retrievedArticles as any,
+            promptTokens: response.promptTokens,
+            completionTokens: response.completionTokens,
+          },
+        });
+
+        await ctx.prisma.message.create({
+          data: {
+            projectId: ctx.projectId,
+            conversationId: conversation.id,
+            direction: "outbound",
+            body: response.content,
+            meta: { fromBot: true, botMessageId: botMessage.id },
+          },
+        });
+
+        // Update conversation
+        await ctx.prisma.conversation.update({
+          where: { id: conversation.id },
+          data: {
+            lastMessageAt: new Date(),
+            messageCount: 2,
+          },
+        });
+
+        return {
+          conversationId: conversation.id,
+          botName: config.name,
+          initialResponse: {
+            message: response.content,
+            confidence: response.confidence,
+            shouldEscalate: response.confidence < config.escalationThreshold,
+            relevantArticles: response.retrievedArticles,
+          },
+        };
+      }
+
+      // Return conversation with welcome message
+      return {
+        conversationId: conversation.id,
+        botName: config.name,
+        welcomeMessage: config.welcomeMessage,
+      };
+    }),
+
+  // Send message to bot (for SDK)
+  sdkChat: sdkProcedure
+    .input(
+      z.object({
+        conversationId: z.string().uuid(),
+        message: z.string().min(1).max(5000),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Get bot config
+      const config = await ctx.prisma.botConfig.findUnique({
+        where: { projectId: ctx.projectId },
+      });
+
+      if (!config || !config.enabled) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "AI assistant is not enabled for this project",
+        });
+      }
+
+      // Get conversation and verify it belongs to this project
+      const conversation = await ctx.prisma.conversation.findUnique({
+        where: {
+          id: input.conversationId,
+          projectId: ctx.projectId,
+        },
+        include: {
+          messages: {
+            orderBy: { createdAt: "asc" },
+            take: 20,
+          },
+        },
+      });
+
+      if (!conversation) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Conversation not found",
+        });
+      }
+
+      // Save user message
+      await ctx.prisma.message.create({
+        data: {
+          projectId: ctx.projectId,
+          conversationId: input.conversationId,
+          direction: "inbound",
+          body: input.message,
+        },
+      });
+
+      await ctx.prisma.botMessage.create({
+        data: {
+          conversationId: input.conversationId,
+          role: "user",
+          content: input.message,
+        },
+      });
+
+      // Search knowledge base
+      const relevantArticles = await searchKnowledgeBase(
+        ctx.projectId,
+        input.message,
+      );
+
+      // Build conversation history
+      const history = conversation.messages.map((m) => ({
+        role: m.direction === "inbound" ? "user" : "assistant",
+        content: m.body,
+      }));
+
+      // Generate response
+      const response = await generateBotResponse(
+        {
+          name: config.name,
+          personality: config.personality,
+          systemPrompt: config.systemPrompt,
+          model: config.model,
+          temperature: config.temperature,
+          maxTokens: config.maxTokens,
+        },
+        relevantArticles,
+        history,
+        input.message,
+      );
+
+      // Save bot message
+      const botMessage = await ctx.prisma.botMessage.create({
+        data: {
+          conversationId: input.conversationId,
+          role: "assistant",
+          content: response.content,
+          confidence: response.confidence,
+          retrievedArticles: response.retrievedArticles as any,
+          promptTokens: response.promptTokens,
+          completionTokens: response.completionTokens,
+        },
+      });
+
+      await ctx.prisma.message.create({
+        data: {
+          projectId: ctx.projectId,
+          conversationId: input.conversationId,
+          direction: "outbound",
+          body: response.content,
+          meta: { fromBot: true, botMessageId: botMessage.id },
+        },
+      });
+
+      // Update conversation
+      await ctx.prisma.conversation.update({
+        where: { id: input.conversationId },
+        data: {
+          lastMessageAt: new Date(),
+          messageCount: { increment: 2 },
+        },
+      });
+
+      // Check if should escalate
+      const shouldEscalate = response.confidence < config.escalationThreshold;
+
+      // Handle escalation - add a note to the conversation for human review
+      if (shouldEscalate) {
+        // Create a system message noting escalation
+        await ctx.prisma.message.create({
+          data: {
+            projectId: ctx.projectId,
+            conversationId: input.conversationId,
+            direction: "outbound",
+            body: "[System: Conversation flagged for human review due to low confidence response]",
+            meta: {
+              isSystemMessage: true,
+              needsHumanReview: true,
+              escalationReason: "Low confidence response",
+              escalatedAt: new Date().toISOString(),
+            },
+          },
+        });
+
+        // TODO: Send notification to agents via configured integrations (Slack/Discord)
+      }
+
+      return {
+        message: response.content,
+        confidence: response.confidence,
+        shouldEscalate,
+        relevantArticles: response.retrievedArticles,
+        botName: config.name,
+      };
+    }),
+
+  // Request to speak with human (for SDK)
+  sdkEscalateToHuman: sdkProcedure
+    .input(
+      z.object({
+        conversationId: z.string().uuid(),
+        reason: z.string().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const conversation = await ctx.prisma.conversation.findUnique({
+        where: {
+          id: input.conversationId,
+          projectId: ctx.projectId,
+        },
+      });
+
+      if (!conversation) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Conversation not found",
+        });
+      }
+
+      // Create escalation system message and bot response
+      await ctx.prisma.message.create({
+        data: {
+          projectId: ctx.projectId,
+          conversationId: input.conversationId,
+          direction: "outbound",
+          body: "[System: User requested to speak with a human agent]",
+          meta: {
+            isSystemMessage: true,
+            needsHumanReview: true,
+            escalationReason: input.reason || "User requested human agent",
+            escalatedAt: new Date().toISOString(),
+            userRequestedEscalation: true,
+          },
+        },
+      });
+
+      // Add bot response to user
+      await ctx.prisma.message.create({
+        data: {
+          projectId: ctx.projectId,
+          conversationId: input.conversationId,
+          direction: "outbound",
+          body: "I've requested a human support agent to help you. They'll be with you shortly. In the meantime, is there anything else I can try to help with?",
+          meta: { fromBot: true, isEscalationMessage: true },
+        },
+      });
+
+      return {
+        success: true,
+        message: "A human support agent has been notified and will join the conversation soon.",
+      };
+    }),
+
+  // Get conversation history (for SDK)
+  sdkGetHistory: sdkProcedure
+    .input(
+      z.object({
+        conversationId: z.string().uuid(),
+        limit: z.number().default(50),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const conversation = await ctx.prisma.conversation.findUnique({
+        where: {
+          id: input.conversationId,
+          projectId: ctx.projectId,
+        },
+        include: {
+          messages: {
+            orderBy: { createdAt: "asc" },
+            take: input.limit,
+          },
+        },
+      });
+
+      if (!conversation) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Conversation not found",
+        });
+      }
+
+      return {
+        conversationId: conversation.id,
+        status: conversation.status,
+        messages: conversation.messages.map((m) => ({
+          id: m.id,
+          role: m.direction === "inbound" ? "user" : "assistant",
+          content: m.body,
+          timestamp: m.createdAt,
+          isFromBot: (m.meta as any)?.fromBot || false,
+        })),
       };
     }),
 });

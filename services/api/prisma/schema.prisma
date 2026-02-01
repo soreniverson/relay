@@ -613,6 +613,21 @@ model MagicLink {
   @@map("magic_links")
 }
 
+model ProjectInvitation {
+  id        String   @id @default(uuid())
+  projectId String   @map("project_id")
+  email     String
+  role      UserRole
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([projectId])
+  @@index([email])
+  @@index([token])
+  @@map("project_invitations")
+}
+
 // ============================================================================
 // ENUMS
 // ============================================================================

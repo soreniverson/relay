@@ -27,6 +27,7 @@ import {
   ChevronDown,
   ExternalLink,
   Check,
+  Loader2,
 } from "lucide-react";
 import { useAuthStore } from "@/stores/auth";
 import {
@@ -36,70 +37,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { trpc } from "@/lib/trpc";
 
-interface Announcement {
-  id: string;
-  title: string;
-  content: string;
-  type: "banner" | "modal" | "slideout" | "feed_item";
-  enabled: boolean;
-  viewCount: number;
-  clickCount: number;
-  startAt: string | null;
-  endAt: string | null;
-  createdAt: string;
-}
-
-const mockAnnouncements: Announcement[] = [
-  {
-    id: "1",
-    title: "New Feature: Dark Mode",
-    content: "We just launched dark mode! Toggle it in your settings.",
-    type: "banner",
-    enabled: true,
-    viewCount: 3421,
-    clickCount: 892,
-    startAt: null,
-    endAt: null,
-    createdAt: "2024-01-15",
-  },
-  {
-    id: "2",
-    title: "Scheduled Maintenance",
-    content: "Brief downtime expected on Saturday at 2am UTC.",
-    type: "modal",
-    enabled: true,
-    viewCount: 1243,
-    clickCount: 156,
-    startAt: "2024-01-18",
-    endAt: "2024-01-20",
-    createdAt: "2024-01-14",
-  },
-  {
-    id: "3",
-    title: "Welcome to Relay",
-    content: "Get started with our quick setup guide.",
-    type: "slideout",
-    enabled: false,
-    viewCount: 5678,
-    clickCount: 2341,
-    startAt: null,
-    endAt: null,
-    createdAt: "2024-01-10",
-  },
-  {
-    id: "4",
-    title: "API v2 Released",
-    content: "Check out the new API with improved performance.",
-    type: "feed_item",
-    enabled: true,
-    viewCount: 876,
-    clickCount: 234,
-    startAt: null,
-    endAt: null,
-    createdAt: "2024-01-16",
-  },
-];
+type AnnouncementType = "banner" | "modal" | "slideout" | "feed_item";
 
 const typeLabels: Record<string, string> = {
   banner: "Banner",
@@ -115,13 +55,42 @@ export default function AnnouncementsPage() {
     null,
   );
   const [typeFilter, setTypeFilter] = useState<string | null>(null);
-  const [announcements, setAnnouncements] = useState(mockAnnouncements);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [newAnnouncement, setNewAnnouncement] = useState({
     title: "",
     content: "",
-    type: "banner" as Announcement["type"],
+    type: "banner" as AnnouncementType,
+  });
+
+  const utils = trpc.useUtils();
+
+  // Fetch announcements
+  const { data: announcements, isLoading } = trpc.announcements.list.useQuery(
+    {
+      projectId: currentProject?.id || "",
+      ...(statusFilter === "active" && { enabled: true }),
+      ...(statusFilter === "paused" && { enabled: false }),
+      ...(typeFilter && { type: typeFilter as AnnouncementType }),
+    },
+    { enabled: !!currentProject?.id },
+  );
+
+  // Mutations
+  const createMutation = trpc.announcements.create.useMutation({
+    onSuccess: () => {
+      utils.announcements.list.invalidate();
+      setIsCreateOpen(false);
+      setNewAnnouncement({ title: "", content: "", type: "banner" });
+    },
+  });
+
+  const toggleMutation = trpc.announcements.toggle.useMutation({
+    onSuccess: () => utils.announcements.list.invalidate(),
+  });
+
+  const deleteMutation = trpc.announcements.delete.useMutation({
+    onSuccess: () => utils.announcements.list.invalidate(),
   });
 
   const handleViewChangelog = () => {
@@ -129,17 +98,13 @@ export default function AnnouncementsPage() {
     if (slug) {
       window.open(`/changelog/${slug}`, "_blank");
     } else {
-      // Show a message that slug needs to be configured
       alert("Please configure a project slug in Settings > General first");
     }
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const filteredAnnouncements = announcements.filter((announcement) => {
-    if (statusFilter === "active" && !announcement.enabled) return false;
-    if (statusFilter === "paused" && announcement.enabled) return false;
-    if (typeFilter && announcement.type !== typeFilter) return false;
+  const filteredAnnouncements = (announcements || []).filter((announcement) => {
     if (
       search &&
       !announcement.title.toLowerCase().includes(search.toLowerCase())
@@ -148,54 +113,37 @@ export default function AnnouncementsPage() {
     return true;
   });
 
-  const toggleAnnouncement = (announcementId: string) => {
-    setAnnouncements((prev) =>
-      prev.map((a) =>
-        a.id === announcementId ? { ...a, enabled: !a.enabled } : a,
-      ),
-    );
+  const toggleAnnouncement = (announcementId: string, currentEnabled: boolean) => {
+    toggleMutation.mutate({ id: announcementId, enabled: !currentEnabled });
   };
 
   const handleCreate = () => {
-    if (!newAnnouncement.title.trim()) return;
+    if (!newAnnouncement.title.trim() || !currentProject?.id) return;
 
-    const announcement: Announcement = {
-      id: Date.now().toString(),
+    createMutation.mutate({
+      projectId: currentProject.id,
       title: newAnnouncement.title,
       content: newAnnouncement.content,
       type: newAnnouncement.type,
       enabled: false,
-      viewCount: 0,
-      clickCount: 0,
-      startAt: null,
-      endAt: null,
-      createdAt: new Date().toISOString().split("T")[0],
-    };
-
-    setAnnouncements((prev) => [announcement, ...prev]);
-    setNewAnnouncement({ title: "", content: "", type: "banner" });
-    setIsCreateOpen(false);
+    });
   };
 
   const handleDelete = (id: string) => {
-    setAnnouncements((prev) => prev.filter((a) => a.id !== id));
+    if (confirm("Are you sure you want to delete this announcement?")) {
+      deleteMutation.mutate({ id });
+    }
   };
 
-  const handleDuplicate = (id: string) => {
-    const original = announcements.find((a) => a.id === id);
-    if (!original) return;
-
-    const duplicate: Announcement = {
-      ...original,
-      id: Date.now().toString(),
-      title: `${original.title} (Copy)`,
+  const handleDuplicate = (announcement: typeof filteredAnnouncements[0]) => {
+    if (!currentProject?.id) return;
+    createMutation.mutate({
+      projectId: currentProject.id,
+      title: `${announcement.title} (Copy)`,
+      content: announcement.content,
+      type: announcement.type as AnnouncementType,
       enabled: false,
-      viewCount: 0,
-      clickCount: 0,
-      createdAt: new Date().toISOString().split("T")[0],
-    };
-
-    setAnnouncements((prev) => [duplicate, ...prev]);
+    });
   };
 
   return (
@@ -307,11 +255,15 @@ export default function AnnouncementsPage() {
 
       {/* Announcements List */}
       <div className="flex-1 overflow-auto">
-        {filteredAnnouncements.length === 0 ? (
+        {isLoading ? (
+          <div className="flex items-center justify-center h-full">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : filteredAnnouncements.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
             <Megaphone className="h-12 w-12 mb-4 opacity-50" />
             <p>No announcements found</p>
-            <p className="text-sm">Try adjusting your filters</p>
+            <p className="text-sm">Create one to get started</p>
           </div>
         ) : (
           filteredAnnouncements.map((announcement) => (
@@ -369,7 +321,8 @@ export default function AnnouncementsPage() {
 
                 {/* Status Badge */}
                 <button
-                  onClick={() => toggleAnnouncement(announcement.id)}
+                  onClick={() => toggleAnnouncement(announcement.id, announcement.enabled)}
+                  disabled={toggleMutation.isPending}
                   className={cn(
                     "shrink-0 text-[11px] leading-none px-1.5 py-1 rounded transition-colors",
                     announcement.enabled
@@ -389,7 +342,7 @@ export default function AnnouncementsPage() {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem
-                      onClick={() => handleDuplicate(announcement.id)}
+                      onClick={() => handleDuplicate(announcement)}
                     >
                       Duplicate
                     </DropdownMenuItem>
@@ -459,7 +412,7 @@ export default function AnnouncementsPage() {
                 onValueChange={(value) =>
                   setNewAnnouncement({
                     ...newAnnouncement,
-                    type: value as Announcement["type"],
+                    type: value as AnnouncementType,
                   })
                 }
               >
@@ -486,9 +439,13 @@ export default function AnnouncementsPage() {
             <Button
               size="sm"
               onClick={handleCreate}
-              disabled={!newAnnouncement.title.trim()}
+              disabled={!newAnnouncement.title.trim() || createMutation.isPending}
             >
-              Create
+              {createMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                "Create"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -192,6 +192,9 @@ export type RelayEventType =
   | "survey:completed"
   | "replay:started"
   | "replay:stopped"
+  | "tour:started"
+  | "tour:completed"
+  | "tour:dismissed"
   | "error";
 
 export type RelayEventHandler = (data?: unknown) => void;

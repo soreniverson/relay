@@ -1,27 +1,15 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
+import { Inter } from "next/font/google";
 import { Providers } from "@/components/providers";
 import "./globals.css";
 
-const zalandoSans = localFont({
-  src: [
-    {
-      path: "../fonts/ZalandoSans-Regular.ttf",
-      weight: "400",
-      style: "normal",
-    },
-    {
-      path: "../fonts/ZalandoSans-Medium.ttf",
-      weight: "500",
-      style: "normal",
-    },
-    {
-      path: "../fonts/ZalandoSans-SemiBold.ttf",
-      weight: "600",
-      style: "normal",
-    },
-  ],
-  variable: "--font-zalando-sans",
+// Using Inter as the primary font - lightweight, clean, and similar aesthetic
+// To use TWK Continental, add font files to src/fonts/ and update this config
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-twk-continental",
+  weight: ["300", "400", "500"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -36,8 +24,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={zalandoSans.className}>
+    <html lang="en" suppressHydrationWarning className="dark">
+      <body className={`${inter.variable} font-sans`}>
         <Providers>{children}</Providers>
       </body>
     </html>

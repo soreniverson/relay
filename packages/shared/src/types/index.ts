@@ -95,6 +95,7 @@ export const IntegrationProvider = {
   JIRA: "jira",
   GITHUB: "github",
   SLACK: "slack",
+  DISCORD: "discord",
   EMAIL: "email",
 } as const;
 export type IntegrationProvider =

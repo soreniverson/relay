@@ -24,6 +24,12 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { Loader2, Copy, Check } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("general");
@@ -236,12 +242,97 @@ function GeneralSettings() {
 }
 
 function TeamSettings() {
-  const members = [
-    { email: "admin@relay.dev", role: "Owner", status: "active" },
-    { email: "alice@relay.dev", role: "Admin", status: "active" },
-    { email: "bob@relay.dev", role: "Agent", status: "active" },
-    { email: "pending@example.com", role: "Viewer", status: "pending" },
-  ];
+  const { currentProject } = useAuthStore();
+  const [isInviteOpen, setIsInviteOpen] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState<"admin" | "agent" | "viewer">("viewer");
+  const [editingMember, setEditingMember] = useState<{
+    userId: string;
+    role: string;
+  } | null>(null);
+
+  const utils = trpc.useUtils();
+
+  // Fetch members
+  const { data: members, isLoading: membersLoading } = trpc.teams.listMembers.useQuery(
+    { projectId: currentProject?.id || "" },
+    { enabled: !!currentProject?.id }
+  );
+
+  // Fetch invitations
+  const { data: invitations, isLoading: invitationsLoading } = trpc.teams.listInvitations.useQuery(
+    { projectId: currentProject?.id || "" },
+    { enabled: !!currentProject?.id }
+  );
+
+  // Mutations
+  const inviteMutation = trpc.teams.invite.useMutation({
+    onSuccess: () => {
+      utils.teams.listMembers.invalidate();
+      utils.teams.listInvitations.invalidate();
+      setIsInviteOpen(false);
+      setInviteEmail("");
+      setInviteRole("viewer");
+    },
+  });
+
+  const updateRoleMutation = trpc.teams.updateRole.useMutation({
+    onSuccess: () => {
+      utils.teams.listMembers.invalidate();
+      setEditingMember(null);
+    },
+  });
+
+  const removeMemberMutation = trpc.teams.removeMember.useMutation({
+    onSuccess: () => utils.teams.listMembers.invalidate(),
+  });
+
+  const cancelInviteMutation = trpc.teams.cancelInvitation.useMutation({
+    onSuccess: () => utils.teams.listInvitations.invalidate(),
+  });
+
+  const handleInvite = () => {
+    if (!currentProject?.id || !inviteEmail) return;
+    inviteMutation.mutate({
+      projectId: currentProject.id,
+      email: inviteEmail,
+      role: inviteRole,
+    });
+  };
+
+  const handleUpdateRole = (userId: string, newRole: "admin" | "agent" | "viewer") => {
+    if (!currentProject?.id) return;
+    updateRoleMutation.mutate({
+      projectId: currentProject.id,
+      userId,
+      role: newRole,
+    });
+  };
+
+  const handleRemoveMember = (userId: string) => {
+    if (!currentProject?.id) return;
+    if (confirm("Are you sure you want to remove this member?")) {
+      removeMemberMutation.mutate({
+        projectId: currentProject.id,
+        userId,
+      });
+    }
+  };
+
+  const handleCancelInvite = (invitationId: string) => {
+    if (confirm("Are you sure you want to cancel this invitation?")) {
+      cancelInviteMutation.mutate({ invitationId });
+    }
+  };
+
+  const isLoading = membersLoading || invitationsLoading;
+
+  const roleLabels: Record<string, string> = {
+    owner: "Owner",
+    admin: "Admin",
+    agent: "Agent",
+    viewer: "Viewer",
+  };
 
   return (
     <div className="space-y-6">
@@ -251,35 +342,109 @@ function TeamSettings() {
       >
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-medium text-foreground">Team Members</h3>
-          <Button size="sm">Invite</Button>
+          <Button size="sm" onClick={() => setIsInviteOpen(true)}>
+            Invite
+          </Button>
         </div>
-        <div className="space-y-1">
-          {members.map((member) => (
-            <div
-              key={member.email}
-              className="flex items-center justify-between p-2.5 rounded-md hover:bg-accent/30 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-7 h-7 rounded-full bg-foreground/10 text-foreground flex items-center justify-center text-xs font-medium">
-                  {member.email.charAt(0).toUpperCase()}
-                </div>
-                <div>
-                  <div className="text-sm text-foreground">{member.email}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {member.role}
+
+        {isLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : (
+          <div className="space-y-1">
+            {/* Active Members */}
+            {members?.map((member) => (
+              <div
+                key={member.id}
+                className="flex items-center justify-between p-2.5 rounded-md hover:bg-accent/30 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  {member.avatarUrl ? (
+                    <img
+                      src={member.avatarUrl}
+                      alt={member.name || member.email}
+                      className="w-7 h-7 rounded-full"
+                    />
+                  ) : (
+                    <div className="w-7 h-7 rounded-full bg-foreground/10 text-foreground flex items-center justify-center text-xs font-medium">
+                      {(member.name || member.email).charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <div>
+                    <div className="text-sm text-foreground">
+                      {member.name || member.email}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {roleLabels[member.role]}
+                    </div>
                   </div>
                 </div>
+                {member.role !== "owner" && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+                        Edit
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleUpdateRole(member.userId, "admin")}>
+                        Make Admin
+                        {member.role === "admin" && <Check className="h-3 w-3 ml-auto" />}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleUpdateRole(member.userId, "agent")}>
+                        Make Agent
+                        {member.role === "agent" && <Check className="h-3 w-3 ml-auto" />}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleUpdateRole(member.userId, "viewer")}>
+                        Make Viewer
+                        {member.role === "viewer" && <Check className="h-3 w-3 ml-auto" />}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => handleRemoveMember(member.userId)}
+                        className="text-destructive"
+                      >
+                        Remove
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
               </div>
-              {member.status === "pending" ? (
-                <span className="text-xs text-amber-400">Pending</span>
-              ) : (
-                <button className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-                  Edit
+            ))}
+
+            {/* Pending Invitations */}
+            {invitations?.map((invite) => (
+              <div
+                key={invite.id}
+                className="flex items-center justify-between p-2.5 rounded-md hover:bg-accent/30 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-7 h-7 rounded-full bg-amber-500/10 text-amber-400 flex items-center justify-center text-xs font-medium">
+                    {invite.email.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <div className="text-sm text-foreground">{invite.email}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {roleLabels[invite.role]} · Pending
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => handleCancelInvite(invite.id)}
+                  className="text-xs text-amber-400 hover:text-amber-300 transition-colors"
+                >
+                  Cancel
                 </button>
-              )}
-            </div>
-          ))}
-        </div>
+              </div>
+            ))}
+
+            {(!members || members.length === 0) && (!invitations || invitations.length === 0) && (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                No team members yet.
+              </p>
+            )}
+          </div>
+        )}
       </div>
 
       <div
@@ -289,10 +454,10 @@ function TeamSettings() {
         <h3 className="text-sm font-medium text-foreground mb-3">Roles</h3>
         <div className="space-y-1 text-sm">
           {[
-            { role: "Owner", desc: "Full access, billing" },
-            { role: "Admin", desc: "Full access, no billing" },
-            { role: "Agent", desc: "Manage interactions, chat" },
-            { role: "Viewer", desc: "Read-only access" },
+            { role: "Owner", desc: "Full access, billing, transfer ownership" },
+            { role: "Admin", desc: "Full access, manage team, no billing" },
+            { role: "Agent", desc: "Manage interactions, chat, view analytics" },
+            { role: "Viewer", desc: "Read-only access to all data" },
           ].map((item) => (
             <div
               key={item.role}
@@ -304,6 +469,62 @@ function TeamSettings() {
           ))}
         </div>
       </div>
+
+      {/* Invite Dialog */}
+      <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Invite Team Member</DialogTitle>
+            <DialogDescription>
+              Send an invitation to join this project.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid gap-1.5">
+              <Label htmlFor="invite-email">Email address</Label>
+              <Input
+                id="invite-email"
+                type="email"
+                placeholder="colleague@company.com"
+                value={inviteEmail}
+                onChange={(e) => setInviteEmail(e.target.value)}
+              />
+            </div>
+            <div className="grid gap-1.5">
+              <Label>Role</Label>
+              <Select
+                value={inviteRole}
+                onValueChange={(v) => setInviteRole(v as "admin" | "agent" | "viewer")}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="agent">Agent</SelectItem>
+                  <SelectItem value="viewer">Viewer</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setIsInviteOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleInvite}
+              disabled={!inviteEmail || inviteMutation.isPending}
+            >
+              {inviteMutation.isPending ? "Sending..." : "Send Invite"}
+            </Button>
+          </DialogFooter>
+          {inviteMutation.error && (
+            <p className="text-xs text-destructive mt-2">
+              {inviteMutation.error.message}
+            </p>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

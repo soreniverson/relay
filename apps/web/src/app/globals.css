@@ -2,196 +2,330 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ================================================
+   DESIGN SYSTEM - RELAY
+   ================================================ */
+
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 9%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 96%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 45%;
-    --accent: 0 0% 96%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 100%;
-    --success: 142 76% 36%;
-    --success-foreground: 0 0% 100%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
-    --border: 0 0% 90%;
-    --input: 0 0% 90%;
-    --ring: 0 0% 9%;
-    --radius: 0.5rem;
+    /* Core backgrounds */
+    --background: #0a0a0a;
+    --surface: #0f0f0f;
+    --card: #0f0f0f;
+    --popover: #0f0f0f;
+
+    /* Borders */
+    --border: #1a1a1a;
+    --border-hover: #262626;
+    --border-focus: #333333;
+    --input: #0f0f0f;
+    --ring: #333333;
+
+    /* Text hierarchy */
+    --foreground: #e5e5e5;
+    --text-primary: #e5e5e5;
+    --text-secondary: #a3a3a3;
+    --text-muted: #525252;
+    --text-hint: #404040;
+    --text-disabled: #333333;
+
+    /* Semantic colors */
+    --primary: #e5e5e5;
+    --primary-foreground: #0a0a0a;
+    --secondary: #1a1a1a;
+    --secondary-foreground: #a3a3a3;
+    --muted: #1a1a1a;
+    --muted-foreground: #525252;
+    --accent: #141414;
+    --accent-foreground: #e5e5e5;
+    --card-foreground: #e5e5e5;
+    --popover-foreground: #e5e5e5;
+    --destructive: #dc2626;
+    --destructive-foreground: #fef2f2;
+    --success: #16a34a;
+    --success-foreground: #f0fdf4;
+    --warning: #d97706;
+    --warning-foreground: #fffbeb;
   }
 
-  .dark {
-    --background: 0 0% 5%;
-    --foreground: 0 0% 90%;
-    --card: 0 0% 7%;
-    --card-foreground: 0 0% 90%;
-    --popover: 0 0% 8%;
-    --popover-foreground: 0 0% 90%;
-    --primary: 0 0% 90%;
-    --primary-foreground: 0 0% 5%;
-    --secondary: 0 0% 12%;
-    --secondary-foreground: 0 0% 90%;
-    --muted: 0 0% 12%;
-    --muted-foreground: 0 0% 55%;
-    --accent: 0 0% 15%;
-    --accent-foreground: 0 0% 90%;
-    --destructive: 0 62% 50%;
-    --destructive-foreground: 0 0% 100%;
-    --success: 142 70% 45%;
-    --success-foreground: 0 0% 100%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
-    --border: 0 0% 15%;
-    --input: 0 0% 15%;
-    --ring: 0 0% 90%;
+  /* Light mode - keeping for accessibility */
+  .light {
+    --background: #fafafa;
+    --surface: #ffffff;
+    --card: #ffffff;
+    --popover: #ffffff;
+    --border: #e5e5e5;
+    --border-hover: #d4d4d4;
+    --border-focus: #a3a3a3;
+    --input: #ffffff;
+    --ring: #a3a3a3;
+    --foreground: #0a0a0a;
+    --text-primary: #0a0a0a;
+    --text-secondary: #525252;
+    --text-muted: #737373;
+    --text-hint: #a3a3a3;
+    --text-disabled: #d4d4d4;
+    --primary: #0a0a0a;
+    --primary-foreground: #fafafa;
+    --secondary: #f5f5f5;
+    --secondary-foreground: #525252;
+    --muted: #f5f5f5;
+    --muted-foreground: #737373;
+    --accent: #f5f5f5;
+    --accent-foreground: #0a0a0a;
+    --card-foreground: #0a0a0a;
+    --popover-foreground: #0a0a0a;
   }
 }
 
 @layer base {
   * {
-    @apply border-border;
+    border-color: var(--border);
   }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
   body {
-    @apply bg-background text-foreground antialiased;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    background-color: var(--background);
+    color: var(--foreground);
+    font-weight: 300;
+    font-size: 0.9375rem;
+    line-height: 1.6;
+  }
+
+  /* Titles get medium weight */
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 500;
   }
 }
 
-/* Page header - consistent across all pages */
+/* ================================================
+   COMPONENT STYLES
+   ================================================ */
+
 @layer components {
+  /* Page layout */
   .page-header {
-    @apply flex items-center justify-between h-14 px-6 border-b border-border;
-    border-bottom-width: 0.5px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 3.5rem;
+    padding: 0 1.5rem;
+    border-bottom: 1px solid var(--border);
   }
 
   .page-title {
-    @apply text-base font-medium text-foreground;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-primary);
   }
 
   .page-content {
-    @apply p-6;
+    padding: 1.5rem;
   }
 
   .page-content-flush {
-    @apply p-0;
+    padding: 0;
   }
-}
 
-/* Card styling */
-@layer components {
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.5rem;
+  }
+
+  .card:hover {
+    border-color: var(--border-hover);
+  }
+
   .stat-card {
-    @apply rounded-lg border bg-card p-6;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.5rem;
   }
 
   .stat-card-label {
-    @apply text-sm font-medium text-muted-foreground;
+    font-size: 0.8125rem;
+    font-weight: 300;
+    color: var(--text-secondary);
   }
 
   .stat-card-value {
-    @apply text-2xl font-bold text-foreground mt-2;
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-top: 0.5rem;
   }
-}
 
-/* List items */
-@layer components {
+  /* List items */
   .list-item {
-    @apply flex items-center gap-4 p-4 rounded-lg border border-border bg-card hover:bg-accent/50 transition-colors;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    transition: border-color 0.15s ease;
+  }
+
+  .list-item:hover {
+    border-color: var(--border-hover);
   }
 
   .list-item-active {
-    @apply bg-accent;
-  }
-}
-
-/* Status badge colors - muted for Linear-style */
-@layer utilities {
-  .badge-new {
-    @apply bg-muted text-muted-foreground;
-  }
-  .badge-triaging {
-    @apply bg-violet-500/10 text-violet-400;
-  }
-  .badge-in-progress {
-    @apply bg-amber-500/10 text-amber-400;
-  }
-  .badge-resolved {
-    @apply bg-emerald-500/10 text-emerald-400;
-  }
-  .badge-closed {
-    @apply bg-muted text-muted-foreground;
+    background: var(--accent);
+    border-color: var(--border-hover);
   }
 
-  .badge-low {
-    @apply bg-emerald-500/10 text-emerald-400;
+  /* Pending/upcoming items */
+  .list-item-pending {
+    border-style: dashed;
   }
-  .badge-med {
-    @apply bg-yellow-500/10 text-yellow-400;
-  }
-  .badge-high {
-    @apply bg-orange-500/10 text-orange-400;
-  }
-  .badge-critical {
-    @apply bg-red-500/10 text-red-400;
-  }
-}
 
-/* Tags - muted style */
-@layer components {
+  /* Tags */
   .tag {
-    @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-muted text-muted-foreground;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 300;
+    background: var(--muted);
+    color: var(--text-secondary);
   }
 
   .tag-active {
-    @apply bg-foreground text-background;
+    background: var(--foreground);
+    color: var(--background);
   }
-}
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  @apply bg-transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  @apply bg-muted-foreground/20 rounded-full;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  @apply bg-muted-foreground/30;
-}
-
-/* Focus ring styling */
-@layer utilities {
-  .focus-ring {
-    @apply focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background;
-  }
-}
-
-/* Filter tabs - Linear style */
-@layer components {
+  /* Filter tabs */
   .filter-tabs {
-    @apply flex items-center gap-1 bg-muted rounded-lg p-1;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    background: var(--muted);
+    border-radius: 8px;
+    padding: 0.25rem;
   }
 
   .filter-tab {
-    @apply px-3 py-1.5 text-sm font-medium rounded-md transition-colors text-muted-foreground hover:text-foreground;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8125rem;
+    font-weight: 300;
+    border-radius: 6px;
+    color: var(--text-muted);
+    transition: all 0.15s ease;
+  }
+
+  .filter-tab:hover {
+    color: var(--text-secondary);
   }
 
   .filter-tab-active {
-    @apply bg-background text-foreground shadow-sm;
+    background: var(--background);
+    color: var(--text-primary);
+  }
+}
+
+/* ================================================
+   UTILITY CLASSES
+   ================================================ */
+
+@layer utilities {
+  /* Status badges */
+  .badge-new {
+    background: rgba(59, 130, 246, 0.1);
+    color: #60a5fa;
+  }
+
+  .badge-triaging {
+    background: rgba(139, 92, 246, 0.1);
+    color: #a78bfa;
+  }
+
+  .badge-in-progress {
+    background: rgba(245, 158, 11, 0.1);
+    color: #fbbf24;
+  }
+
+  .badge-resolved {
+    background: rgba(34, 197, 94, 0.1);
+    color: #4ade80;
+  }
+
+  .badge-closed {
+    background: var(--muted);
+    color: var(--text-muted);
+  }
+
+  /* Severity badges */
+  .badge-low {
+    background: rgba(34, 197, 94, 0.1);
+    color: #4ade80;
+  }
+
+  .badge-med {
+    background: rgba(234, 179, 8, 0.1);
+    color: #facc15;
+  }
+
+  .badge-high {
+    background: rgba(249, 115, 22, 0.1);
+    color: #fb923c;
+  }
+
+  .badge-critical {
+    background: rgba(239, 68, 68, 0.1);
+    color: #f87171;
+  }
+
+  /* Disabled state */
+  .disabled {
+    opacity: 0.6;
+    pointer-events: none;
+  }
+}
+
+/* ================================================
+   SCROLLBAR
+   ================================================ */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-hover);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-focus);
+}
+
+/* ================================================
+   FOCUS STYLES (minimal)
+   ================================================ */
+
+@layer utilities {
+  .focus-ring {
+    outline: none;
+  }
+
+  .focus-ring:focus {
+    border-color: var(--border-focus);
   }
 }

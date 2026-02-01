@@ -27,18 +27,15 @@ export default function LoginPage() {
     try {
       const result = await loginMutation.mutateAsync({ email, password });
 
-      // Convert null to undefined for store compatibility
       const user = {
         ...result.user,
         name: result.user.name ?? undefined,
         avatarUrl: result.user.avatarUrl ?? undefined,
       };
 
-      // Store auth in zustand and localStorage
       setAuth(user, result.token);
       localStorage.setItem("relay_token", result.token);
 
-      // Redirect to dashboard or onboarding
       if (result.user.projects.length === 0) {
         router.push("/onboarding");
       } else {
@@ -55,18 +52,18 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-background">
       <div className="w-full max-w-md space-y-8 px-4">
         <div className="text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground font-bold text-xl">
+          <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg bg-text-primary text-background font-medium text-title">
             R
           </div>
-          <h2 className="mt-6 text-2xl font-bold">Sign in to Relay</h2>
-          <p className="mt-2 text-muted-foreground">
+          <h2 className="mt-6 text-title font-medium text-text-primary">Sign in to Relay</h2>
+          <p className="mt-2 text-secondary font-light text-text-secondary">
             Enter your email and password
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-6">
           {error && (
-            <div className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+            <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-secondary text-destructive">
               {error}
             </div>
           )}
@@ -101,16 +98,16 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <Button type="submit" className="w-full" disabled={loading}>
+          <Button type="submit" variant="primary" className="w-full" disabled={loading}>
             {loading ? "Signing in..." : "Sign in"}
           </Button>
         </form>
 
-        <p className="text-center text-sm text-muted-foreground">
+        <p className="text-center text-secondary font-light text-text-secondary">
           Don't have an account?{" "}
           <Link
             href="/auth/signup"
-            className="font-medium text-primary hover:underline"
+            className="text-text-primary hover:underline"
           >
             Sign up
           </Link>

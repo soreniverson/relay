@@ -22,6 +22,7 @@ import {
 } from "@relay/shared";
 import { triggerWebhooks } from "../lib/webhook-delivery";
 import { SlackClient } from "../lib/slack";
+import { DiscordClient } from "../lib/discord";
 
 export const ingestRouter = router({
   // Create or update session
@@ -250,17 +251,19 @@ export const ingestRouter = router({
         ctx.logger.error({ err }, "Failed to trigger webhooks");
       });
 
-      // Send Slack notification if configured
-      const slackIntegration = await ctx.prisma.integration.findUnique({
+      // OPTIMIZED: Fetch both Slack and Discord integrations in a single query
+      const integrations = await ctx.prisma.integration.findMany({
         where: {
-          projectId_provider: {
-            projectId: ctx.projectId,
-            provider: "slack",
-          },
+          projectId: ctx.projectId,
+          provider: { in: ["slack", "discord"] },
+          enabled: true,
         },
       });
 
-      if (slackIntegration?.enabled) {
+      // Send Slack notification if configured (using pre-fetched data)
+      const slackIntegration = integrations.find((i) => i.provider === "slack");
+
+      if (slackIntegration) {
         const slackConfig = slackIntegration.config as {
           webhookUrl?: string;
           notifyOn?: {
@@ -321,6 +324,86 @@ export const ingestRouter = router({
                   ctx.logger.error(
                     { err },
                     "Failed to send Slack notification",
+                  );
+                });
+            }
+          }
+        }
+      }
+
+      // Send Discord notification if configured (using pre-fetched data)
+      const discordIntegration = integrations.find((i) => i.provider === "discord");
+
+      if (discordIntegration) {
+        const discordConfig = discordIntegration.config as {
+          webhookUrl?: string;
+          notifyOn?: {
+            newBug?: boolean;
+            highSeverity?: boolean;
+            newFeedback?: boolean;
+            newChat?: boolean;
+          };
+        };
+
+        if (discordConfig.webhookUrl) {
+          const notifyOn = discordConfig.notifyOn || {};
+          const shouldNotifyDiscord =
+            (input.type === "bug" && notifyOn.newBug) ||
+            (input.type === "feedback" && notifyOn.newFeedback) ||
+            (input.type === "chat" && notifyOn.newChat) ||
+            ((severity === "critical" || severity === "high") &&
+              notifyOn.highSeverity);
+
+          if (shouldNotifyDiscord) {
+            const discordClient = new DiscordClient({
+              webhookUrl: discordConfig.webhookUrl,
+            });
+
+            if (input.type === "bug") {
+              discordClient
+                .sendBugReport({
+                  title: (content?.title as string) || "Bug Report",
+                  description: input.contentText || undefined,
+                  severity: severity || undefined,
+                  userEmail: userInfo.email,
+                  pageUrl: (technicalContext?.url as string) || undefined,
+                  relayUrl,
+                })
+                .catch((err) => {
+                  ctx.logger.error(
+                    { err },
+                    "Failed to send Discord bug notification",
+                  );
+                });
+            } else if (input.type === "feedback") {
+              discordClient
+                .sendFeedback({
+                  title:
+                    (content?.title as string) ||
+                    input.contentText?.slice(0, 100) ||
+                    "Feedback",
+                  description: input.contentText || undefined,
+                  category: (content?.category as string) || undefined,
+                  userEmail: userInfo.email,
+                  relayUrl,
+                })
+                .catch((err) => {
+                  ctx.logger.error(
+                    { err },
+                    "Failed to send Discord feedback notification",
+                  );
+                });
+            } else if (input.type === "chat") {
+              discordClient
+                .sendChatNotification({
+                  message: input.contentText?.slice(0, 500) || "New message",
+                  userEmail: userInfo.email,
+                  relayUrl,
+                })
+                .catch((err) => {
+                  ctx.logger.error(
+                    { err },
+                    "Failed to send Discord chat notification",
                   );
                 });
             }

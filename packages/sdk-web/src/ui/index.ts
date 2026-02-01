@@ -582,7 +582,7 @@ export class Widget {
     this.bottomNav = createBottomNav({
       activeTab: "home",
       showMessages: this.config.showChat !== false,
-      showHelp: true, // Always show help if knowledge base exists
+      showHelp: false, // Knowledge Base cut from MVP
       showRoadmap: this.config.showRoadmap !== false,
       onTabChange: (tab) => this.handleNavChange(tab),
     });

@@ -99,6 +99,7 @@ export const integrationProviderSchema = z.enum([
   IntegrationProvider.JIRA,
   IntegrationProvider.GITHUB,
   IntegrationProvider.SLACK,
+  IntegrationProvider.DISCORD,
   IntegrationProvider.EMAIL,
 ]);
 

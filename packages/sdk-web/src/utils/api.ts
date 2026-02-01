@@ -72,7 +72,8 @@ export class ApiClient {
       }
 
       const data = await response.json();
-      return data.result?.data as T;
+      // tRPC wraps responses in { result: { data: { json: ... } } }
+      return (data.result?.data?.json ?? data.result?.data) as T;
     } catch (error) {
       clearTimeout(timeoutId);
       if (error instanceof Error && error.name === "AbortError") {
@@ -298,5 +299,100 @@ export class ApiClient {
 
   async getHelpArticle(slug: string): Promise<unknown> {
     return this.query("knowledge.sdkGetArticle", { slug });
+  }
+
+  // Tours
+  async getActiveTours(data: {
+    sessionId: string;
+    url?: string;
+    userTraits?: Record<string, unknown>;
+  }): Promise<unknown[]> {
+    return this.query("tours.getActiveTours", data);
+  }
+
+  async startTour(data: {
+    tourId: string;
+    sessionId: string;
+    userId?: string;
+  }): Promise<{ id: string }> {
+    return this.mutation("tours.startTour", data);
+  }
+
+  async updateTourProgress(data: {
+    tourId: string;
+    sessionId: string;
+    currentStep?: number;
+    completed?: boolean;
+    dismissed?: boolean;
+  }): Promise<{ id: string }> {
+    return this.mutation("tours.updateProgress", data);
+  }
+
+  // ============================================================================
+  // AI BOT (Kai)
+  // ============================================================================
+
+  async getBotConfig(): Promise<{
+    enabled: boolean;
+    name: string;
+    avatar: string | null;
+    welcomeMessage: string;
+  }> {
+    return this.query("bot.sdkGetConfig", {});
+  }
+
+  async startBotConversation(data: {
+    sessionId: string;
+    userId?: string;
+    initialMessage?: string;
+  }): Promise<{
+    conversationId: string;
+    botName: string;
+    welcomeMessage?: string;
+    initialResponse?: {
+      message: string;
+      confidence: number;
+      shouldEscalate: boolean;
+      relevantArticles: Array<{ id: string; title: string; score: number }>;
+    };
+  }> {
+    return this.mutation("bot.sdkStartConversation", data);
+  }
+
+  async sendBotMessage(data: {
+    conversationId: string;
+    message: string;
+  }): Promise<{
+    message: string;
+    confidence: number;
+    shouldEscalate: boolean;
+    relevantArticles: Array<{ id: string; title: string; score: number }>;
+    botName: string;
+  }> {
+    return this.mutation("bot.sdkChat", data);
+  }
+
+  async escalateToHuman(data: {
+    conversationId: string;
+    reason?: string;
+  }): Promise<{ success: boolean; message: string }> {
+    return this.mutation("bot.sdkEscalateToHuman", data);
+  }
+
+  async getBotChatHistory(
+    conversationId: string,
+    limit = 50,
+  ): Promise<{
+    conversationId: string;
+    status: string;
+    messages: Array<{
+      id: string;
+      role: "user" | "assistant";
+      content: string;
+      timestamp: Date;
+      isFromBot: boolean;
+    }>;
+  }> {
+    return this.query("bot.sdkGetHistory", { conversationId, limit });
   }
 }

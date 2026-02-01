@@ -21,6 +21,7 @@ import { createErrorCapture } from "./capture/errors";
 import { createReplayCapture } from "./capture/replay";
 import { captureScreenshot, applyAnnotations } from "./capture/screenshot";
 import { Widget, type WidgetView } from "./ui";
+import { TourRenderer } from "./ui/components/tour/TourRenderer";
 
 // Re-export types
 export * from "./types";
@@ -65,6 +66,10 @@ class RelaySDK implements RelayInstance {
 
   // Custom data
   private customData: Record<string, unknown> = {};
+
+  // Tour renderer
+  private tourRenderer: TourRenderer | null = null;
+  private activeTours: any[] = [];
 
   async init(config: RelayConfig): Promise<void> {
     if (this.initialized) {
@@ -131,9 +136,60 @@ class RelaySDK implements RelayInstance {
     this.initialized = true;
     this.emit("ready");
 
+    // Initialize tour renderer
+    this.initTourRenderer();
+
+    // Check for tours after a short delay
+    setTimeout(() => {
+      this.checkForTours();
+    }, 1000);
+
     if (config.debug) {
       console.log("[Relay] Initialized", { sessionId: this.sessionId });
     }
+  }
+
+  private initTourRenderer(): void {
+    this.tourRenderer = new TourRenderer({
+      onStart: async (tourId: string) => {
+        if (this.api && this.sessionId) {
+          await this.api.startTour({
+            tourId,
+            sessionId: this.sessionId,
+            userId: this.userId || undefined,
+          });
+        }
+      },
+      onProgress: async (tourId: string, step: number) => {
+        if (this.api && this.sessionId) {
+          await this.api.updateTourProgress({
+            tourId,
+            sessionId: this.sessionId,
+            currentStep: step,
+          });
+        }
+      },
+      onComplete: async (tourId: string) => {
+        if (this.api && this.sessionId) {
+          await this.api.updateTourProgress({
+            tourId,
+            sessionId: this.sessionId,
+            completed: true,
+          });
+        }
+        this.emit("tour:completed", { tourId });
+      },
+      onDismiss: async (tourId: string) => {
+        if (this.api && this.sessionId) {
+          await this.api.updateTourProgress({
+            tourId,
+            sessionId: this.sessionId,
+            dismissed: true,
+          });
+        }
+        this.emit("tour:dismissed", { tourId });
+      },
+    });
   }
 
   async identify(user: RelayUser): Promise<void> {
@@ -333,6 +389,57 @@ class RelaySDK implements RelayInstance {
       }
     } catch {
       // Ignore localStorage errors
+    }
+  }
+
+  /**
+   * Check and show eligible tours (called after page load)
+   */
+  async checkForTours(): Promise<void> {
+    if (!this.api || !this.sessionId || !this.tourRenderer) return;
+
+    try {
+      const tours = (await this.api.getActiveTours({
+        sessionId: this.sessionId,
+        url: window.location.href,
+        userTraits: this.customData,
+      })) as any[];
+
+      this.activeTours = tours;
+
+      // Start the first eligible tour
+      if (tours.length > 0) {
+        this.tourRenderer.startTour(tours[0]);
+        this.emit("tour:started", { tourId: tours[0].id });
+      }
+    } catch (error) {
+      console.warn("[Relay] Failed to check for tours:", error);
+    }
+  }
+
+  /**
+   * Start a specific tour by ID
+   */
+  async startTour(tourId: string): Promise<void> {
+    if (!this.api || !this.sessionId || !this.tourRenderer) return;
+
+    try {
+      // Find tour in active tours or fetch it
+      let tour = this.activeTours.find((t) => t.id === tourId);
+      if (!tour) {
+        const tours = (await this.api.getActiveTours({
+          sessionId: this.sessionId,
+          url: window.location.href,
+        })) as any[];
+        tour = tours.find((t) => t.id === tourId);
+      }
+
+      if (tour) {
+        this.tourRenderer.startTour(tour);
+        this.emit("tour:started", { tourId });
+      }
+    } catch (error) {
+      console.error("[Relay] Failed to start tour:", error);
     }
   }
 
@@ -903,6 +1010,12 @@ class RelaySDK implements RelayInstance {
     if (this.widgetContainer) {
       this.widgetContainer.remove();
       this.widgetContainer = null;
+    }
+
+    // Clean up tour renderer
+    if (this.tourRenderer) {
+      this.tourRenderer.destroy();
+      this.tourRenderer = null;
     }
 
     this.initialized = false;

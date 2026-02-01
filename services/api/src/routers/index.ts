@@ -17,6 +17,8 @@ import { announcementsRouter } from "./announcements";
 import { webhooksRouter } from "./webhooks";
 import { campaignsRouter } from "./campaigns";
 import { billingRouter } from "./billing";
+import { teamsRouter } from "./teams";
+import { analyticsRouter } from "./analytics";
 
 export const appRouter = router({
   auth: authRouter,
@@ -37,6 +39,8 @@ export const appRouter = router({
   webhooks: webhooksRouter,
   campaigns: campaignsRouter,
   billing: billingRouter,
+  teams: teamsRouter,
+  analytics: analyticsRouter,
 });
 
 export type AppRouter = typeof appRouter;

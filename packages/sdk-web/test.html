@@ -119,7 +119,6 @@
         <button class="btn-primary" onclick="Relay.open('feedback')">Open Feature Request</button>
         <button class="btn-primary" onclick="Relay.open('chat')">Open Messages</button>
         <button class="btn-primary" onclick="Relay.open('roadmap')">Open Roadmap</button>
-        <button class="btn-primary" onclick="Relay.open('help')">Open Help</button>
         <button class="btn-secondary" onclick="Relay.close()">Close Widget</button>
       </div>
       <div class="status" id="status">Widget not initialized yet...</div>
@@ -173,7 +172,8 @@
     async function initRelay() {
       try {
         await Relay.init({
-          apiKey: 'test-api-key', // Replace with real key for full testing
+          apiKey: 'rly_test_us_west_demo_key_12345678', // Demo key from seed data
+          endpoint: 'http://localhost:3001', // Local API
           environment: 'development',
           debug: true,
           widget: {
@@ -182,9 +182,8 @@
             showBugReport: true,
             showFeedback: true,
             showChat: true,
-            showHelp: true,
             showRoadmap: true,
-            useMockData: true, // Enable mock data for testing without API
+            useMockData: false, // Use real API
           },
           capture: {
             console: true,

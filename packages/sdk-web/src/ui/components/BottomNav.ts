@@ -116,7 +116,7 @@ export function createBottomNav(config: BottomNavConfig): BottomNavResult {
     activeTab,
     onTabChange,
     showMessages = true,
-    showHelp = true,
+    showHelp = false, // Knowledge Base cut from MVP
     showRoadmap = true,
     unreadCount = 0,
   } = config;
