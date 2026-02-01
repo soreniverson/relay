@@ -1,10 +1,10 @@
-const xe = {
+const ve = {
   "us-west": "https://us-west.api.relay.dev",
   "eu-west": "https://eu-west.api.relay.dev"
 };
-class ve {
+class xe {
   constructor(e) {
-    this.sessionId = null, this.apiKey = e.apiKey, this.endpoint = e.endpoint || xe[e.regionHint || "us-west"], typeof window < "u" && window.location.hostname === "localhost" && (this.endpoint = "http://localhost:3001");
+    this.sessionId = null, this.apiKey = e.apiKey, this.endpoint = e.endpoint || ve[e.regionHint || "us-west"], typeof window < "u" && window.location.hostname === "localhost" && (this.endpoint = "http://localhost:3001");
   }
   setSessionId(e) {
     this.sessionId = e;
@@ -650,58 +650,98 @@ function ce(h, e) {
   for (const [t, r] of Object.entries(e))
     r !== void 0 && (h.style[t] = r);
 }
-function He(h, e) {
+function ze(h, e) {
   const t = document.createElement("style");
   return t.id = e, t.textContent = h, t;
 }
-let Re = 0;
+let He = 0;
 function A(h = "relay") {
-  return `${h}-${++Re}-${Date.now().toString(36)}`;
+  return `${h}-${++He}-${Date.now().toString(36)}`;
 }
 function P(h) {
   const e = document.createElement("div");
   return e.textContent = h, e.innerHTML;
 }
-function ze(h) {
+function Re(h) {
   const e = h instanceof Date ? h : new Date(h), r = Date.now() - e.getTime(), a = Math.floor(r / 1e3), s = Math.floor(a / 60), i = Math.floor(s / 60), l = Math.floor(i / 24);
   return a < 60 ? "just now" : s < 60 ? `${s}m ago` : i < 24 ? `${i}h ago` : l < 7 ? `${l}d ago` : e.toLocaleDateString();
 }
 const G = {
   "--relay-bg": "0 0% 100%",
-  "--relay-bg-secondary": "240 5% 96%",
-  "--relay-bg-tertiary": "240 5% 92%",
-  "--relay-text": "240 10% 4%",
-  "--relay-text-muted": "240 4% 46%",
-  "--relay-text-subtle": "240 4% 65%",
-  "--relay-border": "240 6% 90%",
-  "--relay-border-hover": "240 5% 75%",
-  "--relay-primary": "240 6% 10%",
-  "--relay-primary-hover": "240 5% 20%",
+  // #ffffff
+  "--relay-bg-secondary": "0 0% 98%",
+  // #fafafa
+  "--relay-bg-tertiary": "0 0% 96%",
+  // #f5f5f5
+  "--relay-text": "0 0% 9%",
+  // #171717
+  "--relay-text-secondary": "0 0% 45%",
+  // #737373
+  "--relay-text-muted": "0 0% 64%",
+  // #a3a3a3
+  "--relay-text-hint": "0 0% 74%",
+  // #bdbdbd
+  "--relay-border": "0 0% 90%",
+  // #e5e5e5
+  "--relay-border-hover": "0 0% 82%",
+  // #d4d4d4
+  "--relay-border-focus": "0 0% 70%",
+  // #b3b3b3
+  "--relay-primary": "217 91% 60%",
+  // #3b82f6 (blue)
+  "--relay-primary-hover": "217 91% 50%",
+  // darker blue
   "--relay-primary-text": "0 0% 100%",
+  // white
   "--relay-success": "142 71% 45%",
-  "--relay-warning": "38 92% 50%",
-  "--relay-error": "0 72% 51%",
-  "--relay-shadow": "0 1px 2px rgba(0, 0, 0, 0.05)",
-  "--relay-shadow-lg": "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)",
-  "--relay-overlay": "rgba(0, 0, 0, 0.4)"
+  // #22c55e
+  "--relay-warning": "45 93% 47%",
+  // #eab308
+  "--relay-error": "0 84% 60%",
+  // #ef4444
+  "--relay-info": "217 91% 60%",
+  // #3b82f6
+  "--relay-shadow": "0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06)",
+  "--relay-shadow-lg": "0 10px 25px rgba(0, 0, 0, 0.1), 0 6px 10px rgba(0, 0, 0, 0.08)",
+  "--relay-overlay": "rgba(0, 0, 0, 0.5)"
 }, X = {
-  "--relay-bg": "240 10% 4%",
-  "--relay-bg-secondary": "240 6% 10%",
-  "--relay-bg-tertiary": "240 4% 16%",
-  "--relay-text": "0 0% 98%",
-  "--relay-text-muted": "240 5% 65%",
-  "--relay-text-subtle": "240 4% 46%",
-  "--relay-border": "240 4% 16%",
-  "--relay-border-hover": "240 5% 26%",
-  "--relay-primary": "0 0% 98%",
-  "--relay-primary-hover": "0 0% 85%",
-  "--relay-primary-text": "240 10% 4%",
+  "--relay-bg": "0 0% 4%",
+  // #0a0a0a
+  "--relay-bg-secondary": "0 0% 6%",
+  // #0f0f0f
+  "--relay-bg-tertiary": "0 0% 10%",
+  // #1a1a1a
+  "--relay-text": "0 0% 90%",
+  // #e5e5e5
+  "--relay-text-secondary": "0 0% 64%",
+  // #a3a3a3
+  "--relay-text-muted": "0 0% 32%",
+  // #525252
+  "--relay-text-hint": "0 0% 25%",
+  // #404040
+  "--relay-border": "0 0% 10%",
+  // #1a1a1a
+  "--relay-border-hover": "0 0% 15%",
+  // #262626
+  "--relay-border-focus": "0 0% 20%",
+  // #333333
+  "--relay-primary": "217 91% 60%",
+  // #3b82f6 (blue)
+  "--relay-primary-hover": "217 91% 50%",
+  // darker blue
+  "--relay-primary-text": "0 0% 100%",
+  // white
   "--relay-success": "142 71% 45%",
-  "--relay-warning": "38 92% 50%",
-  "--relay-error": "0 72% 51%",
-  "--relay-shadow": "0 1px 2px rgba(0, 0, 0, 0.3)",
-  "--relay-shadow-lg": "0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3)",
-  "--relay-overlay": "rgba(0, 0, 0, 0.6)"
+  // #22c55e
+  "--relay-warning": "45 93% 47%",
+  // #eab308
+  "--relay-error": "0 84% 60%",
+  // #ef4444
+  "--relay-info": "217 91% 60%",
+  // #3b82f6
+  "--relay-shadow": "0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2)",
+  "--relay-shadow-lg": "0 10px 25px rgba(0, 0, 0, 0.4), 0 6px 10px rgba(0, 0, 0, 0.3)",
+  "--relay-overlay": "rgba(0, 0, 0, 0.8)"
 };
 function q() {
   if (typeof window > "u")
@@ -824,8 +864,10 @@ function Pe(h = "auto", e) {
     #relay-widget,
     .relay-screenshot-editor {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-      font-size: 14px;
+      font-size: 15px;
+      font-weight: 400;
       line-height: 1.5;
+      letter-spacing: -0.01em;
       color: hsl(var(--relay-text));
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
@@ -839,28 +881,41 @@ function Pe(h = "auto", e) {
       padding: 0;
     }
 
-    /* Typography */
+    /* Typography - matches dashboard design system */
     #relay-widget h1,
     #relay-widget h2,
     #relay-widget h3,
     #relay-widget h4 {
-      font-weight: 600;
-      line-height: 1.25;
+      font-weight: 500;
+      line-height: 1.3;
+      letter-spacing: -0.02em;
       color: hsl(var(--relay-text));
     }
 
-    #relay-widget h1 { font-size: 24px; }
-    #relay-widget h2 { font-size: 20px; }
-    #relay-widget h3 { font-size: 16px; }
+    #relay-widget h1 { font-size: 20px; }
+    #relay-widget h2 { font-size: 16px; }
+    #relay-widget h3 { font-size: 15px; }
     #relay-widget h4 { font-size: 14px; }
 
     #relay-widget p {
-      color: hsl(var(--relay-text-muted));
+      font-size: 14px;
+      color: hsl(var(--relay-text-secondary));
     }
 
     #relay-widget small {
       font-size: 12px;
-      color: hsl(var(--relay-text-subtle));
+      color: hsl(var(--relay-text-muted));
+    }
+
+    #relay-widget .relay-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: hsl(var(--relay-text));
+    }
+
+    #relay-widget .relay-meta {
+      font-size: 12px;
+      color: hsl(var(--relay-text-muted));
     }
 
     /* Links */
@@ -875,8 +930,17 @@ function Pe(h = "auto", e) {
 
     /* Focus styles */
     #relay-widget *:focus-visible {
-      outline: 2px solid hsl(var(--relay-primary));
-      outline-offset: 2px;
+      outline: 2px solid hsl(var(--relay-border-focus));
+      outline-offset: 1px;
+    }
+
+    #relay-widget button:focus-visible,
+    #relay-widget input:focus-visible,
+    #relay-widget textarea:focus-visible,
+    #relay-widget select:focus-visible {
+      outline: none;
+      border-color: hsl(var(--relay-border-focus));
+      box-shadow: 0 0 0 3px hsl(var(--relay-primary) / 0.1);
     }
 
     /* Animations */
@@ -1011,15 +1075,16 @@ function Ne() {
   `;
 }
 const Ve = `
+  /* Button base - matches dashboard design system */
   #relay-widget .relay-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
     font-family: inherit;
-    font-weight: 600;
-    border: none;
-    border-radius: 10px;
+    font-weight: 500;
+    border: 1px solid transparent;
+    border-radius: 8px;
     cursor: pointer;
     transition: all 0.15s ease;
     white-space: nowrap;
@@ -1027,8 +1092,9 @@ const Ve = `
   }
 
   #relay-widget .relay-btn:disabled {
-    opacity: 0.5;
+    opacity: 0.6;
     cursor: not-allowed;
+    pointer-events: none;
   }
 
   #relay-widget .relay-btn:active:not(:disabled) {
@@ -1036,54 +1102,60 @@ const Ve = `
   }
 
   #relay-widget .relay-btn:focus-visible {
-    outline: 2px solid hsl(var(--relay-primary));
-    outline-offset: 2px;
+    outline: none;
+    box-shadow: 0 0 0 2px hsl(var(--relay-bg)), 0 0 0 4px hsl(var(--relay-border-focus));
   }
 
-  /* Sizes */
+  /* Sizes - 32px sm, 36px md, 40px lg */
   #relay-widget .relay-btn--sm {
-    padding: 8px 14px;
+    height: 32px;
+    padding: 0 12px;
     font-size: 13px;
-    border-radius: 8px;
+    border-radius: 6px;
   }
 
   #relay-widget .relay-btn--md {
-    padding: 10px 18px;
+    height: 36px;
+    padding: 0 16px;
     font-size: 14px;
   }
 
   #relay-widget .relay-btn--lg {
-    padding: 12px 24px;
-    font-size: 15px;
-    border-radius: 12px;
+    height: 40px;
+    padding: 0 20px;
+    font-size: 14px;
+    border-radius: 10px;
   }
 
-  /* Variants */
+  /* Primary variant */
   #relay-widget .relay-btn--primary {
     background: hsl(var(--relay-primary));
     color: hsl(var(--relay-primary-text));
-    box-shadow: 0 1px 2px hsl(var(--relay-primary) / 0.2);
+    border-color: hsl(var(--relay-primary));
   }
 
   #relay-widget .relay-btn--primary:hover:not(:disabled) {
     background: hsl(var(--relay-primary-hover));
-    box-shadow: 0 2px 4px hsl(var(--relay-primary) / 0.15);
+    border-color: hsl(var(--relay-primary-hover));
   }
 
+  /* Secondary/default variant - transparent with border */
   #relay-widget .relay-btn--secondary {
-    background: hsl(var(--relay-bg));
+    background: transparent;
     color: hsl(var(--relay-text));
-    border: 1px solid hsl(var(--relay-border));
+    border-color: hsl(var(--relay-border));
   }
 
   #relay-widget .relay-btn--secondary:hover:not(:disabled) {
-    background: hsl(var(--relay-bg-secondary));
+    background: hsl(var(--relay-bg-tertiary));
     border-color: hsl(var(--relay-border-hover));
   }
 
+  /* Ghost variant */
   #relay-widget .relay-btn--ghost {
     background: transparent;
-    color: hsl(var(--relay-text-muted));
+    color: hsl(var(--relay-text-secondary));
+    border-color: transparent;
   }
 
   #relay-widget .relay-btn--ghost:hover:not(:disabled) {
@@ -1091,14 +1163,16 @@ const Ve = `
     color: hsl(var(--relay-text));
   }
 
+  /* Danger/destructive variant */
   #relay-widget .relay-btn--danger {
-    background: hsl(var(--relay-error));
-    color: white;
-    box-shadow: 0 1px 2px hsl(var(--relay-error) / 0.2);
+    background: transparent;
+    color: hsl(var(--relay-error));
+    border-color: hsl(var(--relay-error) / 0.3);
   }
 
   #relay-widget .relay-btn--danger:hover:not(:disabled) {
-    filter: brightness(1.1);
+    background: hsl(var(--relay-error) / 0.1);
+    border-color: hsl(var(--relay-error) / 0.5);
   }
 
   /* Full width */
@@ -1156,10 +1230,11 @@ function F(h, e, t) {
   ), delete h.dataset.originalText);
 }
 const Oe = `
+  /* Input group - matches dashboard design system */
   #relay-widget .relay-input-group {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
   }
 
   #relay-widget .relay-input-label {
@@ -1176,36 +1251,36 @@ const Oe = `
 
   #relay-widget .relay-input {
     width: 100%;
-    padding: 10px 14px;
+    height: 36px;
+    padding: 0 12px;
     font-family: inherit;
     font-size: 14px;
-    line-height: 1.5;
+    line-height: 36px;
     color: hsl(var(--relay-text));
     background: hsl(var(--relay-bg-secondary));
     border: 1px solid hsl(var(--relay-border));
-    border-radius: 10px;
+    border-radius: 8px;
     transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
   }
 
   #relay-widget .relay-input::placeholder {
-    color: hsl(var(--relay-text-subtle));
+    color: hsl(var(--relay-text-muted));
   }
 
   #relay-widget .relay-input:hover:not(:focus):not(:disabled) {
     border-color: hsl(var(--relay-border-hover));
-    background: hsl(var(--relay-bg));
   }
 
   #relay-widget .relay-input:focus {
     outline: none;
-    border-color: hsl(var(--relay-primary));
-    box-shadow: 0 0 0 3px hsl(var(--relay-primary) / 0.08);
+    border-color: hsl(var(--relay-border-focus));
+    background: hsl(var(--relay-bg));
   }
 
   #relay-widget .relay-input:disabled {
     opacity: 0.6;
     cursor: not-allowed;
-    background: hsl(var(--relay-bg-secondary));
+    background: hsl(var(--relay-bg-tertiary));
   }
 
   #relay-widget .relay-input--error {
@@ -1213,12 +1288,14 @@ const Oe = `
   }
 
   #relay-widget .relay-input--error:focus {
+    border-color: hsl(var(--relay-error));
     box-shadow: 0 0 0 3px hsl(var(--relay-error) / 0.1);
   }
 
   #relay-widget .relay-input-error {
     font-size: 12px;
     color: hsl(var(--relay-error));
+    margin-top: 2px;
   }
 
   #relay-widget .relay-input-hint {
@@ -1242,7 +1319,7 @@ function de(h, e = {}) {
     onBlur: u
   } = e, g = A("input"), f = d("div", {
     class: `relay-input-group ${y}`.trim()
-  }), x = d(
+  }), v = d(
     "label",
     {
       class: `relay-input-label ${i ? "relay-input-label--required" : ""}`,
@@ -1261,12 +1338,12 @@ function de(h, e = {}) {
     maxLength: o,
     pattern: c,
     autofocus: p
-  }), v = d("span", { class: "relay-input-error" });
-  return v.style.display = "none", f.appendChild(x), f.appendChild(m), f.appendChild(v), n && m.addEventListener("input", () => n(m.value)), u && m.addEventListener("blur", () => u(m.value)), {
+  }), x = d("span", { class: "relay-input-error" });
+  return x.style.display = "none", f.appendChild(v), f.appendChild(m), f.appendChild(x), n && m.addEventListener("input", () => n(m.value)), u && m.addEventListener("blur", () => u(m.value)), {
     container: f,
     input: m,
     setError: (_) => {
-      _ ? (v.textContent = _, v.style.display = "block", m.classList.add("relay-input--error")) : (v.textContent = "", v.style.display = "none", m.classList.remove("relay-input--error"));
+      _ ? (x.textContent = _, x.style.display = "block", m.classList.add("relay-input--error")) : (x.textContent = "", x.style.display = "none", m.classList.remove("relay-input--error"));
     },
     setValue: (_) => {
       m.value = _;
@@ -1275,10 +1352,11 @@ function de(h, e = {}) {
   };
 }
 const je = `
+  /* Textarea - matches dashboard design system */
   #relay-widget .relay-textarea-group {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
   }
 
   #relay-widget .relay-textarea-label {
@@ -1295,38 +1373,37 @@ const je = `
 
   #relay-widget .relay-textarea {
     width: 100%;
-    padding: 10px 14px;
+    padding: 10px 12px;
     font-family: inherit;
     font-size: 14px;
     line-height: 1.5;
     color: hsl(var(--relay-text));
     background: hsl(var(--relay-bg-secondary));
     border: 1px solid hsl(var(--relay-border));
-    border-radius: 10px;
+    border-radius: 8px;
     resize: vertical;
     min-height: 100px;
     transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
   }
 
   #relay-widget .relay-textarea::placeholder {
-    color: hsl(var(--relay-text-subtle));
+    color: hsl(var(--relay-text-muted));
   }
 
   #relay-widget .relay-textarea:hover:not(:focus):not(:disabled) {
     border-color: hsl(var(--relay-border-hover));
-    background: hsl(var(--relay-bg));
   }
 
   #relay-widget .relay-textarea:focus {
     outline: none;
-    border-color: hsl(var(--relay-primary));
-    box-shadow: 0 0 0 3px hsl(var(--relay-primary) / 0.08);
+    border-color: hsl(var(--relay-border-focus));
+    background: hsl(var(--relay-bg));
   }
 
   #relay-widget .relay-textarea:disabled {
     opacity: 0.6;
     cursor: not-allowed;
-    background: hsl(var(--relay-bg-secondary));
+    background: hsl(var(--relay-bg-tertiary));
   }
 
   #relay-widget .relay-textarea--error {
@@ -1334,6 +1411,7 @@ const je = `
   }
 
   #relay-widget .relay-textarea--error:focus {
+    border-color: hsl(var(--relay-error));
     box-shadow: 0 0 0 3px hsl(var(--relay-error) / 0.1);
   }
 
@@ -1345,18 +1423,19 @@ const je = `
   #relay-widget .relay-textarea-error {
     font-size: 12px;
     color: hsl(var(--relay-error));
+    margin-top: 2px;
   }
 
   #relay-widget .relay-textarea-footer {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: -4px;
+    margin-top: 2px;
   }
 
   #relay-widget .relay-textarea-counter {
     font-size: 11px;
-    color: hsl(var(--relay-text-subtle));
+    color: hsl(var(--relay-text-muted));
     margin-left: auto;
   }
 
@@ -1384,7 +1463,7 @@ function he(h, e = {}) {
     onBlur: u
   } = e, g = A("textarea"), f = d("div", {
     class: `relay-textarea-group ${y}`.trim()
-  }), x = d(
+  }), v = d(
     "label",
     {
       class: `relay-textarea-label ${s ? "relay-textarea-label--required" : ""}`,
@@ -1402,10 +1481,10 @@ function he(h, e = {}) {
     autofocus: p
   });
   m.value = a, l && (m.maxLength = l);
-  const v = d("div", { class: "relay-textarea-footer" }), _ = d("span", { class: "relay-textarea-error" });
+  const x = d("div", { class: "relay-textarea-footer" }), _ = d("span", { class: "relay-textarea-error" });
   _.style.display = "none";
   let b = null;
-  l && (b = d("span", { class: "relay-textarea-counter" }), b.textContent = `${a.length}/${l}`), v.appendChild(_), b && v.appendChild(b), f.appendChild(x), f.appendChild(m), f.appendChild(v);
+  l && (b = d("span", { class: "relay-textarea-counter" }), b.textContent = `${a.length}/${l}`), x.appendChild(_), b && x.appendChild(b), f.appendChild(v), f.appendChild(m), f.appendChild(x);
   const S = () => {
     c && (m.style.height = "auto", m.style.height = `${m.scrollHeight}px`);
   }, T = () => {
@@ -1539,7 +1618,7 @@ function pe(h, e) {
     disabled: l
   });
   if (r) {
-    const v = d(
+    const x = d(
       "option",
       {
         value: "",
@@ -1548,10 +1627,10 @@ function pe(h, e) {
       },
       [r]
     );
-    g.appendChild(v);
+    g.appendChild(x);
   }
-  const f = (v) => {
-    v.forEach((_) => {
+  const f = (x) => {
+    x.forEach((_) => {
       const b = d(
         "option",
         {
@@ -1565,20 +1644,20 @@ function pe(h, e) {
     });
   };
   f(s);
-  const x = d("span", { class: "relay-select-icon" });
-  x.innerHTML = '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 4.5L6 7.5L9 4.5"/></svg>';
+  const v = d("span", { class: "relay-select-icon" });
+  v.innerHTML = '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 4.5L6 7.5L9 4.5"/></svg>';
   const m = d("span", { class: "relay-select-error" });
-  return m.style.display = "none", u.appendChild(g), u.appendChild(x), y.appendChild(n), y.appendChild(u), y.appendChild(m), c && g.addEventListener("change", () => c(g.value)), {
+  return m.style.display = "none", u.appendChild(g), u.appendChild(v), y.appendChild(n), y.appendChild(u), y.appendChild(m), c && g.addEventListener("change", () => c(g.value)), {
     container: y,
     select: g,
-    setError: (v) => {
-      v ? (m.textContent = v, m.style.display = "block", g.classList.add("relay-select--error")) : (m.textContent = "", m.style.display = "none", g.classList.remove("relay-select--error"));
+    setError: (x) => {
+      x ? (m.textContent = x, m.style.display = "block", g.classList.add("relay-select--error")) : (m.textContent = "", m.style.display = "none", g.classList.remove("relay-select--error"));
     },
-    setValue: (v) => {
-      g.value = v;
+    setValue: (x) => {
+      g.value = x;
     },
     getValue: () => g.value,
-    setOptions: (v) => {
+    setOptions: (x) => {
       const _ = g.value;
       if (g.innerHTML = "", r) {
         const b = d(
@@ -1591,7 +1670,7 @@ function pe(h, e) {
         );
         g.appendChild(b);
       }
-      f(v), v.some((b) => b.value === _) && (g.value = _);
+      f(x), x.some((b) => b.value === _) && (g.value = _);
     }
   };
 }
@@ -1891,16 +1970,16 @@ function ue(h, e = {}) {
     disabled: i
   }), f = d("div", { class: "relay-file-upload__icon" });
   f.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>';
-  const x = d("div", { class: "relay-file-upload__text" }, [
+  const v = d("div", { class: "relay-file-upload__text" }, [
     "Drop files here or "
   ]), m = d(
     "span",
     { class: "relay-file-upload__browse" },
     ["browse"]
   );
-  x.appendChild(m);
-  const v = d("div", { class: "relay-file-upload__hint" });
-  v.textContent = `Max ${j(a)} per file${r ? `, up to ${s} files` : ""}`, u.appendChild(g), u.appendChild(f), u.appendChild(x), u.appendChild(v);
+  v.appendChild(m);
+  const x = d("div", { class: "relay-file-upload__hint" });
+  x.textContent = `Max ${j(a)} per file${r ? `, up to ${s} files` : ""}`, u.appendChild(g), u.appendChild(f), u.appendChild(v), u.appendChild(x);
   const _ = d("div", { class: "relay-file-upload__files" }), b = d("div", { class: "relay-file-upload__error" });
   b.style.display = "none", y.appendChild(n), y.appendChild(u), y.appendChild(_), y.appendChild(b);
   const S = () => {
@@ -1913,7 +1992,7 @@ function ue(h, e = {}) {
       w.innerHTML = Ye(k.type);
       const L = d("div", {
         class: "relay-file-upload__file-info"
-      }), H = d(
+      }), z = d(
         "div",
         { class: "relay-file-upload__file-name" },
         [P(k.name)]
@@ -1922,13 +2001,13 @@ function ue(h, e = {}) {
         { class: "relay-file-upload__file-size" },
         [j(k.size)]
       );
-      L.appendChild(H), L.appendChild(E);
+      L.appendChild(z), L.appendChild(E);
       const I = d("button", {
         type: "button",
         class: "relay-file-upload__file-remove"
       });
       I.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>', I.addEventListener("click", () => {
-        p = p.filter((R, z) => z !== C), S(), o == null || o(p);
+        p = p.filter((H, R) => R !== C), S(), o == null || o(p);
       }), M.appendChild(w), M.appendChild(L), M.appendChild(I), _.appendChild(M);
     });
   }, T = (k) => {
@@ -2165,11 +2244,11 @@ function Ze(h) {
     options: Xe,
     value: s
   }));
-  let x = null, m = null, v = null;
+  let v = null, m = null, x = null;
   if (t) {
-    x = d("div", {
+    v = d("div", {
       class: "relay-bug-form__screenshot"
-    }), x.style.display = "none";
+    }), v.style.display = "none";
     const E = d(
       "span",
       { class: "relay-bug-form__screenshot-label" },
@@ -2177,14 +2256,14 @@ function Ze(h) {
     );
     m = d("div", {
       class: "relay-bug-form__screenshot-preview"
-    }), v = d("img", {
+    }), x = d("img", {
       alt: "Screenshot preview"
-    }), m.appendChild(v);
+    }), m.appendChild(x);
     const I = d("div", {
       class: "relay-bug-form__screenshot-actions"
     });
     if (c) {
-      const z = d(
+      const R = d(
         "button",
         {
           type: "button",
@@ -2192,9 +2271,9 @@ function Ze(h) {
         },
         ["Edit"]
       );
-      z.addEventListener("click", () => c()), I.appendChild(z);
+      R.addEventListener("click", () => c()), I.appendChild(R);
     }
-    const R = d(
+    const H = d(
       "button",
       {
         type: "button",
@@ -2202,9 +2281,9 @@ function Ze(h) {
       },
       ["Remove"]
     );
-    R.addEventListener("click", () => {
+    H.addEventListener("click", () => {
       M(null);
-    }), I.appendChild(R), m.appendChild(I), x.appendChild(E), x.appendChild(m);
+    }), I.appendChild(H), m.appendChild(I), v.appendChild(E), v.appendChild(m);
   }
   const _ = d("div", {
     class: "relay-bug-form__options"
@@ -2231,7 +2310,7 @@ function Ze(h) {
     variant: "primary",
     fullWidth: !0
   }), C = d("div", { class: "relay-bug-form__footer" });
-  C.appendChild(k), n.appendChild(u.container), n.appendChild(g.container), f && n.appendChild(f.container), x && n.appendChild(x), n.appendChild(_), T && n.appendChild(T.container), n.appendChild(C), n.addEventListener("submit", async (E) => {
+  C.appendChild(k), n.appendChild(u.container), n.appendChild(g.container), f && n.appendChild(f.container), v && n.appendChild(v), n.appendChild(_), T && n.appendChild(T.container), n.appendChild(C), n.addEventListener("submit", async (E) => {
     if (E.preventDefault(), !u.getValue().trim()) {
       u.setError("Title is required");
       return;
@@ -2252,17 +2331,17 @@ function Ze(h) {
     F(k, !0, "Submitting...");
     try {
       await o(I);
-    } catch (R) {
-      F(k, !1), console.error("[Relay] Bug report submission failed:", R);
+    } catch (H) {
+      F(k, !1), console.error("[Relay] Bug report submission failed:", H);
     }
   });
   const M = (E) => {
-    if (y = E, x && v)
+    if (y = E, v && x)
       if (E) {
         const I = URL.createObjectURL(E);
-        v.onload = () => URL.revokeObjectURL(I), v.src = I, x.style.display = "flex";
+        x.onload = () => URL.revokeObjectURL(I), x.src = I, v.style.display = "flex";
       } else
-        v.src = "", x.style.display = "none";
+        x.src = "", v.style.display = "none";
   };
   return {
     element: n,
@@ -2279,10 +2358,10 @@ function Ze(h) {
         class: "relay-bug-form__success-icon"
       });
       I.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>';
-      const R = d("h4", {}, ["Thank you!"]), z = d("p", {}, [
+      const H = d("h4", {}, ["Thank you!"]), R = d("p", {}, [
         "Your bug report has been submitted."
       ]);
-      E.appendChild(I), E.appendChild(R), E.appendChild(z), n.appendChild(E);
+      E.appendChild(I), E.appendChild(H), E.appendChild(R), n.appendChild(E);
     },
     setPrefillData: (E) => {
       E.title && u.setValue(E.title), E.description && g.setValue(E.description);
@@ -2479,8 +2558,8 @@ function tt(h) {
     variant: "primary",
     fullWidth: !0
   }), n = d("div", { class: "relay-feature-form__footer" });
-  return n.appendChild(y), i.appendChild(l.container), i.appendChild(o.container), i.appendChild(c.container), p && i.appendChild(p.container), i.appendChild(n), i.addEventListener("submit", async (x) => {
-    if (x.preventDefault(), !l.getValue().trim()) {
+  return n.appendChild(y), i.appendChild(l.container), i.appendChild(o.container), i.appendChild(c.container), p && i.appendChild(p.container), i.appendChild(n), i.addEventListener("submit", async (v) => {
+    if (v.preventDefault(), !l.getValue().trim()) {
       l.setError("Title is required");
       return;
     }
@@ -2498,8 +2577,8 @@ function tt(h) {
     F(y, !0, "Submitting...");
     try {
       await a(m);
-    } catch (v) {
-      F(y, !1), console.error("[Relay] Feature request submission failed:", v);
+    } catch (x) {
+      F(y, !1), console.error("[Relay] Feature request submission failed:", x);
     }
   }), {
     element: i,
@@ -2508,19 +2587,19 @@ function tt(h) {
     },
     showSuccess: () => {
       ne(i), i.className = "";
-      const x = d("div", {
+      const v = d("div", {
         class: "relay-feature-form__success"
       }), m = d("div", {
         class: "relay-feature-form__success-icon"
       });
       m.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>';
-      const v = d("h4", {}, ["Thank you!"]), _ = d("p", {}, [
+      const x = d("h4", {}, ["Thank you!"]), _ = d("p", {}, [
         "Your feature request has been submitted."
       ]);
-      x.appendChild(m), x.appendChild(v), x.appendChild(_), i.appendChild(x);
+      v.appendChild(m), v.appendChild(x), v.appendChild(_), i.appendChild(v);
     },
-    setPrefillData: (x) => {
-      x.title && l.setValue(x.title), x.description && o.setValue(x.description), x.category && c.setValue(x.category);
+    setPrefillData: (v) => {
+      v.title && l.setValue(v.title), v.description && o.setValue(v.description), v.category && c.setValue(v.category);
     }
   };
 }
@@ -2740,7 +2819,7 @@ function it(h = {}) {
     class: "relay-annotation-toolbar__divider"
   }), f = d("div", {
     class: "relay-annotation-toolbar__colors"
-  }), x = /* @__PURE__ */ new Map();
+  }), v = /* @__PURE__ */ new Map();
   Q.forEach((k) => {
     const C = d("button", {
       type: "button",
@@ -2748,11 +2827,11 @@ function it(h = {}) {
     });
     C.style.backgroundColor = k, C.setAttribute("aria-label", `Color ${k}`), C.addEventListener("click", () => {
       T(k), a == null || a(k);
-    }), x.set(k, C), f.appendChild(C);
+    }), v.set(k, C), f.appendChild(C);
   });
   const m = d("div", {
     class: "relay-annotation-toolbar__divider"
-  }), v = d("div", {
+  }), x = d("div", {
     class: "relay-annotation-toolbar__actions"
   }), _ = d("button", {
     type: "button",
@@ -2765,13 +2844,13 @@ function it(h = {}) {
     class: "relay-annotation-toolbar__action",
     disabled: !o
   });
-  b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 7v6h-6M21 13l-4-4c-1.33-1.33-3.17-2-5-2s-3.67.67-5 2c-1.33 1.33-2 3.17-2 5s.67 3.67 2 5"/></svg>', b.setAttribute("aria-label", "Redo"), b.setAttribute("title", "Redo (Ctrl+Shift+Z)"), i && b.addEventListener("click", i), v.appendChild(_), v.appendChild(b), y.appendChild(n), y.appendChild(g), y.appendChild(f), y.appendChild(m), y.appendChild(v);
+  b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 7v6h-6M21 13l-4-4c-1.33-1.33-3.17-2-5-2s-3.67.67-5 2c-1.33 1.33-2 3.17-2 5s.67 3.67 2 5"/></svg>', b.setAttribute("aria-label", "Redo"), b.setAttribute("title", "Redo (Ctrl+Shift+Z)"), i && b.addEventListener("click", i), x.appendChild(_), x.appendChild(b), y.appendChild(n), y.appendChild(g), y.appendChild(f), y.appendChild(m), y.appendChild(x);
   const S = (k) => {
     var C, M;
     (C = u.get(c)) == null || C.classList.remove("relay-annotation-toolbar__tool--active"), (M = u.get(k)) == null || M.classList.add("relay-annotation-toolbar__tool--active"), c = k;
   }, T = (k) => {
     var C, M;
-    (C = x.get(p)) == null || C.classList.remove("relay-annotation-toolbar__color--active"), (M = x.get(k)) == null || M.classList.add("relay-annotation-toolbar__color--active"), p = k;
+    (C = v.get(p)) == null || C.classList.remove("relay-annotation-toolbar__color--active"), (M = v.get(k)) == null || M.classList.add("relay-annotation-toolbar__color--active"), p = k;
   };
   return {
     element: y,
@@ -2831,33 +2910,33 @@ function nt(h) {
     class: "relay-annotation-layer__canvas",
     width: e,
     height: t
-  }), x = f.getContext("2d");
+  }), v = f.getContext("2d");
   g.appendChild(f);
   const m = (w) => {
-    const L = f.getBoundingClientRect(), H = f.width / L.width, E = f.height / L.height;
-    let I, R;
-    return "touches" in w ? (I = w.touches[0].clientX, R = w.touches[0].clientY) : (I = w.clientX, R = w.clientY), {
-      x: (I - L.left) * H,
-      y: (R - L.top) * E
+    const L = f.getBoundingClientRect(), z = f.width / L.width, E = f.height / L.height;
+    let I, H;
+    return "touches" in w ? (I = w.touches[0].clientX, H = w.touches[0].clientY) : (I = w.clientX, H = w.clientY), {
+      x: (I - L.left) * z,
+      y: (H - L.top) * E
     };
-  }, v = () => {
-    x.clearRect(0, 0, f.width, f.height), o.forEach((w) => {
-      _(x, w);
-    }), u && u.type && _(x, u);
+  }, x = () => {
+    v.clearRect(0, 0, f.width, f.height), o.forEach((w) => {
+      _(v, w);
+    }), u && u.type && _(v, u);
   }, _ = (w, L) => {
     w.strokeStyle = L.color || l, w.fillStyle = L.color || l, w.lineWidth = 3;
-    const H = L.x || 0, E = L.y || 0, I = L.width || 0, R = L.height || 0;
+    const z = L.x || 0, E = L.y || 0, I = L.width || 0, H = L.height || 0;
     switch (L.type) {
       case "rectangle":
-        w.strokeRect(H, E, I, R);
+        w.strokeRect(z, E, I, H);
         break;
       case "circle":
         w.beginPath();
-        const z = Math.abs(I) / 2, be = Math.abs(R) / 2;
+        const R = Math.abs(I) / 2, be = Math.abs(H) / 2;
         w.ellipse(
-          H + I / 2,
-          E + R / 2,
-          z,
+          z + I / 2,
+          E + H / 2,
+          R,
           be,
           0,
           0,
@@ -2865,24 +2944,24 @@ function nt(h) {
         ), w.stroke();
         break;
       case "arrow":
-        w.beginPath(), w.moveTo(H, E), w.lineTo(H + I, E + R), w.stroke();
-        const N = Math.atan2(R, I), V = 15;
-        w.beginPath(), w.moveTo(H + I, E + R), w.lineTo(
-          H + I - V * Math.cos(N - Math.PI / 6),
-          E + R - V * Math.sin(N - Math.PI / 6)
+        w.beginPath(), w.moveTo(z, E), w.lineTo(z + I, E + H), w.stroke();
+        const N = Math.atan2(H, I), V = 15;
+        w.beginPath(), w.moveTo(z + I, E + H), w.lineTo(
+          z + I - V * Math.cos(N - Math.PI / 6),
+          E + H - V * Math.sin(N - Math.PI / 6)
         ), w.lineTo(
-          H + I - V * Math.cos(N + Math.PI / 6),
-          E + R - V * Math.sin(N + Math.PI / 6)
+          z + I - V * Math.cos(N + Math.PI / 6),
+          E + H - V * Math.sin(N + Math.PI / 6)
         ), w.closePath(), w.fill();
         break;
       case "highlight":
-        w.fillStyle = (L.color || l) + "40", w.fillRect(H, E, I, R);
+        w.fillStyle = (L.color || l) + "40", w.fillRect(z, E, I, H);
         break;
       case "blur":
-        w.fillStyle = "rgba(128, 128, 128, 0.6)", w.fillRect(H, E, I, R);
+        w.fillStyle = "rgba(128, 128, 128, 0.6)", w.fillRect(z, E, I, H);
         break;
       case "text":
-        L.text && (w.font = "16px sans-serif", w.fillText(L.text, H, E));
+        L.text && (w.font = "16px sans-serif", w.fillText(L.text, z, E));
         break;
     }
   };
@@ -2891,8 +2970,8 @@ function nt(h) {
     b && b.remove(), b = d("input", {
       type: "text",
       class: "relay-annotation-layer__text-input"
-    }), b.style.left = `${w / f.width * 100}%`, b.style.top = `${L / f.height * 100}%`, b.style.color = l, b.style.borderColor = l, b.addEventListener("keydown", (H) => {
-      H.key === "Enter" ? T() : H.key === "Escape" && (b == null || b.remove(), b = null);
+    }), b.style.left = `${w / f.width * 100}%`, b.style.top = `${L / f.height * 100}%`, b.style.color = l, b.style.borderColor = l, b.addEventListener("keydown", (z) => {
+      z.key === "Enter" ? T() : z.key === "Escape" && (b == null || b.remove(), b = null);
     }), b.addEventListener("blur", T), g.appendChild(b), b.focus();
   }, T = () => {
     if (!b || !b.value.trim()) {
@@ -2900,7 +2979,7 @@ function nt(h) {
       return;
     }
     f.getBoundingClientRect();
-    const w = parseFloat(b.style.left) / 100 * f.width, L = parseFloat(b.style.top) / 100 * f.height, H = {
+    const w = parseFloat(b.style.left) / 100 * f.width, L = parseFloat(b.style.top) / 100 * f.height, z = {
       id: A("annotation"),
       type: "text",
       x: w,
@@ -2909,11 +2988,11 @@ function nt(h) {
       color: l,
       text: b.value.trim()
     };
-    o.push(H), c = [], s == null || s(H), v(), b.remove(), b = null;
+    o.push(z), c = [], s == null || s(z), x(), b.remove(), b = null;
   }, k = (w) => {
     if (i === "text") {
-      const H = m(w);
-      S(H.x, H.y);
+      const z = m(w);
+      S(z.x, z.y);
       return;
     }
     p = !0;
@@ -2931,13 +3010,13 @@ function nt(h) {
     if (!p || !u)
       return;
     const L = m(w);
-    u.width = L.x - y, u.height = L.y - n, v();
+    u.width = L.x - y, u.height = L.y - n, x();
   }, M = () => {
     if (!p || !u)
       return;
     p = !1;
     const w = 5;
-    (Math.abs(u.width || 0) > w || Math.abs(u.height || 0) > w) && (o.push(u), c = [], s == null || s(u)), u = null, v();
+    (Math.abs(u.width || 0) > w || Math.abs(u.height || 0) > w) && (o.push(u), c = [], s == null || s(u)), u = null, x();
   };
   return f.addEventListener("mousedown", k), f.addEventListener("mousemove", C), f.addEventListener("mouseup", M), f.addEventListener("mouseleave", M), f.addEventListener("touchstart", (w) => {
     w.preventDefault(), k(w);
@@ -2957,26 +3036,26 @@ function nt(h) {
     },
     getAnnotations: () => [...o],
     setAnnotations: (w) => {
-      o = [...w], c = [], v();
+      o = [...w], c = [], x();
     },
     undo: () => {
       if (o.length === 0)
         return null;
       const w = o.pop();
-      return c.push(w), v(), w;
+      return c.push(w), x(), w;
     },
     redo: () => {
       if (c.length === 0)
         return null;
       const w = c.pop();
-      return o.push(w), v(), w;
+      return o.push(w), x(), w;
     },
     canUndo: () => o.length > 0,
     canRedo: () => c.length > 0,
     clear: () => {
-      o = [], c = [], v();
+      o = [], c = [], x();
     },
-    redraw: v
+    redraw: x
   };
 }
 const lt = `
@@ -3090,12 +3169,12 @@ function ct(h) {
   n.appendChild(u), n.appendChild(g), p.appendChild(y), p.appendChild(n);
   const f = d("div", {
     class: "relay-screenshot-editor__canvas-container"
-  }), x = d("div", {
+  }), v = d("div", {
     class: "relay-screenshot-editor__canvas-wrapper"
   }), m = d("img", {
     class: "relay-screenshot-editor__image"
-  }), v = URL.createObjectURL(e);
-  m.src = v, m.onload = () => {
+  }), x = URL.createObjectURL(e);
+  m.src = x, m.onload = () => {
     l = m.naturalWidth, o = m.naturalHeight, s = it({
       activeTool: "arrow",
       activeColor: "#ef4444",
@@ -3121,8 +3200,8 @@ function ct(h) {
       }
     }), t.length > 0 && i.setAnnotations(t);
     const C = i.element;
-    C.style.position = "absolute", C.style.top = "0", C.style.left = "0", C.style.width = "100%", C.style.height = "100%", x.appendChild(C), i.redraw();
-  }, x.appendChild(m), f.appendChild(x), c.appendChild(p), c.appendChild(f);
+    C.style.position = "absolute", C.style.top = "0", C.style.left = "0", C.style.width = "100%", C.style.height = "100%", v.appendChild(C), i.redraw();
+  }, v.appendChild(m), f.appendChild(v), c.appendChild(p), c.appendChild(f);
   const _ = () => {
     s && i && (s.setCanUndo(i.canUndo()), s.setCanRedo(i.canRedo()));
   }, b = async () => {
@@ -3135,13 +3214,13 @@ function ct(h) {
       L && r(L, C), S();
     }, "image/png");
   }, S = async () => {
-    c.classList.remove("relay-screenshot-editor--enter"), c.classList.add("relay-screenshot-editor--exit"), await le(c), c.remove(), URL.revokeObjectURL(v), a();
+    c.classList.remove("relay-screenshot-editor--enter"), c.classList.add("relay-screenshot-editor--exit"), await le(c), c.remove(), URL.revokeObjectURL(x), a();
   }, T = (C) => {
     C.key === "Escape" ? S() : C.key === "z" && (C.ctrlKey || C.metaKey) ? (C.shiftKey ? i == null || i.redo() : i == null || i.undo(), _()) : C.key === "s" && (C.ctrlKey || C.metaKey) && (C.preventDefault(), b());
   };
   document.addEventListener("keydown", T);
   const k = () => {
-    document.removeEventListener("keydown", T), URL.revokeObjectURL(v);
+    document.removeEventListener("keydown", T), URL.revokeObjectURL(x);
   };
   return {
     element: c,
@@ -3380,25 +3459,25 @@ function yt(h) {
       ), f = d(
         "span",
         { class: "relay-conversation-item__time" },
-        [ze(new Date(o.lastMessage.createdAt))]
+        [Re(new Date(o.lastMessage.createdAt))]
       );
       u.appendChild(g), u.appendChild(f);
-      const x = d("div", {
+      const v = d("div", {
         class: "relay-conversation-item__preview"
       }), m = d(
         "p",
         { class: "relay-conversation-item__message" },
         [P(o.lastMessage.body)]
       );
-      if (x.appendChild(m), c) {
-        const v = d(
+      if (v.appendChild(m), c) {
+        const x = d(
           "span",
           { class: "relay-conversation-item__badge" },
           [o.unreadCount > 99 ? "99+" : String(o.unreadCount)]
         );
-        x.appendChild(v);
+        v.appendChild(x);
       }
-      n.appendChild(u), n.appendChild(x), p.appendChild(y), p.appendChild(n), p.addEventListener("click", () => t(o)), i.appendChild(p);
+      n.appendChild(u), n.appendChild(v), p.appendChild(y), p.appendChild(n), p.addEventListener("click", () => t(o)), i.appendChild(p);
     });
   };
   return l(), {
@@ -3604,12 +3683,12 @@ function ft(h) {
     let c = null, p = null, y = null;
     s.forEach((n, u) => {
       var T;
-      const g = new Date(n.createdAt), f = n.direction !== p, x = u === s.length - 1 || ((T = s[u + 1]) == null ? void 0 : T.direction) !== n.direction, m = y ? (g.getTime() - y.getTime()) / 1e3 / 60 : 0, v = x || m > 5;
+      const g = new Date(n.createdAt), f = n.direction !== p, v = u === s.length - 1 || ((T = s[u + 1]) == null ? void 0 : T.direction) !== n.direction, m = y ? (g.getTime() - y.getTime()) / 1e3 / 60 : 0, x = v || m > 5;
       f && (c = d("div", {
         class: `relay-message-group relay-message-group--${n.direction}`
       }), l.appendChild(c));
       const _ = d("div", {
-        class: `relay-message relay-message--${n.direction}${v ? " relay-message--show-time" : ""}`
+        class: `relay-message relay-message--${n.direction}${x ? " relay-message--show-time" : ""}`
       }), b = d("div", { class: "relay-message__bubble" }, [
         n.body
       ]), S = d("div", { class: "relay-message__time" }, [
@@ -3725,8 +3804,8 @@ const bt = `
     width: 18px;
     height: 18px;
   }
-`, xt = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>';
-function vt(h) {
+`, vt = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>';
+function xt(h) {
   const {
     placeholder: e = "Type a message...",
     onSend: t,
@@ -3744,7 +3823,7 @@ function vt(h) {
     class: "relay-chat-input__send",
     disabled: a
   });
-  o.innerHTML = xt, o.setAttribute("aria-label", "Send message"), i.appendChild(l), s.appendChild(i), s.appendChild(o);
+  o.innerHTML = vt, o.setAttribute("aria-label", "Send message"), i.appendChild(l), s.appendChild(i), s.appendChild(o);
   const c = () => {
     l.style.height = "auto", l.style.height = Math.min(l.scrollHeight, 100) + "px";
   }, p = () => {
@@ -4120,7 +4199,7 @@ function Tt(h) {
           class: "relay-roadmap-list__group"
         }), f = d("div", {
           class: "relay-roadmap-list__group-header"
-        }), x = d(
+        }), v = d(
           "h3",
           { class: "relay-roadmap-list__group-title" },
           [St[n]]
@@ -4129,8 +4208,8 @@ function Tt(h) {
           { class: "relay-roadmap-list__group-count" },
           [String(u.length)]
         );
-        f.appendChild(x), f.appendChild(m);
-        const v = d("div", {
+        f.appendChild(v), f.appendChild(m);
+        const x = d("div", {
           class: "relay-roadmap-list__group-items"
         });
         u.forEach((_) => {
@@ -4138,8 +4217,8 @@ function Tt(h) {
             item: _,
             onVote: t
           });
-          l.set(_.id, b), v.appendChild(b.element);
-        }), g.appendChild(f), g.appendChild(v), o.appendChild(g);
+          l.set(_.id, b), x.appendChild(b.element);
+        }), g.appendChild(f), g.appendChild(x), o.appendChild(g);
       });
     } else
       [...s].sort((n, u) => u.voteCount - n.voteCount).forEach((n) => {
@@ -4335,22 +4414,22 @@ function ie(h) {
     class: "relay-home__action-btn"
   });
   f.innerHTML = "<span>🐛</span> Report a bug", f.addEventListener("click", a);
-  const x = d("button", {
+  const v = d("button", {
     type: "button",
     class: "relay-home__action-btn"
   });
-  return x.innerHTML = "<span>💡</span> Request a feature", x.addEventListener("click", s), g.appendChild(f), g.appendChild(x), i.appendChild(l), i.appendChild(p), i.appendChild(g), {
+  return v.innerHTML = "<span>💡</span> Request a feature", v.addEventListener("click", s), g.appendChild(f), g.appendChild(v), i.appendChild(l), i.appendChild(p), i.appendChild(g), {
     element: i,
     focus: () => y.focus()
   };
 }
 const It = `
   ${Lt}
-`, Ht = {
+`, zt = {
   mobile: 480
 };
 function D() {
-  return typeof window > "u" ? "desktop" : window.innerWidth <= Ht.mobile ? "mobile" : "desktop";
+  return typeof window > "u" ? "desktop" : window.innerWidth <= zt.mobile ? "mobile" : "desktop";
 }
 function ye(h) {
   if (typeof window > "u")
@@ -4394,7 +4473,7 @@ function ge(h, e = D()) {
     }
   };
 }
-const Rt = `
+const Ht = `
   #relay-widget .relay-trigger {
     position: fixed;
     z-index: 999998;
@@ -4477,11 +4556,11 @@ const Rt = `
       height: 24px;
     }
   }
-`, zt = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/></svg>', At = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+`, Rt = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/></svg>', At = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>';
 function Bt(h) {
   const {
     position: e,
-    icon: t = zt,
+    icon: t = Rt,
     ariaLabel: r = "Open feedback widget",
     onClick: a
   } = h, s = d("button", {
@@ -4521,6 +4600,7 @@ function Bt(h) {
   };
 }
 const Ft = `
+  /* Modal - matches dashboard design system */
   #relay-widget .relay-modal {
     position: fixed;
     z-index: 999999;
@@ -4530,12 +4610,8 @@ const Ft = `
     max-height: min(700px, calc(100vh - 120px));
     background: hsl(var(--relay-bg));
     border: 1px solid hsl(var(--relay-border));
-    border-radius: 16px;
-    box-shadow:
-      0 0 0 1px hsl(var(--relay-border) / 0.1),
-      0 4px 6px -1px rgba(0, 0, 0, 0.08),
-      0 10px 15px -3px rgba(0, 0, 0, 0.1),
-      0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    box-shadow: var(--relay-shadow-lg);
     display: none;
     flex-direction: column;
     overflow: hidden;
@@ -4660,8 +4736,8 @@ function Dt(h) {
   });
   i.appendChild(l);
   const o = (u, g) => {
-    const f = g || D(), x = ge(u, f);
-    i.style.top = "", i.style.right = "", i.style.bottom = "", i.style.left = "", f === "desktop" && ce(i, x.modal);
+    const f = g || D(), v = ge(u, f);
+    i.style.top = "", i.style.right = "", i.style.bottom = "", i.style.left = "", f === "desktop" && ce(i, v.modal);
   };
   o(e);
   const c = ye((u) => {
@@ -4809,14 +4885,14 @@ function Pt(h) {
     { id: "help", label: "Help", show: a },
     { id: "roadmap", label: "Roadmap", show: s }
   ], y = /* @__PURE__ */ new Map(), n = /* @__PURE__ */ new Map();
-  p.forEach(({ id: g, label: f, show: x }) => {
-    if (!x)
+  p.forEach(({ id: g, label: f, show: v }) => {
+    if (!v)
       return;
     const m = d("button", {
       type: "button",
       class: `relay-bottom-nav__item ${g === l ? "relay-bottom-nav__item--active" : ""}`
-    }), v = d("span", { class: "relay-bottom-nav__icon" });
-    v.innerHTML = g === l && B[`${g}Active`] || B[g];
+    }), x = d("span", { class: "relay-bottom-nav__icon" });
+    x.innerHTML = g === l && B[`${g}Active`] || B[g];
     const _ = d(
       "span",
       { class: "relay-bottom-nav__label" },
@@ -4826,20 +4902,20 @@ function Pt(h) {
       const b = d("span", { class: "relay-bottom-nav__badge" });
       b.style.display = o > 0 ? "flex" : "none", b.textContent = o > 99 ? "99+" : String(o), m.appendChild(b), n.set(g, b);
     }
-    m.appendChild(v), m.appendChild(_), m.addEventListener("click", () => {
+    m.appendChild(x), m.appendChild(_), m.addEventListener("click", () => {
       g !== l && (u(g), t(g));
     }), y.set(g, m), c.appendChild(m);
   });
   const u = (g) => {
-    const f = y.get(l), x = y.get(g);
+    const f = y.get(l), v = y.get(g);
     if (f) {
       f.classList.remove("relay-bottom-nav__item--active");
       const m = f.querySelector(".relay-bottom-nav__icon");
       m && (m.innerHTML = B[l]);
     }
-    if (x) {
-      x.classList.add("relay-bottom-nav__item--active");
-      const m = x.querySelector(".relay-bottom-nav__icon");
+    if (v) {
+      v.classList.add("relay-bottom-nav__item--active");
+      const m = v.querySelector(".relay-bottom-nav__icon");
       m && (m.innerHTML = B[`${g}Active`] || B[g]);
     }
     l = g;
@@ -5368,7 +5444,7 @@ class Gt {
     this.container = d("div", {
       id: "relay-widget"
     });
-    const e = this.generateStyles(), t = He(e, "relay-widget-styles");
+    const e = this.generateStyles(), t = ze(e, "relay-widget-styles");
     this.container.appendChild(t), this.trigger = Bt({
       position: this.config.position || "bottom-right",
       onClick: () => this.toggle()
@@ -5478,7 +5554,7 @@ class Gt {
     return `
       ${Pe(this.themeMode, this.config.primaryColor)}
       ${Ne()}
-      ${Rt}
+      ${Ht}
       ${Ft}
       ${$t}
       ${Yt}
@@ -5637,7 +5713,7 @@ class Gt {
       messages: [],
       hasMore: !1,
       loading: !0
-    }), this.chatInput = vt({
+    }), this.chatInput = xt({
       placeholder: "Type a message...",
       onSend: (a) => this.handleMessageSend(a)
     }), t.appendChild(r), t.appendChild(this.messageThread.element), t.appendChild(this.chatInput.element), e.appendChild(t), this.fetchMessages(), this.startMessagePolling();
@@ -6732,7 +6808,7 @@ class Jt {
       network: !0,
       dom: !0
     };
-    t.console && this.consoleCapture.start(), t.network && this.networkCapture.start(), t.dom && this.errorCapture.start(), this.api = new ve({
+    t.console && this.consoleCapture.start(), t.network && this.networkCapture.start(), t.dom && this.errorCapture.start(), this.api = new xe({
       apiKey: e.apiKey,
       endpoint: e.endpoint,
       regionHint: e.regionHint
@@ -7011,13 +7087,13 @@ class Jt {
       y.style.cssText = "padding: 24px;";
       const n = a.questions[s];
       if (n) {
-        const x = document.createElement("p");
-        if (x.textContent = n.text, x.style.cssText = `
+        const v = document.createElement("p");
+        if (v.textContent = n.text, v.style.cssText = `
           font-size: 15px;
           font-weight: 500;
           color: #111827;
           margin: 0 0 16px;
-        `, y.appendChild(x), n.type === "nps") {
+        `, y.appendChild(v), n.type === "nps") {
           const m = document.createElement("div");
           m.style.cssText = "display: flex; gap: 4px;";
           for (let S = 0; S <= 10; S++) {
@@ -7038,12 +7114,12 @@ class Jt {
             }, m.appendChild(T);
           }
           y.appendChild(m);
-          const v = document.createElement("div");
-          v.style.cssText = "display: flex; justify-content: space-between; margin-top: 8px;";
+          const x = document.createElement("div");
+          x.style.cssText = "display: flex; justify-content: space-between; margin-top: 8px;";
           const _ = document.createElement("span");
           _.textContent = n.minLabel || "Not likely", _.style.cssText = "font-size: 12px; color: #6b7280;";
           const b = document.createElement("span");
-          b.textContent = n.maxLabel || "Very likely", b.style.cssText = "font-size: 12px; color: #6b7280;", v.appendChild(_), v.appendChild(b), y.appendChild(v);
+          b.textContent = n.maxLabel || "Very likely", b.style.cssText = "font-size: 12px; color: #6b7280;", x.appendChild(_), x.appendChild(b), y.appendChild(x);
         } else if (n.type === "text") {
           const m = document.createElement("textarea");
           m.placeholder = n.placeholder || "Your answer...", m.value = i[n.id] || "", m.style.cssText = `
@@ -7064,8 +7140,8 @@ class Jt {
         } else if (n.type === "rating") {
           const m = document.createElement("div");
           m.style.cssText = "display: flex; gap: 8px;";
-          const v = n.max || 5;
-          for (let _ = 1; _ <= v; _++) {
+          const x = n.max || 5;
+          for (let _ = 1; _ <= x; _++) {
             const b = document.createElement("button");
             b.innerHTML = `<svg width="32" height="32" viewBox="0 0 24 24" fill="${_ <= (i[n.id] || 0) ? "#f59e0b" : "#e5e7eb"}"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`, b.style.cssText = `
               padding: 8px;
@@ -7079,8 +7155,8 @@ class Jt {
           y.appendChild(m);
         } else if (n.type === "single_choice" || n.type === "multi_choice") {
           const m = document.createElement("div");
-          m.style.cssText = "display: flex; flex-direction: column; gap: 8px;", (n.options || []).forEach((v) => {
-            const _ = n.type === "multi_choice", b = _ ? (i[n.id] || []).includes(v) : i[n.id] === v, S = document.createElement("div");
+          m.style.cssText = "display: flex; flex-direction: column; gap: 8px;", (n.options || []).forEach((x) => {
+            const _ = n.type === "multi_choice", b = _ ? (i[n.id] || []).includes(x) : i[n.id] === x, S = document.createElement("div");
             S.style.cssText = `
               display: flex;
               align-items: center;
@@ -7105,12 +7181,12 @@ class Jt {
               font-size: 12px;
             `, b && (T.textContent = _ ? "✓" : "");
             const k = document.createElement("span");
-            k.textContent = v, k.style.cssText = "font-size: 14px; color: #111827;", S.appendChild(T), S.appendChild(k), S.onclick = () => {
+            k.textContent = x, k.style.cssText = "font-size: 14px; color: #111827;", S.appendChild(T), S.appendChild(k), S.onclick = () => {
               if (_) {
-                const C = (i[n.id] || []).slice(), M = C.indexOf(v);
-                M >= 0 ? C.splice(M, 1) : C.push(v), i[n.id] = C;
+                const C = (i[n.id] || []).slice(), M = C.indexOf(x);
+                M >= 0 ? C.splice(M, 1) : C.push(x), i[n.id] = C;
               } else
-                i[n.id] = v;
+                i[n.id] = x;
               l();
             }, m.appendChild(S);
           }), y.appendChild(m);
@@ -7119,8 +7195,8 @@ class Jt {
       r.appendChild(y);
       const u = document.createElement("div");
       if (u.style.cssText = "padding: 16px 24px 24px; display: flex; gap: 12px;", s > 0) {
-        const x = document.createElement("button");
-        x.textContent = "Back", x.style.cssText = `
+        const v = document.createElement("button");
+        v.textContent = "Back", v.style.cssText = `
           flex: 1;
           padding: 12px 20px;
           background: #f3f4f6;
@@ -7131,9 +7207,9 @@ class Jt {
           font-weight: 500;
           color: #111827;
           cursor: pointer;
-        `, x.onclick = () => {
+        `, v.onclick = () => {
           s--, l();
-        }, u.appendChild(x);
+        }, u.appendChild(v);
       }
       const g = s === a.questions.length - 1, f = document.createElement("button");
       f.textContent = g ? "Submit" : "Next", f.style.cssText = `
@@ -7148,11 +7224,11 @@ class Jt {
         color: white;
         cursor: pointer;
       `, f.onclick = async () => {
-        var x;
+        var v;
         if (g) {
           f.disabled = !0, f.textContent = "Submitting...";
           try {
-            await ((x = this.api) == null ? void 0 : x.submitSurveyResponse({
+            await ((v = this.api) == null ? void 0 : v.submitSurveyResponse({
               surveyId: e.id,
               sessionId: this.sessionId,
               responses: i
