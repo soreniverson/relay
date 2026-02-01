@@ -26,10 +26,10 @@ async function main() {
     }),
   );
 
-  // CORS
+  // CORS - allow any origin for SDK embeds
   app.use(
     cors({
-      origin: process.env.CORS_ORIGIN?.split(",") || ["http://localhost:3000"],
+      origin: true, // Allow all origins (SDK can be embedded anywhere)
       credentials: true,
     }),
   );
