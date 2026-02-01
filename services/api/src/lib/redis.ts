@@ -1,16 +1,16 @@
 import Redis from "ioredis";
 
-const redisUrl = process.env.REDIS_URL || "redis://localhost:6379";
+const redisUrl = process.env.REDIS_URL;
 const isDev = process.env.NODE_ENV !== "production";
 
-// In-memory fallback for development without Redis
+// In-memory fallback when Redis is not configured
 const memoryCache = new Map<string, { value: string; expires?: number }>();
 
 let redisConnected = false;
 let redis: Redis | null = null;
 
-// Only connect to Redis if not in dev mode or if REDIS_URL is explicitly set
-if (!isDev || process.env.REDIS_URL) {
+// Only connect to Redis if REDIS_URL is explicitly set
+if (redisUrl) {
   redis = new Redis(redisUrl, {
     maxRetriesPerRequest: 3,
     lazyConnect: true,
@@ -45,7 +45,7 @@ if (!isDev || process.env.REDIS_URL) {
     }
   });
 } else {
-  console.log("Development mode: Using in-memory cache (no Redis)");
+  console.log("REDIS_URL not set: Using in-memory cache (realtime features disabled)");
 }
 
 // Cache utilities with fallback
@@ -177,7 +177,7 @@ export const pubsub = {
   },
 
   createSubscriber(): Redis | null {
-    if (!redis || !redisConnected) {
+    if (!redis || !redisConnected || !redisUrl) {
       return null;
     }
     return new Redis(redisUrl);
